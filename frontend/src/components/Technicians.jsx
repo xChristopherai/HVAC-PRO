@@ -107,21 +107,6 @@ const TechnicianCard = ({ technician }) => {
           </div>
         </div>
 
-        {/* Skills */}
-        <div className="space-y-2">
-          <p className="text-sm font-medium">Skills</p>
-          <div className="flex flex-wrap gap-1">
-            {technician.skills?.slice(0, 4).map((skill, index) => (
-              <SkillBadge key={index} skill={skill.name} level={skill.level} />
-            )) || <span className="text-sm text-muted-foreground">No skills listed</span>}
-            {technician.skills?.length > 4 && (
-              <Badge variant="outline" className="text-xs">
-                +{technician.skills.length - 4} more
-              </Badge>
-            )}
-          </div>
-        </div>
-
         {/* Performance Stats */}
         <div className="grid grid-cols-2 gap-4 pt-2 border-t">
           <div className="text-center">
@@ -136,16 +121,6 @@ const TechnicianCard = ({ technician }) => {
             <p className="text-xs text-muted-foreground">Avg Rating</p>
           </div>
         </div>
-
-        {/* Availability */}
-        {technician.availability && (
-          <div className="space-y-2">
-            <p className="text-sm font-medium">This Week</p>
-            <div className="text-xs text-muted-foreground">
-              {technician.availability.hours_this_week || 0}h scheduled
-            </div>
-          </div>
-        )}
         
         {/* Actions */}
         <div className="pt-2 flex space-x-2">
