@@ -46,7 +46,7 @@ const OwnerInsights = ({ companyId }) => {
       setLoading(true);
       setError(null);
       
-      const response = await fetch(`${BACKEND_URL}/api/owner-insights?company_id=${companyId}`);
+      const response = await authService.authenticatedFetch(`${BACKEND_URL}/api/owner-insights?company_id=${companyId}`);
       
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
