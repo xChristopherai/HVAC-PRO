@@ -39,8 +39,8 @@ class AuthService {
       await this.login();
     }
 
-    // Construct full URL
-    const url = endpoint.startsWith('http') ? endpoint : `${BACKEND_URL}/api/${endpoint.replace(/^\//, '')}`;
+    // Construct full URL - BACKEND_URL already includes /api
+    const url = endpoint.startsWith('http') ? endpoint : `${BACKEND_URL}/${endpoint.replace(/^\//, '')}`;
 
     const authOptions = {
       ...options,
@@ -53,6 +53,7 @@ class AuthService {
     };
 
     try {
+      console.log('Fetching:', url); // Debug log
       const response = await fetch(url, authOptions);
       return response;
     } catch (error) {
