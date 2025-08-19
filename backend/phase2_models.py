@@ -3,7 +3,7 @@ from typing import Optional, List, Dict, Any
 from datetime import datetime
 from enum import Enum
 import uuid
-from .models import BaseDocument
+from models import BaseDocument
 
 # Phase 2 Enums
 class MessageSender(str, Enum):
