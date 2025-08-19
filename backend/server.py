@@ -36,10 +36,10 @@ db = client[os.environ.get('DB_NAME', 'hvac_assistant')]
 # Create FastAPI app
 app = FastAPI(title="HVAC Assistant API", version="2.0.0")
 
-# CORS middleware
+# CORS middleware - allow all origins for development
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=os.environ.get('CORS_ORIGINS', '*').split(','),
+    allow_origins=["*"],  # Allow all origins for now
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
