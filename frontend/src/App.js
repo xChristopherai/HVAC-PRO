@@ -259,19 +259,46 @@ const App = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Mock authentication for development
-    const mockUser = {
-      sub: 'mock-owner-001',
-      email: 'owner@hvactech.com',
-      name: 'John Smith',
-      role: 'owner',
-      company_id: 'company-001'
-    };
-    
-    setCurrentUser(mockUser);
-    setIsAuthenticated(true);
-    setLoading(false);
+    // Initialize authentication
+    initializeAuth();
   }, []);
+
+  const initializeAuth = async () => {
+    try {
+      setLoading(true);
+      
+      // Try to authenticate using stored token or create new mock session
+      if (!authService.isAuthenticated()) {
+        await authService.login('owner', 'company-001');
+      }
+      
+      // Set mock user data for UI
+      const mockUser = {
+        sub: 'mock-owner-001',
+        email: 'owner@hvactech.com',
+        name: 'John Smith',
+        role: 'owner',
+        company_id: 'company-001'
+      };
+      
+      setCurrentUser(mockUser);
+      setIsAuthenticated(true);
+    } catch (err) {
+      console.error('Authentication failed:', err);
+      setError('Authentication failed. Using offline mode.');
+      // Still set authenticated to true for development
+      setIsAuthenticated(true);
+      setCurrentUser({
+        sub: 'mock-owner-001',
+        email: 'owner@hvactech.com',
+        name: 'John Smith (Offline)',
+        role: 'owner',
+        company_id: 'company-001'
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleLogout = () => {
     setCurrentUser(null);
