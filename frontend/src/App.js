@@ -40,7 +40,7 @@ const navigation = [
   { name: 'Appointments', href: '/appointments', icon: Calendar },
   { name: 'Technicians', href: '/technicians', icon: Wrench },
   { name: 'Messaging', href: '/messaging', icon: MessageSquare },
-  { name: 'Settings', href: '/settings', icon: Settings },
+  { name: 'Settings', href: '/settings', icon: SettingsIcon },
 ];
 
 // Sidebar Component
