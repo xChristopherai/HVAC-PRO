@@ -41,11 +41,14 @@ class AuthService {
     };
   }
 
-  async authenticatedFetch(url, options = {}) {
+  async authenticatedFetch(endpoint, options = {}) {
     // Ensure we have a token
     if (!this.token) {
       await this.login();
     }
+
+    // Construct full URL
+    const url = endpoint.startsWith('http') ? endpoint : `${BACKEND_URL}/api/${endpoint.replace(/^\//, '')}`;
 
     const authOptions = {
       ...options,
@@ -60,7 +63,7 @@ class AuthService {
     // If unauthorized, try to re-login once
     if (response.status === 401 && !options._retried) {
       await this.login();
-      return this.authenticatedFetch(url, { ...options, _retried: true });
+      return this.authenticatedFetch(endpoint, { ...options, _retried: true });
     }
 
     return response;
