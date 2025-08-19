@@ -302,6 +302,7 @@ const App = () => {
   };
 
   const handleLogout = () => {
+    authService.logout();
     setCurrentUser(null);
     setIsAuthenticated(false);
   };
