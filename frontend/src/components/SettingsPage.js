@@ -59,11 +59,8 @@ const SettingsPage = ({ companyId }) => {
     try {
       setSaving(true);
       
-      const response = await fetch(`${BACKEND_URL}/api/settings/${companyId}`, {
+      const response = await authService.authenticatedFetch(`settings/${companyId}`, {
         method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
         body: JSON.stringify(settings),
       });
       
