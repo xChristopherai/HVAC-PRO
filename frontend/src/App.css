@@ -1,53 +1,115 @@
-/* HVAC Assistant - Complete CSS Styles */
-
-/* Global Reset and Base Styles */
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
+@layer base {
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 240 10% 3.9%;
+    --card: 0 0% 100%;
+    --card-foreground: 240 10% 3.9%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 240 10% 3.9%;
+    --primary: 240 5.9% 10%;
+    --primary-foreground: 0 0% 98%;
+    --secondary: 240 4.8% 95.9%;
+    --secondary-foreground: 240 5.9% 10%;
+    --muted: 240 4.8% 95.9%;
+    --muted-foreground: 240 3.8% 46.1%;
+    --accent: 240 4.8% 95.9%;
+    --accent-foreground: 240 5.9% 10%;
+    --destructive: 0 72.22% 50.59%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 240 5.9% 90%;
+    --input: 240 5.9% 90%;
+    --ring: 240 5% 64.9%;
+    --radius: 0.5rem;
+  }
 }
 
-:root {
-  /* Color Palette */
-  --primary-blue: #2563eb;
-  --primary-blue-light: #3b82f6;
-  --primary-blue-dark: #1d4ed8;
-  --secondary-gray: #64748b;
-  --secondary-gray-light: #94a3b8;
-  --secondary-gray-dark: #475569;
-  --success-green: #10b981;
-  --warning-yellow: #f59e0b;
-  --error-red: #ef4444;
-  --background-gray: #f8fafc;
-  --background-white: #ffffff;
-  --text-primary: #0f172a;
-  --text-secondary: #64748b;
-  --border-color: #e2e8f0;
-  --border-color-dark: #cbd5e1;
+@layer base {
+  * {
+    @apply border-border;
+  }
   
-  /* Spacing */
-  --spacing-xs: 0.25rem;
-  --spacing-sm: 0.5rem;
-  --spacing-md: 1rem;
-  --spacing-lg: 1.5rem;
-  --spacing-xl: 2rem;
-  --spacing-2xl: 3rem;
+  body {
+    @apply bg-background text-foreground;
+    font-feature-settings: "rlig" 1, "calt" 1;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    font-weight: 400;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
   
-  /* Border Radius */
-  --radius-sm: 0.25rem;
-  --radius-md: 0.5rem;
-  --radius-lg: 0.75rem;
-  --radius-xl: 1rem;
+  /* Strong typography hierarchy like Stripe */
+  h1, h2, h3, h4, h5, h6 {
+    font-weight: 700 !important;
+    color: rgb(15, 23, 42) !important;
+    line-height: 1.25 !important;
+    letter-spacing: -0.025em !important;
+  }
   
-  /* Shadows */
-  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
-  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
-  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
-  --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+  h1 {
+    font-size: 2.25rem !important;
+    font-weight: 800 !important;
+  }
   
-  /* Typography */
-  --font-size-xs: 0.75rem;
-  --font-size-sm: 0.875rem;
+  h2 {
+    font-size: 1.875rem !important;
+    font-weight: 700 !important;
+  }
+  
+  h3 {
+    font-size: 1.5rem !important;
+    font-weight: 600 !important;
+  }
+  
+  /* Body text should be readable */
+  p, div, span {
+    font-weight: 400;
+    color: rgb(51, 65, 85);
+  }
+  
+  /* Strong labels and important text */
+  label, .font-medium {
+    font-weight: 500 !important;
+    color: rgb(15, 23, 42) !important;
+  }
+  
+  .font-semibold {
+    font-weight: 600 !important;
+  }
+  
+  .font-bold {
+    font-weight: 700 !important;
+  }
+  
+  /* Muted text should still be readable */
+  .text-muted-foreground {
+    color: rgb(100, 116, 139) !important;
+    font-weight: 400 !important;
+  }
+  
+  /* Button text should be bold */
+  button {
+    font-weight: 500 !important;
+  }
+  
+  /* Card titles should be prominent */
+  .card h3, .card h4 {
+    font-weight: 600 !important;
+    color: rgb(15, 23, 42) !important;
+  }
+  
+  /* Stats/numbers should be very bold */
+  .text-2xl, .text-3xl {
+    font-weight: 800 !important;
+    color: rgb(15, 23, 42) !important;
+  }
+  
+  /* Input labels */
+  input + label, label {
+    font-weight: 500 !important;
+    color: rgb(15, 23, 42) !important;
+  }
+}
   --font-size-base: 1rem;
   --font-size-lg: 1.125rem;
   --font-size-xl: 1.25rem;
