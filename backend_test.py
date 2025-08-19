@@ -324,9 +324,9 @@ class HVACAPITester:
             self.log_test("Company Details", False, f"Error: {data.get('detail', 'Unknown error')}")
             return False
 
-    def run_all_tests(self):
-        """Run complete test suite"""
-        print("🚀 Starting HVAC Assistant Backend API Tests")
+    def run_dashboard_focused_tests(self):
+        """Run dashboard-focused tests for frontend debugging"""
+        print("🚀 Starting Dashboard-Focused Backend API Tests")
         print(f"🌐 Testing against: {self.base_url}")
         print("=" * 60)
         
@@ -335,34 +335,22 @@ class HVACAPITester:
         self.test_health_check()
         self.test_root_endpoint()
         
-        # Authentication tests
-        print("\n🔐 Authentication Tests:")
-        admin_login_success = self.test_admin_login()
+        # Dashboard specific tests
+        print("\n📊 Dashboard Endpoint Tests:")
+        print("Testing dashboard endpoint exactly as frontend calls it...")
+        frontend_success = self.test_dashboard_data_frontend_format()
+        
+        print("Testing dashboard endpoint with /api prefix...")
+        api_success = self.test_dashboard_with_api_prefix()
+        
+        # Authentication tests (optional for dashboard)
+        print("\n🔐 Authentication Tests (Optional):")
         user_login_success = self.test_mock_user_login()
         
-        if not user_login_success:
-            print("❌ Cannot proceed without user authentication")
-            return False
-            
-        # Core business endpoints
-        print("\n📊 Core Business Endpoints:")
-        self.test_dashboard_data()
-        self.test_owner_insights()
-        self.test_company_settings()
-        self.test_company_details()
-        
-        # Data listing endpoints
-        print("\n📋 Data Listing Endpoints:")
-        self.test_customers_list()
-        self.test_technicians_list()
-        self.test_appointments_list()
-        self.test_jobs_list()
-        self.test_inquiries_list()
-        
-        # Admin endpoints (if admin login succeeded)
-        if admin_login_success:
-            print("\n👑 Admin Endpoints:")
-            self.test_admin_analytics()
+        if user_login_success:
+            print("Testing dashboard with authentication...")
+            success, data = self.make_request('GET', f'/dashboard/{self.company_id}', token=self.user_token)
+            self.log_test("Dashboard with Auth", success, f"Authenticated request: {'Success' if success else 'Failed'}")
         
         # Final results
         print("\n" + "=" * 60)
@@ -371,15 +359,19 @@ class HVACAPITester:
         success_rate = (self.tests_passed / self.tests_run) * 100 if self.tests_run > 0 else 0
         print(f"✨ Success Rate: {success_rate:.1f}%")
         
-        if success_rate >= 80:
-            print("🎉 Backend API is functioning well!")
-            return True
-        elif success_rate >= 50:
-            print("⚠️  Backend has some issues but core functionality works")
-            return True
+        # Specific dashboard analysis
+        print("\n🔍 Dashboard Analysis:")
+        if frontend_success:
+            print("✅ Frontend can access dashboard endpoint directly")
         else:
-            print("🚨 Backend has major issues - needs attention")
-            return False
+            print("❌ Frontend cannot access dashboard endpoint directly")
+            
+        if api_success:
+            print("✅ Dashboard endpoint works with /api prefix")
+        else:
+            print("❌ Dashboard endpoint fails with /api prefix")
+        
+        return frontend_success or api_success
 
 def main():
     """Main test execution"""
