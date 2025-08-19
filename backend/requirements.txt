@@ -10,7 +10,7 @@ pydantic==2.5.0
 bcrypt==4.1.2
 httpx==0.25.2
 openai==1.6.1
-emergent-integration==1.0.0
+# emergent-integration will be installed via integration_playbook_expert
 twilio==8.12.0
 google-auth==2.25.2
 google-auth-oauthlib==1.2.0
