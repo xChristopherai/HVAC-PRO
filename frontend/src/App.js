@@ -6,7 +6,7 @@ import {
   Calendar, 
   Wrench, 
   MessageSquare, 
-  Settings, 
+  Settings as SettingsIcon, 
   Search,
   Bell,
   Menu,
