@@ -123,8 +123,8 @@ class MockGoogleCalendarService:
                 return True
         return False
 
-class MockLLMService:
-    """Mock LLM service using Emergent LLM Key"""
+class LLMService:
+    """Real LLM service using Emergent LLM Key"""
     
     def __init__(self):
         self.api_key = os.getenv("EMERGENT_LLM_KEY", "sk-emergent-68d0e189c6844Bd6f2")
@@ -132,48 +132,112 @@ class MockLLMService:
     async def generate_sms_response(self, customer_message: str, context: Dict[str, Any]) -> str:
         """Generate AI SMS response with minimal token usage"""
         
-        # Use template-based responses for common scenarios to minimize LLM usage
-        templates = {
+        # First try template-based responses for common scenarios to minimize LLM usage
+        templates = self._get_sms_templates()
+        template_response = self._try_template_match(customer_message, context, templates)
+        
+        if template_response:
+            logger.info("Using template-based SMS response (0 LLM tokens)")
+            return template_response
+        
+        # Use LLM for complex queries with strict token limits
+        try:
+            from emergentintegrations.llm.chat import LlmChat, UserMessage
+            
+            system_message = f"""You are Sarah, an AI assistant for {context.get('company_name', 'Elite HVAC Solutions')}. 
+
+RULES:
+- Keep responses under 120 characters
+- Be professional but friendly
+- Focus on helping with HVAC needs
+- For emergencies, prioritize urgency
+- For quotes, ask for details
+- For appointments, be helpful
+
+Company hours: {context.get('business_hours', 'Mon-Fri 8AM-6PM')}"""
+            
+            chat = LlmChat(
+                api_key=self.api_key,
+                session_id=f"hvac-sms-{hash(customer_message)}",
+                system_message=system_message
+            ).with_model("openai", "gpt-4o-mini")  # Most cost-effective model
+            
+            user_message = UserMessage(text=f"Customer message: {customer_message}")
+            
+            response = await chat.send_message(user_message)
+            
+            # Ensure response is under 160 chars (SMS limit)
+            if len(response) > 160:
+                response = response[:157] + "..."
+            
+            logger.info(f"Generated LLM SMS response (~{len(response)} chars, minimal tokens)")
+            return response
+            
+        except Exception as e:
+            logger.error(f"LLM SMS generation failed: {str(e)}")
+            # Fallback to default template
+            return templates["default"].format(
+                company_name=context.get("company_name", "Elite HVAC Solutions")
+            )
+    
+    def _get_sms_templates(self) -> Dict[str, str]:
+        """Get SMS response templates"""
+        return {
             "greeting": "Hi! I'm Sarah from {company_name}. How can I help you today?",
             "emergency": "I understand this is urgent. Let me connect you with our emergency technician right away. What's the issue?",
             "appointment": "I'd be happy to schedule an appointment for you. What service do you need and when works best?",
             "pricing": "I'll have one of our technicians provide a detailed estimate. Can you describe the issue?",
+            "hours": "We're open {business_hours}. For emergencies, call our emergency line!",
             "default": "Thanks for contacting {company_name}! I'm here to help. Can you tell me more about your HVAC needs?"
         }
+    
+    def _try_template_match(self, message: str, context: Dict[str, Any], templates: Dict[str, str]) -> str:
+        """Try to match message to templates first"""
         
-        # Simple keyword matching for template selection
-        message_lower = customer_message.lower()
+        message_lower = message.lower()
         
-        if any(word in message_lower for word in ["emergency", "urgent", "broken", "not working"]):
-            template_key = "emergency"
-        elif any(word in message_lower for word in ["appointment", "schedule", "book"]):
-            template_key = "appointment"
-        elif any(word in message_lower for word in ["price", "cost", "estimate", "quote"]):
-            template_key = "pricing"
-        elif any(word in message_lower for word in ["hello", "hi", "hey"]):
-            template_key = "greeting"
-        else:
-            template_key = "default"
+        # Priority matching for cost optimization
+        if any(word in message_lower for word in ["emergency", "urgent", "broken", "not working", "no heat", "no ac"]):
+            return templates["emergency"]
+        elif any(word in message_lower for word in ["appointment", "schedule", "book", "when can"]):
+            return templates["appointment"]
+        elif any(word in message_lower for word in ["price", "cost", "estimate", "quote", "how much"]):
+            return templates["pricing"]
+        elif any(word in message_lower for word in ["hours", "open", "closed", "when are you"]):
+            return templates["hours"].format(
+                business_hours=context.get("business_hours", "Mon-Fri 8AM-6PM")
+            )
+        elif any(word in message_lower for word in ["hello", "hi", "hey", "good morning", "good afternoon"]):
+            return templates["greeting"].format(
+                company_name=context.get("company_name", "Elite HVAC Solutions")
+            )
         
-        # Use template with context substitution
-        response = templates[template_key].format(
-            company_name=context.get("company_name", "Elite HVAC Solutions")
-        )
-        
-        # Log LLM usage for monitoring
-        logger.info(f"Generated template-based SMS response using template: {template_key}")
-        
-        return response
+        return None  # No template match, use LLM
     
     async def optimize_sms_template(self, template: str, max_tokens: int = 120) -> str:
         """Optimize SMS template for minimal credits"""
         
-        # Mock template optimization - in production this would use LLM
-        if len(template) > max_tokens:
-            # Simple truncation with ellipsis
-            return template[:max_tokens-3] + "..."
+        if len(template) <= max_tokens:
+            return template
         
-        return template
+        try:
+            from emergentintegrations.llm.chat import LlmChat, UserMessage
+            
+            chat = LlmChat(
+                api_key=self.api_key,
+                session_id="sms-optimization",
+                system_message=f"Shorten this SMS to under {max_tokens} characters while keeping the key message."
+            ).with_model("openai", "gpt-4o-mini")
+            
+            user_message = UserMessage(text=f"Shorten: {template}")
+            response = await chat.send_message(user_message)
+            
+            return response[:max_tokens] if len(response) > max_tokens else response
+            
+        except Exception as e:
+            logger.error(f"SMS optimization failed: {str(e)}")
+            # Simple truncation fallback
+            return template[:max_tokens-3] + "..." if len(template) > max_tokens else template
 
 class MockEmailService:
     """Mock email service for notifications"""
@@ -567,7 +631,7 @@ class NotificationService:
 # Service Instances (Dependency Injection)
 twilio_service = MockTwilioService()
 calendar_service = MockGoogleCalendarService()
-llm_service = MockLLMService()
+llm_service = LLMService()
 email_service = MockEmailService()
 
 def get_messaging_service(db):
