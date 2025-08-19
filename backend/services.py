@@ -5,7 +5,7 @@ from typing import Optional, Dict, Any, List
 from datetime import datetime, timedelta
 import json
 import httpx
-from .phase2_models import (
+from phase2_models import (
     Message, MessageCreate, MessageThread, 
     CustomerRating, RatingCreate, OwnerNotification, NotificationCreate,
     SMSTemplate, CalendarEvent, CalendarEventCreate
