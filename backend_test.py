@@ -107,9 +107,61 @@ class HVACAPITester:
             self.log_test("Mock User Login", False, f"Error: {data.get('detail', 'Unknown error')}")
             return False
 
-    def test_dashboard_data(self):
-        """Test main dashboard endpoint"""
-        success, data = self.make_request('GET', f'/dashboard/{self.company_id}', token=self.user_token)
+    def test_dashboard_data_frontend_format(self):
+        """Test dashboard endpoint exactly as frontend calls it"""
+        # Test without /api prefix as frontend calls it
+        url = f"{self.base_url}/dashboard/{self.company_id}"
+        headers = {'Content-Type': 'application/json'}
+        
+        try:
+            response = requests.get(url, headers=headers, timeout=30)
+            success = response.status_code < 400
+            
+            if success:
+                data = response.json() if response.content else {}
+                
+                # Check exact format that Dashboard.jsx expects
+                required_keys = ['stats', 'todays_appointments', 'recent_inquiries', 'urgent_jobs']
+                has_all_keys = all(key in data for key in required_keys)
+                
+                stats = data.get('stats', {})
+                expected_stats = ['total_customers', 'pending_jobs', 'active_technicians', 'todays_appointments']
+                has_stats = all(key in stats for key in expected_stats)
+                
+                # Check data types
+                appointments_is_list = isinstance(data.get('todays_appointments'), list)
+                inquiries_is_list = isinstance(data.get('recent_inquiries'), list)
+                urgent_jobs_is_list = isinstance(data.get('urgent_jobs'), list)
+                
+                all_valid = has_all_keys and has_stats and appointments_is_list and inquiries_is_list and urgent_jobs_is_list
+                
+                details = f"Status: {response.status_code}, Keys: {list(data.keys())}, Stats: {list(stats.keys())}"
+                self.log_test("Dashboard Frontend Format", all_valid, details)
+                return all_valid
+            else:
+                error_msg = f"HTTP {response.status_code}"
+                try:
+                    error_data = response.json()
+                    error_msg += f" - {error_data.get('detail', 'Unknown error')}"
+                except:
+                    error_msg += f" - {response.text[:100]}"
+                
+                self.log_test("Dashboard Frontend Format", False, error_msg)
+                return False
+                
+        except requests.exceptions.Timeout:
+            self.log_test("Dashboard Frontend Format", False, "Request timeout")
+            return False
+        except requests.exceptions.ConnectionError:
+            self.log_test("Dashboard Frontend Format", False, "Connection error")
+            return False
+        except Exception as e:
+            self.log_test("Dashboard Frontend Format", False, f"Error: {str(e)}")
+            return False
+
+    def test_dashboard_with_api_prefix(self):
+        """Test dashboard endpoint with /api prefix"""
+        success, data = self.make_request('GET', f'/dashboard/{self.company_id}')
         
         if success:
             required_keys = ['stats', 'todays_appointments', 'recent_inquiries', 'urgent_jobs']
@@ -119,11 +171,11 @@ class HVACAPITester:
             stats_keys = ['total_customers', 'pending_jobs', 'active_technicians', 'todays_appointments']
             has_stats = all(key in stats for key in stats_keys)
             
-            self.log_test("Dashboard Data", has_all_keys and has_stats, 
+            self.log_test("Dashboard with API prefix", has_all_keys and has_stats, 
                          f"Customers: {stats.get('total_customers', 0)}, Jobs: {stats.get('pending_jobs', 0)}")
             return has_all_keys and has_stats
         else:
-            self.log_test("Dashboard Data", False, f"Error: {data.get('detail', 'Unknown error')}")
+            self.log_test("Dashboard with API prefix", False, f"Error: {data.get('detail', 'Unknown error')}")
             return False
 
     def test_owner_insights(self):
