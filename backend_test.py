@@ -11,7 +11,7 @@ from datetime import datetime
 from typing import Dict, Any, Optional
 
 class HVACAPITester:
-    def __init__(self, base_url="http://localhost:8001"):
+    def __init__(self, base_url="https://hvac-assist-1.preview.emergentagent.com"):
         self.base_url = base_url
         self.admin_token = None
         self.user_token = None
