@@ -17,13 +17,16 @@ import { Input } from './components/ui/input';
 import { cn } from './lib/utils';
 import authService from './utils/auth';
 
-// Import components (we'll create these)
+// Import components
 import Dashboard from './components/Dashboard';
+// New UI Components (to be created)
 import Customers from './components/Customers';
 import Appointments from './components/Appointments';
 import Technicians from './components/Technicians';
 import Messaging from './components/Messaging';
-import SettingsPage from './components/Settings';
+
+// Legacy components with NEW_UI flag support
+import SettingsPage from './components/SettingsPage';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 
