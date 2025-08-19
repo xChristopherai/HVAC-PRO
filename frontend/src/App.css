@@ -1,201 +1,202 @@
-@layer base {
-  :root {
-    /* Stripe-inspired dark theme tokens */
-    --bg: #0A0B0D;
-    --card: #0E1116;
-    --text: #F8FAFC;
-    --text-sec: #A7B0BF;
-    --text-muted: #8A93A5;
-    --border: #1F2630;
-    --primary: #635BFF;
-    --success: #10B981;
-    --danger: #EF4444;
-    --warning: #F59E0B;
-    --radius: 14px;
-    
-    /* Shadcn compatibility */
-    --background: 10 8% 4%;
-    --foreground: 240 5% 98%;
-    --card: 215 28% 9%;
-    --card-foreground: 240 5% 98%;
-    --popover: 215 28% 9%;
-    --popover-foreground: 240 5% 98%;
-    --primary: 246 83% 67%;
-    --primary-foreground: 0 0% 98%;
-    --secondary: 215 20% 13%;
-    --secondary-foreground: 210 11% 71%;
-    --muted: 215 20% 13%;
-    --muted-foreground: 210 11% 65%;
-    --accent: 215 20% 13%;
-    --accent-foreground: 210 11% 71%;
-    --destructive: 0 72% 51%;
-    --destructive-foreground: 0 0% 98%;
-    --border: 215 28% 18%;
-    --input: 215 28% 18%;
-    --ring: 246 83% 67%;
-    --radius: 14px;
-  }
+/* Stripe-inspired HVAC Assistant Dark Theme */
+
+/* CSS Variables */
+:root {
+  --bg: #0A0B0D;
+  --card: #0E1116;
+  --text: #F8FAFC;
+  --text-sec: #A7B0BF;
+  --text-muted: #8A93A5;
+  --border: #1F2630;
+  --primary: #635BFF;
+  --success: #10B981;
+  --danger: #EF4444;
+  --warning: #F59E0B;
+  --radius: 14px;
+  
+  /* Shadcn compatibility */
+  --background: 10 8% 4%;
+  --foreground: 240 5% 98%;
+  --card: 215 28% 9%;
+  --card-foreground: 240 5% 98%;
+  --popover: 215 28% 9%;
+  --popover-foreground: 240 5% 98%;
+  --primary: 246 83% 67%;
+  --primary-foreground: 0 0% 98%;
+  --secondary: 215 20% 13%;
+  --secondary-foreground: 210 11% 71%;
+  --muted: 215 20% 13%;
+  --muted-foreground: 210 11% 65%;
+  --accent: 215 20% 13%;
+  --accent-foreground: 210 11% 71%;
+  --destructive: 0 72% 51%;
+  --destructive-foreground: 0 0% 98%;
+  --border: 215 28% 18%;
+  --input: 215 28% 18%;
+  --ring: 246 83% 67%;
+  --radius: 14px;
 }
 
-@layer base {
-  * {
-    @apply border-border;
-  }
-  
-  html, body, #root {
-    background: var(--bg) !important;
-    color: var(--text) !important;
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-    font-weight: 400;
-    line-height: 1.6;
-    -webkit-font-smoothing: antialiased;
-    -moz-osx-font-smoothing: grayscale;
-  }
-  
-  body {
-    @apply text-foreground;
-    background: #0A0B0D !important;
-    color: #F8FAFC !important;
-    font-feature-settings: "rlig" 1, "calt" 1;
-  }
-  
-  /* Strong typography hierarchy like Stripe */
-  h1, h2, h3, h4, h5, h6 {
-    font-weight: 700 !important;
-    color: var(--text) !important;
-    line-height: 1.25 !important;
-    letter-spacing: -0.025em !important;
-  }
-  
-  h1 {
-    font-size: 2.25rem !important;
-    font-weight: 800 !important;
-  }
-  
-  h2 {
-    font-size: 1.875rem !important;
-    font-weight: 700 !important;
-  }
-  
-  h3 {
-    font-size: 1.5rem !important;
-    font-weight: 600 !important;
-  }
-  
-  /* Body text should be readable */
-  p, div, span {
-    font-weight: 400;
-    color: var(--text-sec);
-  }
-  
-  /* Strong labels and important text */
-  label, .font-medium {
-    font-weight: 500 !important;
-    color: var(--text) !important;
-  }
-  
-  .font-semibold {
-    font-weight: 600 !important;
-  }
-  
-  .font-bold {
-    font-weight: 700 !important;
-  }
-  
-  /* Muted text should still be readable */
-  .text-muted-foreground {
-    color: var(--text-muted) !important;
-    font-weight: 400 !important;
-  }
-  
-  /* Button text should be bold */
-  button {
-    font-weight: 500 !important;
-  }
-  
-  /* Card titles should be prominent */
-  .card h3, .card h4 {
-    font-weight: 600 !important;
-    color: var(--text) !important;
-  }
-  
-  /* Stats/numbers should be very bold */
-  .text-2xl, .text-3xl {
-    font-weight: 800 !important;
-    color: var(--text) !important;
-  }
-  
-  /* Input styling */
-  input, textarea, select {
-    background: var(--card) !important;
-    border: 1px solid var(--border) !important;
-    color: var(--text) !important;
-    border-radius: var(--radius) !important;
-    font-weight: 400 !important;
-  }
-  
-  input:focus, textarea:focus, select:focus {
-    outline: none !important;
-    border-color: var(--primary) !important;
-    box-shadow: 0 0 0 3px rgba(99, 91, 255, 0.1) !important;
-  }
-  
-  /* Card styling */
-  .card {
-    background: var(--card) !important;
-    border: 1px solid var(--border) !important;
-    border-radius: var(--radius) !important;
-  }
-  
-  /* Button primary styling */
-  .btn-primary, button[data-variant="default"] {
-    background: var(--primary) !important;
-    color: white !important;
-    border: 1px solid var(--primary) !important;
-    font-weight: 500 !important;
-  }
-  
-  .btn-primary:hover, button[data-variant="default"]:hover {
-    background: #5A52E5 !important;
-    border-color: #5A52E5 !important;
-  }
-  
-  /* Button outline styling */
-  button[data-variant="outline"] {
-    background: transparent !important;
-    color: var(--text) !important;
-    border: 1px solid var(--border) !important;
-  }
-  
-  button[data-variant="outline"]:hover {
-    background: var(--card) !important;
-    border-color: var(--text-muted) !important;
-  }
-  
-  /* Sidebar styling */
-  .sidebar {
-    background: var(--card) !important;
-    border-right: 1px solid var(--border) !important;
-  }
-  
-  /* Better focus rings */
-  button:focus-visible, input:focus-visible, textarea:focus-visible {
-    outline: 2px solid var(--primary) !important;
-    outline-offset: 2px !important;
-  }
-  
-  /* Stronger separators */
-  hr, .separator {
-    border-color: var(--border) !important;
-    opacity: 1 !important;
-  }
-  
-  /* Badge styling */
-  .badge {
-    font-weight: 500 !important;
-    font-size: 0.75rem !important;
-    border-radius: calc(var(--radius) / 2) !important;
-  }
+/* Base styling */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html, body, #root {
+  background: #0A0B0D !important;
+  color: #F8FAFC !important;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif !important;
+  font-weight: 400;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  height: 100%;
+  width: 100%;
+}
+
+body {
+  background: #0A0B0D !important;
+  color: #F8FAFC !important;
+}
+
+/* Typography */
+h1, h2, h3, h4, h5, h6 {
+  font-weight: 700 !important;
+  color: #F8FAFC !important;
+  line-height: 1.25 !important;
+  letter-spacing: -0.025em !important;
+}
+
+h1 {
+  font-size: 2.25rem !important;
+  font-weight: 800 !important;
+}
+
+h2 {
+  font-size: 1.875rem !important;
+  font-weight: 700 !important;
+}
+
+h3 {
+  font-size: 1.5rem !important;
+  font-weight: 600 !important;
+}
+
+/* Text colors */
+p, div, span {
+  color: #A7B0BF !important;
+  font-weight: 400;
+}
+
+label {
+  font-weight: 500 !important;
+  color: #F8FAFC !important;
+}
+
+.text-muted-foreground {
+  color: #8A93A5 !important;
+  font-weight: 400 !important;
+}
+
+.text-2xl, .text-3xl {
+  font-weight: 800 !important;
+  color: #F8FAFC !important;
+}
+
+/* Cards */
+[class*="card"], .card {
+  background: #0E1116 !important;
+  border: 1px solid #1F2630 !important;
+  border-radius: 14px !important;
+  color: #F8FAFC !important;
+}
+
+/* Buttons */
+button {
+  font-weight: 500 !important;
+  border-radius: 14px !important;
+}
+
+/* Primary buttons */
+button[data-variant="default"], .bg-primary {
+  background: #635BFF !important;
+  color: white !important;
+  border: 1px solid #635BFF !important;
+}
+
+button[data-variant="default"]:hover, .bg-primary:hover {
+  background: #5A52E5 !important;
+}
+
+/* Outline buttons */
+button[data-variant="outline"] {
+  background: transparent !important;
+  color: #F8FAFC !important;
+  border: 1px solid #1F2630 !important;
+}
+
+button[data-variant="outline"]:hover {
+  background: #0E1116 !important;
+  border-color: #8A93A5 !important;
+}
+
+/* Inputs */
+input, textarea, select {
+  background: #0E1116 !important;
+  border: 1px solid #1F2630 !important;
+  color: #F8FAFC !important;
+  border-radius: 14px !important;
+  font-weight: 400 !important;
+}
+
+input:focus, textarea:focus, select:focus {
+  outline: none !important;
+  border-color: #635BFF !important;
+  box-shadow: 0 0 0 3px rgba(99, 91, 255, 0.1) !important;
+}
+
+/* Sidebar */
+nav[class*="sidebar"], .sidebar, aside {
+  background: #0E1116 !important;
+  border-right: 1px solid #1F2630 !important;
+}
+
+/* Badge styling */
+[class*="badge"], .badge {
+  font-weight: 500 !important;
+  font-size: 0.75rem !important;
+  border-radius: 8px !important;
+  padding: 0.25rem 0.5rem !important;
+}
+
+/* Success badge */
+.text-green-600, .bg-green-50, .border-green-200 {
+  background: rgba(16, 185, 129, 0.1) !important;
+  color: #10B981 !important;
+  border-color: rgba(16, 185, 129, 0.3) !important;
+}
+
+/* Warning badge */
+.text-amber-600, .bg-amber-50, .border-amber-200 {
+  background: rgba(245, 158, 11, 0.1) !important;
+  color: #F59E0B !important;
+  border-color: rgba(245, 158, 11, 0.3) !important;
+}
+
+/* Danger/Error badge */
+.text-red-600, .bg-red-50, .border-red-200 {
+  background: rgba(239, 68, 68, 0.1) !important;
+  color: #EF4444 !important;
+  border-color: rgba(239, 68, 68, 0.3) !important;
+}
+
+/* Blue badge */
+.text-blue-600, .bg-blue-50, .border-blue-200 {
+  background: rgba(99, 91, 255, 0.1) !important;
+  color: #635BFF !important;
+  border-color: rgba(99, 91, 255, 0.3) !important;
 }
   --font-size-base: 1rem;
   --font-size-lg: 1.125rem;
