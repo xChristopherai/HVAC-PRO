@@ -26,7 +26,7 @@ import Technicians from './components/Technicians';
 import Messaging from './components/Messaging';
 
 // Legacy components with NEW_UI flag support
-import SettingsPage from './components/SettingsPage';
+import Settings from './components/Settings';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 
