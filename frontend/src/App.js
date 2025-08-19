@@ -30,6 +30,9 @@ import SettingsPage from './components/SettingsPage';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 
+// Feature Flag for NEW_UI
+const NEW_UI = true;
+
 // Navigation items
 const navigation = [
   { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
