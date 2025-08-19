@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate, Link, useLocation } from 'react-router-dom';
 import './App.css';
+import authService from './utils/auth';
 
 // Import components
 import SettingsPage from './components/SettingsPage';
