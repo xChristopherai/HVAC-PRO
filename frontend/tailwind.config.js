@@ -50,6 +50,19 @@ module.exports = {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
         },
+        // Custom Stripe-inspired tokens
+        bg: { 
+          DEFAULT: 'var(--bg)', 
+          card: 'var(--card)' 
+        },
+        text: { 
+          primary: 'var(--text)', 
+          secondary: 'var(--text-sec)', 
+          muted: 'var(--text-muted)' 
+        },
+        success: 'var(--success)',
+        danger: 'var(--danger)',
+        warning: 'var(--warning)',
       },
       borderRadius: {
         lg: "var(--radius)",
