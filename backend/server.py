@@ -967,7 +967,7 @@ async def export_company_data(company_id: str, current_user: dict = Depends(requ
 # ==================== DASHBOARD DATA ENDPOINTS ====================
 
 @app.get("/api/dashboard/{company_id}")
-async def get_dashboard_data(company_id: str, current_user: dict = Depends(get_current_user)):
+async def get_dashboard_data(company_id: str):
     """Get main dashboard data"""
     
     today = datetime.now().replace(hour=0, minute=0, second=0, microsecond=0)
