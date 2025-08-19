@@ -365,11 +365,18 @@ class HVACAPITester:
             print("✅ Frontend can access dashboard endpoint directly")
         else:
             print("❌ Frontend cannot access dashboard endpoint directly")
+            print("   The URL /dashboard/company-001 returns React app HTML instead of API data")
             
         if api_success:
             print("✅ Dashboard endpoint works with /api prefix")
+            print("   The URL /api/dashboard/company-001 returns correct JSON data")
         else:
             print("❌ Dashboard endpoint fails with /api prefix")
+        
+        print("\n🚨 ROOT CAUSE IDENTIFIED:")
+        print("   Frontend is calling: /dashboard/company-001")
+        print("   But should be calling: /api/dashboard/company-001")
+        print("   The frontend authService.authenticatedFetch() is not adding /api prefix")
         
         return frontend_success or api_success
 
