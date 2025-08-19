@@ -1005,6 +1005,23 @@ async def get_dashboard_data(company_id: str):
         "urgent_jobs": [Job(**job).dict() for job in urgent_jobs]
     }
 
+    # Add duplicate endpoints at root level for production compatibility
+    
+@app.get("/dashboard/{company_id}")
+async def get_dashboard_data_root(company_id: str):
+    """Get main dashboard data - root level"""
+    return await get_dashboard_data(company_id)
+
+@app.get("/owner-insights")
+async def get_owner_insights_root(company_id: str = Query(...)):
+    """Get owner insights - root level"""
+    return await get_owner_insights(company_id)
+
+@app.get("/settings/{company_id}")
+async def get_company_settings_root(company_id: str):
+    """Get company settings - root level"""
+    return await get_company_settings(company_id)
+
 # ==================== HEALTH CHECK ENDPOINTS ====================
 
 @app.get("/api/health")
