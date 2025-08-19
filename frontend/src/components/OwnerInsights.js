@@ -14,6 +14,9 @@ import {
 import { Line, Bar } from 'react-chartjs-2';
 import 'chartjs-adapter-date-fns';
 
+// Import auth service
+import authService from '../utils/auth';
+
 // Register Chart.js components
 ChartJS.register(
   CategoryScale,
