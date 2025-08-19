@@ -82,7 +82,7 @@ const MainDashboard = ({ companyId }) => {
   const fetchDashboardData = async () => {
     try {
       setLoading(true);
-      const response = await fetch(`${BACKEND_URL}/api/dashboard/${companyId}`);
+      const response = await authService.authenticatedFetch(`${BACKEND_URL}/api/dashboard/${companyId}`);
       
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
