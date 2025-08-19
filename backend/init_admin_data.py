@@ -342,7 +342,7 @@ async def create_invoices(companies, customers, jobs):
             # Create invoice items
             items = [
                 {
-                    "description": f"Labor - {job['service_type']}",
+                    "description": f"Labor - {job.get('title', 'HVAC Service')}",
                     "quantity": job.get("labor_hours", 2.0),
                     "unit_price": 75.0,
                     "total": job.get("labor_hours", 2.0) * 75.0
