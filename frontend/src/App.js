@@ -9,8 +9,6 @@ import AdminDashboard from './components/AdminDashboard';
 import OwnerInsights from './components/OwnerInsights';
 import MessagingSystem from './components/MessagingSystem';
 
-// Import auth service
-import authService from './utils/auth';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 
