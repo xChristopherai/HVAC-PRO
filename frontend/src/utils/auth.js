@@ -40,7 +40,7 @@ class AuthService {
         await this.login();
       }
 
-      const url = endpoint.startsWith('http') ? endpoint : `${BACKEND_URL}/${endpoint.replace(/^\//, '')}`;
+      const url = endpoint.startsWith('http') ? endpoint : `${BACKEND_URL}/api/${endpoint.replace(/^\//, '')}`;
       
       const authOptions = {
         ...options,
