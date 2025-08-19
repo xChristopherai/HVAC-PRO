@@ -101,3 +101,86 @@
 #====================================================================================================
 # Testing Data - Main Agent and testing sub agent both should log testing data below this section
 #====================================================================================================
+
+user_problem_statement: "Test the backend API endpoints that the frontend Dashboard component is trying to access. The frontend is showing 'Unable to load dashboard' but backend returns data when curled directly."
+
+backend:
+  - task: "Dashboard API endpoint accessibility"
+    implemented: true
+    working: false
+    file: "backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+        - working: false
+        - agent: "testing"
+        - comment: "CRITICAL ISSUE IDENTIFIED: Frontend calls /dashboard/company-001 but gets React app HTML instead of API data. The correct API endpoint /api/dashboard/company-001 works perfectly and returns proper JSON data. Root cause: Frontend authService.authenticatedFetch() is not adding /api prefix to dashboard endpoint calls."
+
+  - task: "Dashboard API data format validation"
+    implemented: true
+    working: true
+    file: "backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+        - working: true
+        - agent: "testing"
+        - comment: "API endpoint /api/dashboard/company-001 returns correct JSON format with all required fields: stats (total_customers, pending_jobs, active_technicians, todays_appointments), todays_appointments array, recent_inquiries array, and urgent_jobs array. Data format matches exactly what Dashboard.jsx component expects."
+
+  - task: "Backend API authentication flow"
+    implemented: true
+    working: true
+    file: "backend/server.py"
+    stuck_count: 0
+    priority: "medium"
+    needs_retesting: false
+    status_history:
+        - working: true
+        - agent: "testing"
+        - comment: "Authentication works correctly. Mock user login returns valid token. Dashboard endpoint works both with and without authentication token. No authentication issues detected."
+
+  - task: "Backend API connectivity and health"
+    implemented: true
+    working: true
+    file: "backend/server.py"
+    stuck_count: 0
+    priority: "medium"
+    needs_retesting: false
+    status_history:
+        - working: true
+        - agent: "testing"
+        - comment: "Backend API is fully operational. Health check passes, root endpoint responds correctly. API is accessible from production URL https://hvac-assist-1.preview.emergentagent.com"
+
+frontend:
+  - task: "Dashboard component API integration"
+    implemented: true
+    working: false
+    file: "frontend/src/components/Dashboard.jsx"
+    stuck_count: 1
+    priority: "high"
+    needs_retesting: true
+    status_history:
+        - working: false
+        - agent: "testing"
+        - comment: "Dashboard component calls authService.authenticatedFetch('dashboard/company-001') which resolves to /dashboard/company-001 instead of /api/dashboard/company-001. This causes frontend to receive React app HTML instead of API JSON data, resulting in 'Unable to load dashboard' error."
+
+metadata:
+  created_by: "testing_agent"
+  version: "1.0"
+  test_sequence: 1
+  run_ui: false
+
+test_plan:
+  current_focus:
+    - "Dashboard API endpoint accessibility"
+    - "Dashboard component API integration"
+  stuck_tasks:
+    - "Dashboard component API integration"
+  test_all: false
+  test_priority: "high_first"
+
+agent_communication:
+    - agent: "testing"
+    - message: "CRITICAL ISSUE FOUND: Frontend Dashboard component is calling wrong URL path. The authService.authenticatedFetch() method is not adding /api prefix to dashboard endpoint calls. Backend API works perfectly at /api/dashboard/company-001 but frontend calls /dashboard/company-001 which returns React app HTML. This is the root cause of 'Unable to load dashboard' error. Main agent needs to fix the frontend authService to properly construct API URLs with /api prefix."
