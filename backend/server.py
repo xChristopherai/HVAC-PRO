@@ -12,10 +12,10 @@ import uuid
 from collections import defaultdict
 
 # Import models and services
-from .models import *
-from .phase2_models import *
-from .auth import *
-from .services import *
+from models import *
+from phase2_models import *
+from auth import *
+from services import *
 
 # Load environment variables
 ROOT_DIR = Path(__file__).parent
