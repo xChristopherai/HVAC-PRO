@@ -45,26 +45,6 @@ const StatusBadge = ({ status }) => {
   );
 };
 
-const SkillBadge = ({ skill, level }) => {
-  const levelColors = {
-    1: 'bg-red-100 text-red-800',
-    2: 'bg-yellow-100 text-yellow-800', 
-    3: 'bg-green-100 text-green-800',
-    4: 'bg-blue-100 text-blue-800',
-    5: 'bg-purple-100 text-purple-800'
-  };
-  
-  return (
-    <Badge 
-      variant="secondary" 
-      className={cn("text-xs", levelColors[level] || 'bg-gray-100 text-gray-800')}
-    >
-      {skill}
-      {level && <span className="ml-1">★{level}</span>}
-    </Badge>
-  );
-};
-
 const TechnicianCard = ({ technician }) => {
   return (
     <Card className="hover:shadow-md transition-shadow">
