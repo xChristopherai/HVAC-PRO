@@ -154,7 +154,7 @@ const TopBar = ({ sidebarOpen, setSidebarOpen }) => {
           <Bell className="w-4 h-4" />
         </Button>
         <Button variant="ghost" size="icon">
-          <Settings className="w-4 h-4" />
+          <SettingsIcon className="w-4 h-4" />
         </Button>
       </div>
     </header>
