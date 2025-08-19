@@ -553,8 +553,7 @@ async def twilio_webhook(request: Request):
 
 @app.get("/api/owner-insights")
 async def get_owner_insights(
-    company_id: str = Query(...),
-    current_user: dict = Depends(require_owner_or_admin)
+    company_id: str = Query(...)
 ):
     """Get owner dashboard insights with analytics"""
     
