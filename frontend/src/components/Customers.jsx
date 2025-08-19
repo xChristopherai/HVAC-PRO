@@ -36,10 +36,16 @@ const Customers = ({ currentUser }) => {
       
       if (response.ok) {
         const data = await response.json();
-        setCustomers(data);
+        // Ensure data is always an array
+        setCustomers(Array.isArray(data) ? data : []);
+      } else {
+        // Set empty array on error
+        setCustomers([]);
       }
     } catch (err) {
       console.error('Failed to fetch customers:', err);
+      // Set empty array on exception
+      setCustomers([]);
     } finally {
       setLoading(false);
     }
