@@ -13,7 +13,16 @@ export function formatCurrency(amount) {
   }).format(amount)
 }
 
-// Format time helper
+// Format date helper
+export function formatDate(date) {
+  return new Intl.DateTimeFormat('en-US', {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
+  }).format(new Date(date))
+}
+
+// Format time helper (for timestamps)
 export function formatTime(dateString) {
   if (!dateString) return 'N/A'
   
@@ -30,22 +39,8 @@ export function formatTime(dateString) {
   }
 }
 
-export function formatCurrency(amount) {
-  return new Intl.NumberFormat('en-US', {
-    style: 'currency',
-    currency: 'USD',
-  }).format(amount)
-}
-
-export function formatDate(date) {
-  return new Intl.DateTimeFormat('en-US', {
-    month: 'short',
-    day: 'numeric',
-    year: 'numeric',
-  }).format(new Date(date))
-}
-
-export function formatTime(date) {
+// Format time only (for just time display)
+export function formatTimeOnly(date) {
   return new Intl.DateTimeFormat('en-US', {
     hour: '2-digit',
     minute: '2-digit',
