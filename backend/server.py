@@ -1038,6 +1038,33 @@ async def root():
         "documentation": "/docs"
     }
 
+# Add root level endpoints for production compatibility
+@app.get("/")
+async def root_health():
+    """Root health check"""
+    return {"status": "healthy", "message": "HVAC Assistant API is running"}
+
+@app.get("/health")
+async def health_check_root():
+    """Health check at root level"""
+    try:
+        # Test database connection
+        await db.companies.count_documents({})
+        db_status = "healthy"
+    except Exception as e:
+        db_status = f"error: {str(e)}"
+    
+    return {
+        "status": "healthy" if db_status == "healthy" else "degraded",
+        "timestamp": datetime.utcnow().isoformat(),
+        "services": {
+            "database": db_status,
+            "sms": "mock",
+            "calendar": "mock",
+            "llm": "mock"
+        }
+    }
+
 # Error handlers
 @app.exception_handler(404)
 async def not_found_handler(request: Request, exc: HTTPException):
