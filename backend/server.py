@@ -826,8 +826,7 @@ async def get_company_settings(company_id: str):
 @app.put("/api/settings/{company_id}")
 async def update_company_settings(
     company_id: str,
-    settings: dict,
-    current_user: dict = Depends(require_owner_or_admin)
+    settings: dict
 ):
     """Update company settings"""
     
