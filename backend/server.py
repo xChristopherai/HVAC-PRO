@@ -790,7 +790,7 @@ async def test_notifications(
 # ==================== SETTINGS ENDPOINTS ====================
 
 @app.get("/api/settings/{company_id}")
-async def get_company_settings(company_id: str, current_user: dict = Depends(get_current_user)):
+async def get_company_settings(company_id: str):
     """Get comprehensive company settings"""
     
     # Get settings from company document
