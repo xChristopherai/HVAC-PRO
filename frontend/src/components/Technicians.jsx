@@ -314,46 +314,6 @@ const Technicians = ({ currentUser }) => {
 };
 
 export default Technicians;
-            "inline-flex px-2 py-1 rounded-full text-xs font-medium",
-            technician.is_active ? "text-green-600 bg-green-50" : "text-gray-600 bg-gray-50"
-          )}>
-            {technician.is_active ? 'Active' : 'Inactive'}
-          </span>
-        </div>
-        
-        <div className="space-y-2 mb-4">
-          <div className="flex items-center justify-between text-sm">
-            <span className="text-muted-foreground">Rating</span>
-            <div className="flex items-center space-x-1">
-              {renderStars(technician.average_rating)}
-              <span className="text-xs text-muted-foreground ml-1">
-                ({technician.total_ratings} reviews)
-              </span>
-            </div>
-          </div>
-          
-          <div className="flex items-center justify-between text-sm">
-            <span className="text-muted-foreground">Jobs Completed</span>
-            <span className="font-medium">{technician.total_jobs_completed}</span>
-          </div>
-        </div>
-        
-        <div className="space-y-2">
-          <div className="flex items-center text-xs text-muted-foreground">
-            <Phone className="w-3 h-3 mr-2" />
-            {technician.phone}
-          </div>
-          {technician.email && (
-            <div className="flex items-center text-xs text-muted-foreground">
-              <Mail className="w-3 h-3 mr-2" />
-              {technician.email}
-            </div>
-          )}
-        </div>
-      </CardContent>
-    </Card>
-  );
-};
 
 const Technicians = ({ currentUser }) => {
   const [technicians, setTechnicians] = useState([]);
