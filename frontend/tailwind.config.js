@@ -57,7 +57,25 @@ module.exports = {
         sm: "calc(var(--radius) - 4px)",
       },
       fontFamily: {
-        sans: ["Inter", "system-ui", "sans-serif"],
+        sans: [
+          'ui-sans-serif', 
+          'system-ui', 
+          '-apple-system', 
+          'BlinkMacSystemFont', 
+          '"Segoe UI"', 
+          'Roboto', 
+          '"Helvetica Neue"', 
+          'Arial', 
+          '"Noto Sans"', 
+          'sans-serif'
+        ],
+      },
+      fontWeight: {
+        normal: '400',
+        medium: '500',
+        semibold: '600',
+        bold: '700',
+        extrabold: '800',
       },
       keyframes: {
         "accordion-down": {
