@@ -43,84 +43,58 @@ const navigation = [
   { name: 'Settings', href: '/settings', icon: SettingsIcon },
 ];
 
-// Sidebar Component
+// Sidebar Component - PayPal style
 const Sidebar = ({ isOpen, setIsOpen }) => {
   const location = useLocation();
   
   return (
-    <>
-      {/* Mobile backdrop */}
-      {isOpen && (
-        <div 
-          className="fixed inset-0 bg-background/80 backdrop-blur-sm z-40 md:hidden"
-          onClick={() => setIsOpen(false)}
-        />
-      )}
-      
-      {/* Sidebar */}
-      <div className={cn(
-        "fixed top-0 left-0 z-50 h-full w-64 bg-card border-r border-border transform transition-transform duration-200 ease-in-out md:relative md:translate-x-0",
-        isOpen ? "translate-x-0" : "-translate-x-full"
-      )}>
-        <div className="flex flex-col h-full">
-          {/* Brand */}
-          <div className="flex items-center justify-between h-16 px-6 border-b border-border">
-            <div className="flex items-center space-x-3">
-              <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
-                <Wrench className="w-4 h-4 text-primary-foreground" />
-              </div>
-              <span className="font-semibold text-lg">HVAC Pro</span>
+    <div className={cn(
+      "sidebar fixed inset-y-0 left-0 z-50 transform transition-transform duration-200 ease-in-out lg:translate-x-0 lg:static lg:inset-0",
+      isOpen ? "translate-x-0" : "-translate-x-full"
+    )}>
+      <div className="flex flex-col h-full">
+        {/* Logo */}
+        <div className="flex items-center h-16 px-6 border-b border-[#E5E7EB]">
+          <div className="flex items-center space-x-2">
+            <div className="w-8 h-8 bg-[#0070E0] rounded-lg flex items-center justify-center">
+              <span className="text-white font-bold text-sm">H</span>
             </div>
-            <Button 
-              variant="ghost" 
-              size="icon"
-              className="md:hidden"
-              onClick={() => setIsOpen(false)}
-            >
-              <X className="w-4 h-4" />
-            </Button>
+            <span className="text-lg font-semibold text-[#0B0F19]">HVAC Pro</span>
           </div>
-          
-          {/* Navigation */}
-          <nav className="flex-1 px-3 py-4 space-y-1">
-            {navigation.map((item) => {
-              const isActive = location.pathname === item.href;
-              const Icon = item.icon;
-              
-              return (
-                <Link
-                  key={item.name}
-                  to={item.href}
-                  className={cn(
-                    "flex items-center px-3 py-2 text-sm font-medium rounded-lg transition-colors",
-                    isActive 
-                      ? "bg-primary text-primary-foreground" 
-                      : "text-muted-foreground hover:text-foreground hover:bg-accent"
-                  )}
-                  onClick={() => setIsOpen(false)}
-                >
-                  <Icon className="w-4 h-4 mr-3" />
-                  {item.name}
-                </Link>
-              );
-            })}
-          </nav>
-          
-          {/* User section */}
-          <div className="p-4 border-t border-border">
-            <div className="flex items-center space-x-3">
-              <div className="w-8 h-8 bg-muted rounded-full flex items-center justify-center">
-                <span className="text-xs font-medium">JS</span>
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium truncate">John Smith</p>
-                <p className="text-xs text-muted-foreground truncate">Owner</p>
-              </div>
-            </div>
+        </div>
+
+        {/* Navigation */}
+        <nav className="flex-1 py-4">
+          {navigation.map((item) => {
+            const Icon = item.icon;
+            const isActive = location.pathname === item.href || 
+                           (item.href === '/dashboard' && location.pathname === '/');
+            
+            return (
+              <Link
+                key={item.name}
+                to={item.href}
+                className={cn(
+                  "sidebar-item",
+                  isActive && "active"
+                )}
+                onClick={() => setIsOpen(false)}
+              >
+                <Icon className="w-[18px] h-[18px] mr-3" />
+                <span className="text-base font-medium">{item.name}</span>
+              </Link>
+            );
+          })}
+        </nav>
+
+        {/* User info */}
+        <div className="p-6 border-t border-[#E5E7EB]">
+          <div className="text-sm text-[#475569]">
+            Signed in as <span className="font-medium text-[#0B0F19]">John Smith</span>
           </div>
         </div>
       </div>
-    </>
+    </div>
   );
 };
 
