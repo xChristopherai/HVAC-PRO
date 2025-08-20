@@ -52,6 +52,29 @@ const Customers = ({ currentUser, aiVoiceEnabled }) => {
     }
   };
 
+  const handleAddCustomer = async (customerData) => {
+    try {
+      const response = await authService.authenticatedFetch('/api/customers', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          company_id: currentUser?.company_id || 'company-001',
+          ...customerData
+        })
+      });
+      
+      if (response.ok) {
+        const newCustomer = await response.json();
+        setCustomers(prev => [newCustomer, ...prev]);
+        setShowAddCustomer(false);
+      } else {
+        console.error('Failed to add customer');
+      }
+    } catch (err) {
+      console.error('Error adding customer:', err);
+    }
+  };
+
   const filteredCustomers = (customers || []).filter(customer => 
     customer.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
     customer.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
