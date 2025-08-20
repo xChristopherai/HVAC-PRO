@@ -333,21 +333,22 @@ const Settings = ({ currentUser }) => {
   }
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
+    <div className="space-y-8">
+      {/* Header - PayPal style */}
       <div>
-        <h1 className="text-3xl font-bold">Settings</h1>
-        <p className="text-muted-foreground">Configure your HVAC Pro system</p>
+        <h1 className="section-header">Settings</h1>
+        <p className="text-[#475569]">Configure your HVAC Pro system preferences</p>
       </div>
 
-      {/* Settings Layout */}
-      <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+      {/* Settings Layout - PayPal style */}
+      <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
         {/* Settings Navigation */}
-        <Card>
-          <CardContent className="p-4">
-            <nav className="space-y-1">
-              {settingsNavigation.map((item) => {
-                const Icon = item.icon;
+        <div>
+          <Card>
+            <CardContent className="p-6">
+              <nav className="space-y-2">
+                {settingsNavigation.map((item) => {
+                  const Icon = item.icon;
                 return (
                   <button
                     key={item.id}
