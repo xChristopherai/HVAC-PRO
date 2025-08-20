@@ -123,12 +123,12 @@ const useAuth = () => {
   return { user, loading };
 };
 
-// Main Layout Component - PayPal style
+// Main Layout Component - FIXED LAYOUT
 const Layout = ({ children }) => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   
   return (
-    <div className="flex h-screen bg-[#F7F9FC]">
+    <div className="main-layout">
       <Sidebar isOpen={sidebarOpen} setIsOpen={setSidebarOpen} />
       
       {/* Mobile backdrop */}
@@ -139,7 +139,7 @@ const Layout = ({ children }) => {
         />
       )}
       
-      <div className="flex-1 flex flex-col min-w-0">
+      <div className="main-content">
         {/* Top Bar - Mobile only */}
         <header className="h-16 bg-white border-b border-[#E5E7EB] flex items-center justify-between px-6 lg:hidden">
           <div className="flex items-center space-x-4">
@@ -154,11 +154,9 @@ const Layout = ({ children }) => {
           </div>
         </header>
         
-        {/* Main content area - PayPal style */}
-        <main className="flex-1 overflow-auto">
-          <div className="content-wrapper">
-            {children}
-          </div>
+        {/* Main content area */}
+        <main className="content-wrapper">
+          {children}
         </main>
       </div>
     </div>
