@@ -871,8 +871,8 @@ const ServiceAreasSection = ({ settings, onSave }) => {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-2xl font-bold">Service Areas</h2>
-        <p className="text-muted-foreground">Define the areas where you provide HVAC services</p>
+        <h2 className="text-2xl font-bold text-[#0B0F19]">Service Areas</h2>
+        <p className="text-[#64748B]">Define the areas where you provide HVAC services</p>
       </div>
 
       <Card>
