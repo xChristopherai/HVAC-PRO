@@ -198,6 +198,13 @@ const Customers = ({ currentUser, aiVoiceEnabled }) => {
 
   return (
     <div className="space-y-6">
+      {/* Add Customer Dialog */}
+      <AddCustomerDialog 
+        open={showAddCustomer} 
+        onOpenChange={setShowAddCustomer}
+        onAddCustomer={handleAddCustomer}
+      />
+      
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
