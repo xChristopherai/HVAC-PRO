@@ -646,6 +646,10 @@ def get_notification_service(db):
     """Get notification service instance"""
     return NotificationService(twilio_service, email_service, db)
 
+def get_sms_service():
+    """Get SMS service instance"""
+    return twilio_service
+
 def get_calendar_service():
     """Get calendar service instance"""
     return calendar_service
