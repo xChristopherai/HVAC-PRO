@@ -333,8 +333,8 @@ const NotificationsSection = ({ settings, onSave }) => {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-2xl font-bold">Notifications</h2>
-        <p className="text-muted-foreground">Configure notification preferences and contact information</p>
+        <h2 className="text-2xl font-bold text-[#0B0F19]">Notifications</h2>
+        <p className="text-[#64748B]">Configure notification preferences and contact information</p>
       </div>
 
       <Card>
