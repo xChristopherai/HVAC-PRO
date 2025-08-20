@@ -262,7 +262,7 @@ const Appointments = ({ currentUser, aiVoiceEnabled }) => {
                     : "You haven't scheduled any appointments yet."
                   }
                 </p>
-                {filter === 'all' && (
+                {filter === 'all' && !aiVoiceEnabled && (
                   <Button>
                     <Plus className="w-4 h-4 mr-2" />
                     Schedule Your First Appointment
