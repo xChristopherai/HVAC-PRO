@@ -284,13 +284,13 @@ const Dashboard = ({ currentUser }) => {
         </Card>
 
         {/* Recent Inquiries */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center space-x-2">
-              <Phone className="w-5 h-5" />
+        <Card className="bg-white border border-[#E5E7EB] rounded-xl shadow-sm">
+          <CardHeader className="pb-4">
+            <CardTitle className="flex items-center space-x-2 text-[#0B0F19]">
+              <Phone className="w-5 h-5 text-[#0070E0]" />
               <span>Recent Inquiries</span>
             </CardTitle>
-            <CardDescription>
+            <CardDescription className="text-[#475569]">
               Latest customer inquiries via SMS
             </CardDescription>
           </CardHeader>
@@ -314,10 +314,10 @@ const Dashboard = ({ currentUser }) => {
         </Card>
       </div>
 
-      {/* Quick Actions */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Quick Actions</CardTitle>
+      {/* Quick Actions - PayPal style */}
+      <Card className="bg-white border border-[#E5E7EB] rounded-xl shadow-sm">
+        <CardHeader className="pb-4">
+          <CardTitle className="text-[#0B0F19]">Quick Actions</CardTitle>
           <CardDescription>
             Common tasks and shortcuts
           </CardDescription>
