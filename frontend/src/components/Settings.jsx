@@ -713,30 +713,10 @@ const Settings = ({ currentUser }) => {
         );
       case 'integrations':
         return (
-          <div className="space-y-6">
-            <div>
-              <h2 className="text-2xl font-bold">Integrations</h2>
-              <p className="text-muted-foreground">Manage connections to external services</p>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <IntegrationCard
-                title="Twilio SMS"
-                description="Send and receive SMS messages"
-                status={settings?.integrations?.twilio_sms?.status}
-              />
-              <IntegrationCard
-                title="Google Calendar"
-                description="Sync appointments with Google Calendar"
-                status={settings?.integrations?.google_calendar?.status}
-              />
-              <IntegrationCard
-                title="Stripe Payments"
-                description="Process payments and manage billing"
-                status={settings?.integrations?.stripe_payments?.status}
-              />
-            </div>
-          </div>
+          <IntegrationsSection 
+            settings={settings}
+            onSave={handleSave}
+          />
         );
       default:
         return (
