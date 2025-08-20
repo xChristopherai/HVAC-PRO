@@ -436,6 +436,144 @@ const NotificationsSection = ({ settings, onSave }) => {
   );
 };
 
+// Billing Settings Section
+const BillingSection = ({ settings, onSave }) => {
+  const [billingSettings, setBillingSettings] = useState({
+    current_plan: settings?.billing?.plan || 'trial',
+    plan_status: settings?.billing?.status || 'active',
+    ...settings?.billing
+  });
+  const [loading, setLoading] = useState(false);
+
+  const handleUpgrade = async () => {
+    setLoading(true);
+    try {
+      const response = await authService.authenticatedFetch('/api/billing/checkout', {
+        method: 'POST',
+        body: JSON.stringify({ plan: 'pro' })
+      });
+      
+      if (response.ok) {
+        const result = await response.json();
+        // Open checkout URL
+        window.open(result.checkoutUrl, '_blank');
+        console.log('Billing checkout created:', result);
+      }
+    } catch (err) {
+      console.error('Failed to create checkout:', err);
+      alert('Failed to create billing session');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const getPlanDetails = (plan) => {
+    switch (plan) {
+      case 'pro':
+        return { name: 'Professional', price: '$99/month', features: ['Unlimited appointments', 'SMS/Voice AI', 'Google Calendar', 'Priority support'] };
+      case 'enterprise':
+        return { name: 'Enterprise', price: '$199/month', features: ['Everything in Pro', 'Multi-location', 'Advanced analytics', 'Custom integrations'] };
+      default:
+        return { name: 'Trial', price: 'Free', features: ['Up to 10 appointments', 'Basic features', '7-day trial'] };
+    }
+  };
+
+  const currentPlanDetails = getPlanDetails(billingSettings.current_plan);
+
+  return (
+    <div className="space-y-6">
+      <div>
+        <h2 className="text-2xl font-bold">Billing</h2>
+        <p className="text-muted-foreground">Manage your subscription and billing information</p>
+      </div>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Current Plan</CardTitle>
+          <CardDescription>Your current subscription details</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <h3 className="text-lg font-semibold">{currentPlanDetails.name}</h3>
+              <p className="text-muted-foreground">{currentPlanDetails.price}</p>
+            </div>
+            <Badge variant={billingSettings.current_plan === 'trial' ? 'secondary' : 'default'}>
+              {billingSettings.plan_status || 'active'}
+            </Badge>
+          </div>
+
+          <div className="space-y-2">
+            <h4 className="font-medium">Features included:</h4>
+            <ul className="space-y-1">
+              {currentPlanDetails.features.map((feature, index) => (
+                <li key={index} className="flex items-center text-sm text-muted-foreground">
+                  <Check className="w-4 h-4 mr-2 text-green-600" />
+                  {feature}
+                </li>
+              ))}
+            </ul>
+          </div>
+        </CardContent>
+      </Card>
+
+      {billingSettings.current_plan === 'trial' && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Upgrade Your Plan</CardTitle>
+            <CardDescription>Get access to more features and unlimited usage</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="border rounded-lg p-4">
+                <h3 className="font-semibold">Professional</h3>
+                <p className="text-2xl font-bold">$99<span className="text-sm font-normal">/month</span></p>
+                <ul className="mt-2 space-y-1 text-sm">
+                  <li>• Unlimited appointments</li>
+                  <li>• SMS & Voice AI</li>
+                  <li>• Google Calendar sync</li>
+                  <li>• Priority support</li>
+                </ul>
+              </div>
+              
+              <div className="border rounded-lg p-4">
+                <h3 className="font-semibold">Enterprise</h3>
+                <p className="text-2xl font-bold">$199<span className="text-sm font-normal">/month</span></p>
+                <ul className="mt-2 space-y-1 text-sm">
+                  <li>• Everything in Professional</li>
+                  <li>• Multi-location support</li>
+                  <li>• Advanced analytics</li>
+                  <li>• Custom integrations</li>
+                </ul>
+              </div>
+            </div>
+
+            <Button onClick={handleUpgrade} disabled={loading} className="w-full">
+              <ExternalLink className="w-4 h-4 mr-2" />
+              {loading ? 'Processing...' : 'Upgrade / Manage Billing'}
+            </Button>
+          </CardContent>
+        </Card>
+      )}
+
+      {billingSettings.current_plan !== 'trial' && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Manage Subscription</CardTitle>
+            <CardDescription>Update payment method or change plan</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Button onClick={handleUpgrade} disabled={loading} variant="outline">
+              <ExternalLink className="w-4 h-4 mr-2" />
+              {loading ? 'Loading...' : 'Manage Billing'}
+            </Button>
+          </CardContent>
+        </Card>
+      )}
+    </div>
+  );
+};
+
 // Integration Status Card
 const IntegrationCard = ({ title, description, status, onTest }) => {
   const getStatusColor = (status) => {
