@@ -22,6 +22,99 @@ import { Label } from './ui/label';
 import { cn, formatTime } from '../lib/utils';
 import authService from '../utils/auth';
 
+const ScheduleAppointmentDialog = ({ open, onOpenChange, onScheduleAppointment }) => {
+  const [formData, setFormData] = useState({
+    title: '',
+    description: '',
+    scheduled_date: '',
+    customer_name: '',
+    service_type: ''
+  });
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    onScheduleAppointment(formData);
+    setFormData({ title: '', description: '', scheduled_date: '', customer_name: '', service_type: '' });
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="sm:max-w-[500px]">
+        <DialogHeader>
+          <DialogTitle>Schedule New Appointment</DialogTitle>
+          <DialogDescription>
+            Schedule a service appointment for a customer.
+          </DialogDescription>
+        </DialogHeader>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="grid grid-cols-1 gap-4">
+            <div>
+              <Label htmlFor="customer_name">Customer Name *</Label>
+              <Input
+                id="customer_name"
+                value={formData.customer_name}
+                onChange={(e) => setFormData(prev => ({ ...prev, customer_name: e.target.value }))}
+                placeholder="Customer name"
+                required
+              />
+            </div>
+            
+            <div>
+              <Label htmlFor="title">Service Title *</Label>
+              <Input
+                id="title"
+                value={formData.title}
+                onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
+                placeholder="HVAC Service - No Heat"
+                required
+              />
+            </div>
+            
+            <div>
+              <Label htmlFor="description">Description</Label>
+              <Input
+                id="description"
+                value={formData.description}
+                onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
+                placeholder="Service description"
+              />
+            </div>
+            
+            <div>
+              <Label htmlFor="service_type">Service Type *</Label>
+              <Input
+                id="service_type"
+                value={formData.service_type}
+                onChange={(e) => setFormData(prev => ({ ...prev, service_type: e.target.value }))}
+                placeholder="no_heat, no_cool, maintenance, plumbing"
+                required
+              />
+            </div>
+            
+            <div>
+              <Label htmlFor="scheduled_date">Date & Time *</Label>
+              <Input
+                id="scheduled_date"
+                type="datetime-local"
+                value={formData.scheduled_date}
+                onChange={(e) => setFormData(prev => ({ ...prev, scheduled_date: e.target.value }))}
+                required
+              />
+            </div>
+          </div>
+          
+          <div className="flex justify-end space-x-2 pt-4">
+            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+              Cancel
+            </Button>
+            <Button type="submit">Schedule Appointment</Button>
+          </div>
+        </form>
+      </DialogContent>
+    </Dialog>
+  );
+};
+
 const StatusBadge = ({ status }) => {
   const configs = {
     scheduled: { label: 'Scheduled', variant: 'default', icon: CalendarIcon },
