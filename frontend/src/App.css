@@ -43,10 +43,23 @@ body {
   min-height: 100vh !important;
 }
 
-/* FIXED LAYOUT - No more overlap */
-.main-layout {
-  display: flex !important;
-  height: 100vh !important;
+/* FORCE VERY LIGHT BLUE BACKGROUND EVERYWHERE */
+html, body, #root, .main-layout, .main-content, .content-wrapper {
+  background: #F0F8FF !important;
+}
+
+/* Override any Tailwind background classes */
+.bg-background, .bg-gray-50, .bg-muted, .bg-yellow-50, .bg-slate-50, .bg-blue-50 {
+  background: #F0F8FF !important;
+}
+
+/* Force content area background */
+main, div[class*="space-y"], section {
+  background: #F0F8FF !important;
+}
+
+/* Container backgrounds */
+.container, .max-w-7xl, .max-w-6xl, .max-w-5xl {
   background: #F0F8FF !important;
 }
 
