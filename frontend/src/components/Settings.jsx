@@ -382,8 +382,8 @@ const NotificationsSection = ({ settings, onSave }) => {
                 onCheckedChange={(checked) => setNotificationSettings(prev => ({...prev, job_reminder_sms: checked}))}
               />
               <div>
-                <Label htmlFor="job_reminder_sms">Job Reminder SMS</Label>
-                <p className="text-xs text-muted-foreground">Send SMS reminders to technicians before appointments</p>
+                <Label htmlFor="job_reminder_sms" className="text-[#0B0F19] font-medium">Job Reminder SMS</Label>
+                <p className="text-xs text-[#64748B]">Send SMS reminders to technicians before appointments</p>
               </div>
             </div>
 
