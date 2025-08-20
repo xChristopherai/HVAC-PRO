@@ -138,16 +138,22 @@ const Technicians = ({ currentUser }) => {
       
       if (response.ok) {
         const data = await response.json();
-        setTechnicians(data);
+        // Ensure data is always an array
+        setTechnicians(Array.isArray(data) ? data : []);
+      } else {
+        // Set empty array on error
+        setTechnicians([]);
       }
     } catch (err) {
       console.error('Failed to fetch technicians:', err);
+      // Set empty array on exception
+      setTechnicians([]);
     } finally {
       setLoading(false);
     }
   };
 
-  const filteredTechnicians = technicians.filter(tech => {
+  const filteredTechnicians = (technicians || []).filter(tech => {
     const matchesSearch = tech.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          tech.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          tech.phone?.includes(searchTerm);
