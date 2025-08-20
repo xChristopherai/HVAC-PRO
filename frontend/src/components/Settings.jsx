@@ -228,8 +228,8 @@ const CalendarSection = ({ settings, onSave }) => {
         <CardContent className="space-y-4">
           <div className="flex items-center justify-between">
             <div>
-              <Label className="text-sm font-medium">Google Calendar Connection</Label>
-              <p className="text-xs text-muted-foreground">
+              <Label className="text-sm font-medium text-[#0B0F19]">Google Calendar Connection</Label>
+              <p className="text-xs text-[#64748B]">
                 {calendarSettings.google_connected ? 'Connected to Google Calendar' : 'Not connected'}
               </p>
             </div>
