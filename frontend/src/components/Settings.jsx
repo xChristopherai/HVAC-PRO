@@ -977,4 +977,185 @@ const ServiceAreasSection = ({ settings, onSave }) => {
   );
 };
 
+// Integrations Settings Section
+const IntegrationsSection = ({ settings, onSave }) => {
+  const [integrationSettings, setIntegrationSettings] = useState({
+    twilio: settings?.integrations?.twilio || {},
+    google_calendar: settings?.integrations?.google_calendar || {},
+    stripe: settings?.integrations?.stripe || {},
+    quickbooks: settings?.integrations?.quickbooks || {}
+  });
+  const [connecting, setConnecting] = useState({});
+
+  const handleConnect = async (provider, data) => {
+    setConnecting(prev => ({ ...prev, [provider]: true }));
+    try {
+      const response = await authService.authenticatedFetch(`/api/settings/integrations/${provider}`, {
+        method: 'POST',
+        body: JSON.stringify(data)
+      });
+      
+      if (response.ok) {
+        const result = await response.json();
+        setIntegrationSettings(prev => ({
+          ...prev,
+          [provider]: { ...data, status: result.status }
+        }));
+        console.log(`${provider} integration saved:`, result);
+      }
+    } catch (err) {
+      console.error(`Failed to save ${provider} integration:`, err);
+      alert(`Failed to connect ${provider}`);
+    } finally {
+      setConnecting(prev => ({ ...prev, [provider]: false }));
+    }
+  };
+
+  const IntegrationConnectCard = ({ provider, title, description, icon: Icon, fields }) => {
+    const [isExpanded, setIsExpanded] = useState(false);
+    const [formData, setFormData] = useState({});
+    const isConnected = integrationSettings[provider]?.status === 'connected';
+    
+    const handleSubmit = (e) => {
+      e.preventDefault();
+      handleConnect(provider, formData);
+      setIsExpanded(false);
+    };
+
+    return (
+      <Card>
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-3">
+              <Icon className="w-8 h-8" />
+              <div>
+                <CardTitle>{title}</CardTitle>
+                <CardDescription>{description}</CardDescription>
+              </div>
+            </div>
+            <Badge variant={isConnected ? 'default' : 'secondary'}>
+              {isConnected ? 'Connected' : 'Not Connected'}
+            </Badge>
+          </div>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {!isExpanded ? (
+            <Button 
+              onClick={() => setIsExpanded(true)} 
+              disabled={connecting[provider]}
+              variant={isConnected ? "outline" : "default"}
+            >
+              {connecting[provider] ? 'Connecting...' : isConnected ? 'Reconfigure' : 'Connect'}
+            </Button>
+          ) : (
+            <form onSubmit={handleSubmit} className="space-y-4">
+              {fields.map((field) => (
+                <div key={field.name} className="space-y-2">
+                  <Label htmlFor={field.name}>{field.label}</Label>
+                  <Input
+                    id={field.name}
+                    type={field.type || 'text'}
+                    value={formData[field.name] || ''}
+                    onChange={(e) => setFormData(prev => ({...prev, [field.name]: e.target.value}))}
+                    placeholder={field.placeholder}
+                    required={field.required}
+                  />
+                  {field.description && (
+                    <p className="text-xs text-muted-foreground">{field.description}</p>
+                  )}
+                </div>
+              ))}
+              <div className="flex space-x-2">
+                <Button type="submit" disabled={connecting[provider]}>
+                  {connecting[provider] ? 'Saving...' : 'Save'}
+                </Button>
+                <Button type="button" variant="outline" onClick={() => setIsExpanded(false)}>
+                  Cancel
+                </Button>
+              </div>
+            </form>
+          )}
+        </CardContent>
+      </Card>
+    );
+  };
+
+  return (
+    <div className="space-y-6">
+      <div>
+        <h2 className="text-2xl font-bold">Integrations</h2>
+        <p className="text-muted-foreground">Connect external services to expand your HVAC Pro capabilities</p>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <IntegrationConnectCard
+          provider="twilio"
+          title="Twilio SMS & Voice"
+          description="Send SMS messages and handle voice calls"
+          icon={MessageSquare}
+          fields={[
+            { name: 'account_sid', label: 'Account SID', required: true, placeholder: 'ACxxx...' },
+            { name: 'auth_token', label: 'Auth Token', type: 'password', required: true, placeholder: 'Your Twilio auth token' },
+            { name: 'phone_number', label: 'Phone Number', required: true, placeholder: '+1234567890', description: 'Your Twilio phone number' }
+          ]}
+        />
+
+        <IntegrationConnectCard
+          provider="google_calendar"
+          title="Google Calendar"
+          description="Sync appointments with Google Calendar"
+          icon={Calendar}
+          fields={[
+            { name: 'client_id', label: 'Client ID', required: true, placeholder: 'Google OAuth Client ID' },
+            { name: 'client_secret', label: 'Client Secret', type: 'password', required: true, placeholder: 'Google OAuth Client Secret' },
+            { name: 'calendar_id', label: 'Calendar ID', required: false, placeholder: 'primary', description: 'Leave as "primary" for main calendar' }
+          ]}
+        />
+
+        <IntegrationConnectCard
+          provider="stripe"
+          title="Stripe Payments"
+          description="Accept online payments and manage billing"
+          icon={CreditCard}
+          fields={[
+            { name: 'publishable_key', label: 'Publishable Key', required: true, placeholder: 'pk_test_...' },
+            { name: 'secret_key', label: 'Secret Key', type: 'password', required: true, placeholder: 'sk_test_...', description: 'Keep this secure - never share publicly' }
+          ]}
+        />
+
+        <IntegrationConnectCard
+          provider="quickbooks"
+          title="QuickBooks"
+          description="Sync invoices and financial data"
+          icon={Building}
+          fields={[
+            { name: 'client_id', label: 'App Client ID', required: true, placeholder: 'QuickBooks App Client ID' },
+            { name: 'client_secret', label: 'Client Secret', type: 'password', required: true, placeholder: 'QuickBooks Client Secret' },
+            { name: 'company_id', label: 'Company ID', required: false, placeholder: 'QuickBooks Company ID' }
+          ]}
+        />
+      </div>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Integration Status</CardTitle>
+          <CardDescription>Overview of all connected services</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            {Object.entries(integrationSettings).map(([provider, config]) => (
+              <div key={provider} className="text-center p-3 border rounded-lg">
+                <p className="font-medium capitalize">{provider.replace('_', ' ')}</p>
+                <Badge variant={config.status === 'connected' ? 'default' : 'secondary'} className="mt-1">
+                  {config.status || 'Not Connected'}
+                </Badge>
+              </div>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  );
+};
+
 export default Settings;
