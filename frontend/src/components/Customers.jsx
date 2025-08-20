@@ -173,7 +173,7 @@ const Customers = ({ currentUser, aiVoiceEnabled }) => {
       <div className="space-y-6">
         <div className="flex items-center justify-between">
           <h1 className="text-3xl font-bold">Customers</h1>
-          <Button>
+          <Button onClick={() => setShowAddCustomer(true)}>
             <Plus className="w-4 h-4 mr-2" />
             Add Customer
           </Button>
