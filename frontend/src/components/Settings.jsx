@@ -559,6 +559,13 @@ const Settings = ({ currentUser }) => {
             onSave={handleSave}
           />
         );
+      case 'billing':
+        return (
+          <BillingSection 
+            settings={settings}
+            onSave={handleSave}
+          />
+        );
       case 'integrations':
         return (
           <div className="space-y-6">
