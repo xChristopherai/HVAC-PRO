@@ -299,6 +299,143 @@ const CalendarSection = ({ settings, onSave }) => {
   );
 };
 
+// Notifications Settings Section
+const NotificationsSection = ({ settings, onSave }) => {
+  const [notificationSettings, setNotificationSettings] = useState({
+    job_reminder_sms: settings?.notifications?.job_reminder_sms || false,
+    missed_call_alert: settings?.notifications?.missed_call_alert || false,
+    daily_summary: settings?.notifications?.daily_summary || false,
+    emergency_escalations: settings?.notifications?.emergency_escalations || false,
+    owner_email: settings?.notifications?.owner_email || '',
+    owner_phone: settings?.notifications?.owner_phone || '',
+    ...settings?.notifications
+  });
+  const [saving, setSaving] = useState(false);
+
+  const handleSave = async () => {
+    setSaving(true);
+    try {
+      const response = await authService.authenticatedFetch('/api/settings/notifications', {
+        method: 'POST',
+        body: JSON.stringify(notificationSettings)
+      });
+      
+      if (response.ok) {
+        console.log('Notifications settings saved successfully!');
+      }
+    } catch (err) {
+      console.error('Failed to save notifications settings:', err);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <div className="space-y-6">
+      <div>
+        <h2 className="text-2xl font-bold">Notifications</h2>
+        <p className="text-muted-foreground">Configure notification preferences and contact information</p>
+      </div>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Owner Contact Information</CardTitle>
+          <CardDescription>Where to send important notifications</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="owner_email">Owner Email</Label>
+              <Input
+                id="owner_email"
+                type="email"
+                value={notificationSettings.owner_email}
+                onChange={(e) => setNotificationSettings(prev => ({...prev, owner_email: e.target.value}))}
+                placeholder="owner@hvactech.com"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="owner_phone">Owner Phone</Label>
+              <Input
+                id="owner_phone"
+                type="tel"
+                value={notificationSettings.owner_phone}
+                onChange={(e) => setNotificationSettings(prev => ({...prev, owner_phone: e.target.value}))}
+                placeholder="+1-555-123-4567"
+              />
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Notification Preferences</CardTitle>
+          <CardDescription>Choose which notifications you want to receive</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="space-y-4">
+            <div className="flex items-center space-x-2">
+              <Switch
+                id="job_reminder_sms"
+                checked={notificationSettings.job_reminder_sms}
+                onCheckedChange={(checked) => setNotificationSettings(prev => ({...prev, job_reminder_sms: checked}))}
+              />
+              <div>
+                <Label htmlFor="job_reminder_sms">Job Reminder SMS</Label>
+                <p className="text-xs text-muted-foreground">Send SMS reminders to technicians before appointments</p>
+              </div>
+            </div>
+
+            <div className="flex items-center space-x-2">
+              <Switch
+                id="missed_call_alert"
+                checked={notificationSettings.missed_call_alert}
+                onCheckedChange={(checked) => setNotificationSettings(prev => ({...prev, missed_call_alert: checked}))}
+              />
+              <div>
+                <Label htmlFor="missed_call_alert">Missed-call Alert to Owner</Label>
+                <p className="text-xs text-muted-foreground">Get notified when customers call but aren't answered</p>
+              </div>
+            </div>
+
+            <div className="flex items-center space-x-2">
+              <Switch
+                id="daily_summary"
+                checked={notificationSettings.daily_summary}
+                onCheckedChange={(checked) => setNotificationSettings(prev => ({...prev, daily_summary: checked}))}
+              />
+              <div>
+                <Label htmlFor="daily_summary">Daily Summary</Label>
+                <p className="text-xs text-muted-foreground">Receive daily summary of completed jobs and revenue</p>
+              </div>
+            </div>
+
+            <div className="flex items-center space-x-2">
+              <Switch
+                id="emergency_escalations"
+                checked={notificationSettings.emergency_escalations}
+                onCheckedChange={(checked) => setNotificationSettings(prev => ({...prev, emergency_escalations: checked}))}
+              />
+              <div>
+                <Label htmlFor="emergency_escalations">Emergency Escalations</Label>
+                <p className="text-xs text-muted-foreground">Immediate alerts for emergency service requests</p>
+              </div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      <div className="flex justify-end">
+        <Button onClick={handleSave} disabled={saving}>
+          <Save className="w-4 h-4 mr-2" />
+          {saving ? 'Saving...' : 'Save Changes'}
+        </Button>
+      </div>
+    </div>
+  );
+};
+
 // Integration Status Card
 const IntegrationCard = ({ title, description, status, onTest }) => {
   const getStatusColor = (status) => {
