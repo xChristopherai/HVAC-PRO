@@ -20,10 +20,11 @@ import { Badge } from './ui/badge';
 import { cn } from '../lib/utils';
 import authService from '../utils/auth';
 
-const Customers = ({ currentUser }) => {
+const Customers = ({ currentUser, aiVoiceEnabled }) => {
   const [customers, setCustomers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
+  const [showAddCustomer, setShowAddCustomer] = useState(false);
 
   useEffect(() => {
     fetchCustomers();
