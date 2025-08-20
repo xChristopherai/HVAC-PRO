@@ -931,7 +931,7 @@ const ServiceAreasSection = ({ settings, onSave }) => {
           )}
 
           {serviceAreaSettings.areas.length === 0 && (
-            <div className="text-center py-6 text-muted-foreground">
+            <div className="text-center py-6 text-[#64748B]">
               <Map className="w-8 h-8 mx-auto mb-2" />
               <p>No service areas defined yet</p>
               <p className="text-xs">Add ZIP codes or city names to get started</p>
