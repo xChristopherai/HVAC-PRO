@@ -32,6 +32,22 @@ class AppointmentStatus(str, Enum):
     CANCELLED = "cancelled"
     NO_SHOW = "no_show"
 
+class AppointmentSource(str, Enum):
+    AI_VOICE = "ai-voice"
+    AI_SMS = "ai-sms"
+    MANUAL = "manual"
+
+class IssueType(str, Enum):
+    NO_HEAT = "no_heat"
+    NO_COOL = "no_cool"
+    MAINTENANCE = "maintenance"
+    PLUMBING = "plumbing"
+
+class TimeWindow(str, Enum):
+    MORNING = "8-11"
+    AFTERNOON = "12-3"
+    EVENING = "3-6"
+
 class JobStatus(str, Enum):
     PENDING = "pending"
     ASSIGNED = "assigned"
