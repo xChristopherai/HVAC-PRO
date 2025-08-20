@@ -43,24 +43,64 @@ body {
   min-height: 100vh !important;
 }
 
-/* FORCE VERY LIGHT BLUE BACKGROUND EVERYWHERE */
-html, body, #root, .main-layout, .main-content, .content-wrapper {
+/* FORCE VERY LIGHT BLUE BACKGROUND EVERYWHERE - HIGHEST PRIORITY */
+html {
   background: #F0F8FF !important;
 }
 
-/* Override any Tailwind background classes */
-.bg-background, .bg-gray-50, .bg-muted, .bg-yellow-50, .bg-slate-50, .bg-blue-50 {
+body {
   background: #F0F8FF !important;
+  background-color: #F0F8FF !important;
 }
 
-/* Force content area background */
-main, div[class*="space-y"], section {
+#root {
   background: #F0F8FF !important;
+  background-color: #F0F8FF !important;
 }
 
-/* Container backgrounds */
-.container, .max-w-7xl, .max-w-6xl, .max-w-5xl {
+.main-layout {
+  display: flex !important;
+  height: 100vh !important;
   background: #F0F8FF !important;
+  background-color: #F0F8FF !important;
+}
+
+.main-content {
+  flex: 1 !important;
+  min-width: 0 !important;
+  height: 100vh !important;
+  overflow: auto !important;
+  background: #F0F8FF !important;
+  background-color: #F0F8FF !important;
+}
+
+.content-wrapper {
+  max-width: none !important;
+  margin: 0 !important;
+  padding: 2rem !important;
+  width: 100% !important;
+  background: #F0F8FF !important;
+  background-color: #F0F8FF !important;
+}
+
+/* Override ALL possible background classes */
+.bg-background, .bg-gray-50, .bg-muted, .bg-yellow-50, .bg-slate-50, .bg-blue-50,
+.bg-zinc-50, .bg-neutral-50, .bg-stone-50, .bg-red-50, .bg-orange-50, .bg-amber-50,
+.bg-lime-50, .bg-green-50, .bg-emerald-50, .bg-teal-50, .bg-cyan-50, .bg-sky-50,
+.bg-indigo-50, .bg-violet-50, .bg-purple-50, .bg-fuchsia-50, .bg-pink-50, .bg-rose-50 {
+  background: #F0F8FF !important;
+  background-color: #F0F8FF !important;
+}
+
+/* Force ALL div backgrounds to light blue */
+div {
+  background-color: #F0F8FF !important;
+}
+
+/* Except cards and white elements */
+.card, [class*="card"], .bg-white, button, input, textarea, select {
+  background: #FFFFFF !important;
+  background-color: #FFFFFF !important;
 }
 
 /* Sidebar - FIXED POSITIONING */
