@@ -489,8 +489,8 @@ const BillingSection = ({ settings, onSave }) => {
 
       <Card>
         <CardHeader>
-          <CardTitle>Current Plan</CardTitle>
-          <CardDescription>Your current subscription details</CardDescription>
+          <CardTitle className="text-[#0B0F19]">Current Plan</CardTitle>
+          <CardDescription className="text-[#64748B]">Your current subscription details</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="flex items-center justify-between">
