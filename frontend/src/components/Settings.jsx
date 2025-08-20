@@ -830,4 +830,164 @@ const Settings = ({ currentUser }) => {
   );
 };
 
+// Service Areas Settings Section
+const ServiceAreasSection = ({ settings, onSave }) => {
+  const [serviceAreaSettings, setServiceAreaSettings] = useState({
+    areas: settings?.serviceAreas?.areas || [],
+    default_radius: settings?.serviceAreas?.default_radius || 25,
+    ...settings?.serviceAreas
+  });
+  const [saving, setSaving] = useState(false);
+  const [newArea, setNewArea] = useState('');
+
+  const handleSave = async () => {
+    setSaving(true);
+    try {
+      const response = await authService.authenticatedFetch('/api/settings/service-areas', {
+        method: 'POST',
+        body: JSON.stringify(serviceAreaSettings)
+      });
+      
+      if (response.ok) {
+        console.log('Service areas settings saved successfully!');
+      }
+    } catch (err) {
+      console.error('Failed to save service areas settings:', err);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const addServiceArea = () => {
+    if (newArea.trim() && !serviceAreaSettings.areas.includes(newArea.trim())) {
+      setServiceAreaSettings(prev => ({
+        ...prev,
+        areas: [...prev.areas, newArea.trim()]
+      }));
+      setNewArea('');
+    }
+  };
+
+  const removeServiceArea = (areaToRemove) => {
+    setServiceAreaSettings(prev => ({
+      ...prev,
+      areas: prev.areas.filter(area => area !== areaToRemove)
+    }));
+  };
+
+  const handleKeyPress = (e) => {
+    if (e.key === 'Enter') {
+      addServiceArea();
+    }
+  };
+
+  return (
+    <div className="space-y-6">
+      <div>
+        <h2 className="text-2xl font-bold">Service Areas</h2>
+        <p className="text-muted-foreground">Define the areas where you provide HVAC services</p>
+      </div>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Service Coverage</CardTitle>
+          <CardDescription>Add ZIP codes, cities, or neighborhoods you serve</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="flex space-x-2">
+            <Input
+              value={newArea}
+              onChange={(e) => setNewArea(e.target.value)}
+              onKeyPress={handleKeyPress}
+              placeholder="Enter ZIP code or city name (e.g., 12345 or Springfield)"
+              className="flex-1"
+            />
+            <Button onClick={addServiceArea} disabled={!newArea.trim()}>
+              <Plus className="w-4 h-4 mr-2" />
+              Add
+            </Button>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="default_radius">Default Service Radius (miles)</Label>
+            <Input
+              id="default_radius"
+              type="number"
+              min="1"
+              max="100"
+              value={serviceAreaSettings.default_radius}
+              onChange={(e) => setServiceAreaSettings(prev => ({...prev, default_radius: parseInt(e.target.value)}))}
+              placeholder="25"
+            />
+            <p className="text-xs text-muted-foreground">Default radius for service areas when specific boundaries aren't defined</p>
+          </div>
+
+          {serviceAreaSettings.areas.length > 0 && (
+            <div className="space-y-2">
+              <Label>Current Service Areas</Label>
+              <div className="space-y-2 max-h-48 overflow-y-auto">
+                {serviceAreaSettings.areas.map((area, index) => (
+                  <div key={index} className="flex items-center justify-between p-2 bg-muted rounded-lg">
+                    <span className="text-sm">{area}</span>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => removeServiceArea(area)}
+                      className="text-destructive hover:text-destructive"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {serviceAreaSettings.areas.length === 0 && (
+            <div className="text-center py-6 text-muted-foreground">
+              <Map className="w-8 h-8 mx-auto mb-2" />
+              <p>No service areas defined yet</p>
+              <p className="text-xs">Add ZIP codes or city names to get started</p>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Service Area Examples</CardTitle>
+          <CardDescription>Common ways to define your service coverage</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <h4 className="font-medium">By ZIP Code</h4>
+              <p className="text-sm text-muted-foreground">12345, 12346, 12347</p>
+            </div>
+            <div className="space-y-2">
+              <h4 className="font-medium">By City</h4>
+              <p className="text-sm text-muted-foreground">Springfield, Shelbyville, Capital City</p>
+            </div>
+            <div className="space-y-2">
+              <h4 className="font-medium">By Neighborhood</h4>
+              <p className="text-sm text-muted-foreground">Downtown, Riverside, Hillview</p>
+            </div>
+            <div className="space-y-2">
+              <h4 className="font-medium">By County</h4>
+              <p className="text-sm text-muted-foreground">Sangamon County, Logan County</p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      <div className="flex justify-end">
+        <Button onClick={handleSave} disabled={saving}>
+          <Save className="w-4 h-4 mr-2" />
+          {saving ? 'Saving...' : 'Save Changes'}
+        </Button>
+      </div>
+    </div>
+  );
+};
+
 export default Settings;
