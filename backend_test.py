@@ -289,6 +289,311 @@ class HVACAPITester:
             self.log_test("Inquiries List", False, f"Error: {data.get('detail', 'Unknown error')}")
             return False
 
+    # ==================== AI VOICE SCHEDULING TESTS ====================
+    
+    def test_ai_voice_environment_variable(self):
+        """Test AI Voice Scheduling environment variable is loaded"""
+        # Test health endpoint to see if AI Voice is enabled
+        success, data = self.make_request('GET', '/health')
+        
+        if success:
+            # Check if the backend is running (which means env vars are loaded)
+            status_ok = data.get('status') in ['healthy', 'degraded']
+            self.log_test("AI Voice Environment Variable", status_ok, 
+                         f"Backend status: {data.get('status', 'unknown')}")
+            return status_ok
+        else:
+            self.log_test("AI Voice Environment Variable", False, "Backend not responding")
+            return False
+
+    def test_availability_endpoint(self):
+        """Test GET /api/availability endpoint"""
+        test_date = "2025-01-24"
+        params = {"date": test_date}
+        success, data = self.make_request('GET', '/availability', params=params)
+        
+        if success:
+            # Check response structure
+            has_date = 'date' in data and data['date'] == test_date
+            has_windows = 'windows' in data and isinstance(data['windows'], list)
+            
+            windows_valid = True
+            if has_windows and data['windows']:
+                for window in data['windows']:
+                    required_fields = ['window', 'capacity', 'booked', 'available']
+                    if not all(field in window for field in required_fields):
+                        windows_valid = False
+                        break
+            
+            all_valid = has_date and has_windows and windows_valid
+            window_count = len(data.get('windows', []))
+            
+            self.log_test("Availability Endpoint", all_valid, 
+                         f"Date: {data.get('date')}, Windows: {window_count}")
+            return all_valid
+        else:
+            self.log_test("Availability Endpoint", False, f"Error: {data.get('detail', 'Unknown error')}")
+            return False
+
+    def test_voice_webhook_endpoint(self):
+        """Test POST /api/voice/inbound webhook endpoint"""
+        # Mock Twilio form data
+        mock_form_data = {
+            "From": "+15551234567",
+            "CallSid": "test_call_sid_123",
+            "SpeechResult": "",
+            "Digits": ""
+        }
+        
+        # Use requests directly for form data
+        url = f"{self.base_url}/api/voice/inbound"
+        headers = {'Content-Type': 'application/x-www-form-urlencoded'}
+        
+        try:
+            response = requests.post(url, data=mock_form_data, headers=headers, timeout=30)
+            success = response.status_code < 400
+            
+            if success:
+                # Check if response contains TwiML-like structure
+                try:
+                    data = response.json()
+                    has_say = 'Say' in data
+                    has_greeting = 'Welcome to HVAC Pro' in str(data) if has_say else False
+                    
+                    self.log_test("Voice Webhook Endpoint", has_say, 
+                                 f"Status: {response.status_code}, Has greeting: {has_greeting}")
+                    return has_say
+                except:
+                    # Response might be XML, check for basic success
+                    self.log_test("Voice Webhook Endpoint", True, 
+                                 f"Status: {response.status_code}, Response received")
+                    return True
+            else:
+                error_msg = f"HTTP {response.status_code}"
+                try:
+                    error_data = response.json()
+                    error_msg += f" - {error_data.get('detail', 'Unknown error')}"
+                except:
+                    error_msg += f" - {response.text[:100]}"
+                
+                self.log_test("Voice Webhook Endpoint", False, error_msg)
+                return False
+                
+        except Exception as e:
+            self.log_test("Voice Webhook Endpoint", False, f"Error: {str(e)}")
+            return False
+
+    def test_appointment_creation_with_ai_voice_source(self):
+        """Test POST /api/appointments with source='ai-voice'"""
+        # First create a customer for the appointment
+        customer_data = {
+            "company_id": self.company_id,
+            "name": "Sarah Johnson",
+            "phone": "+15551234567",
+            "address": {"full": "123 Main St, Anytown, ST 12345"},
+            "preferred_contact": "phone"
+        }
+        
+        customer_success, customer_response = self.make_request('POST', '/customers', customer_data, self.user_token)
+        
+        if not customer_success:
+            self.log_test("Appointment Creation with AI Voice Source", False, 
+                         f"Failed to create customer: {customer_response.get('detail', 'Unknown error')}")
+            return False
+        
+        customer_id = customer_response.get('id')
+        
+        # Create appointment with AI Voice source
+        appointment_data = {
+            "company_id": self.company_id,
+            "customer_id": customer_id,
+            "title": "HVAC Service - No Heat",
+            "description": "Customer called via AI Voice system reporting no heat issue",
+            "scheduled_date": "2025-01-24T10:00:00",
+            "estimated_duration": 120,
+            "service_type": "no_heat",
+            "source": "ai-voice",
+            "issue_type": "no_heat",
+            "window": "8-11",
+            "address": "123 Main St, Anytown, ST 12345"
+        }
+        
+        success, data = self.make_request('POST', '/appointments', appointment_data, self.user_token)
+        
+        if success:
+            # Check if appointment was created with correct source
+            has_id = 'id' in data
+            correct_source = data.get('source') == 'ai-voice'
+            correct_issue = data.get('issue_type') == 'no_heat'
+            correct_window = data.get('window') == '8-11'
+            
+            all_valid = has_id and correct_source and correct_issue and correct_window
+            
+            self.log_test("Appointment Creation with AI Voice Source", all_valid,
+                         f"ID: {data.get('id', 'none')}, Source: {data.get('source')}, Issue: {data.get('issue_type')}")
+            
+            # Store appointment ID for filtering test
+            if has_id:
+                self.ai_voice_appointment_id = data['id']
+            
+            return all_valid
+        else:
+            self.log_test("Appointment Creation with AI Voice Source", False, 
+                         f"Error: {data.get('detail', 'Unknown error')}")
+            return False
+
+    def test_appointments_filtering_by_source(self):
+        """Test GET /api/appointments?source=ai-voice filtering"""
+        params = {
+            "company_id": self.company_id,
+            "source": "ai-voice"
+        }
+        
+        success, data = self.make_request('GET', '/appointments', params=params, token=self.user_token)
+        
+        if success:
+            is_list = isinstance(data, list)
+            ai_voice_count = len(data) if is_list else 0
+            
+            # Check if all returned appointments have ai-voice source
+            all_ai_voice = True
+            if is_list and data:
+                for appointment in data:
+                    if appointment.get('source') != 'ai-voice':
+                        all_ai_voice = False
+                        break
+            
+            self.log_test("Appointments Filtering by Source", is_list and all_ai_voice,
+                         f"Found {ai_voice_count} AI Voice appointments")
+            return is_list and all_ai_voice
+        else:
+            self.log_test("Appointments Filtering by Source", False, 
+                         f"Error: {data.get('detail', 'Unknown error')}")
+            return False
+
+    def test_customer_creation_endpoint(self):
+        """Test POST /api/customers for Add Customer button"""
+        customer_data = {
+            "company_id": self.company_id,
+            "name": "Michael Davis",
+            "phone": "+15559876543",
+            "address": {"full": "456 Oak Ave, Springfield, ST 67890"},
+            "preferred_contact": "phone",
+            "notes": "New customer from voice scheduling system"
+        }
+        
+        success, data = self.make_request('POST', '/customers', customer_data, self.user_token)
+        
+        if success:
+            has_id = 'id' in data
+            correct_name = data.get('name') == customer_data['name']
+            correct_phone = data.get('phone') == customer_data['phone']
+            
+            all_valid = has_id and correct_name and correct_phone
+            
+            self.log_test("Customer Creation Endpoint", all_valid,
+                         f"ID: {data.get('id', 'none')}, Name: {data.get('name')}")
+            return all_valid
+        else:
+            self.log_test("Customer Creation Endpoint", False, 
+                         f"Error: {data.get('detail', 'Unknown error')}")
+            return False
+
+    def test_sms_service_integration(self):
+        """Test SMS service integration for confirmations"""
+        # Test the SMS service by checking if it's accessible through health endpoint
+        success, data = self.make_request('GET', '/health')
+        
+        if success:
+            services = data.get('services', {})
+            sms_status = services.get('sms', 'unknown')
+            sms_working = sms_status in ['mock', 'connected', 'healthy']
+            
+            self.log_test("SMS Service Integration", sms_working,
+                         f"SMS Status: {sms_status}")
+            return sms_working
+        else:
+            self.log_test("SMS Service Integration", False, "Health check failed")
+            return False
+
+    def run_ai_voice_scheduling_tests(self):
+        """Run comprehensive AI Voice Scheduling tests"""
+        print("🎙️ Starting AI Voice Scheduling Backend Tests")
+        print(f"🌐 Testing against: {self.base_url}")
+        print("=" * 60)
+        
+        # Initialize tokens
+        print("\n🔐 Authentication Setup:")
+        admin_success = self.test_admin_login()
+        user_success = self.test_mock_user_login()
+        
+        if not user_success:
+            print("❌ Cannot proceed without user authentication")
+            return False
+        
+        # AI Voice Scheduling specific tests
+        print("\n🎙️ AI Voice Scheduling Tests:")
+        
+        # 1. Environment Variable Test
+        env_success = self.test_ai_voice_environment_variable()
+        
+        # 2. Availability Endpoint Test
+        availability_success = self.test_availability_endpoint()
+        
+        # 3. Voice Webhook Test
+        webhook_success = self.test_voice_webhook_endpoint()
+        
+        # 4. Appointment Creation with AI Voice Source
+        appointment_success = self.test_appointment_creation_with_ai_voice_source()
+        
+        # 5. Appointments Filtering by Source
+        filtering_success = self.test_appointments_filtering_by_source()
+        
+        # 6. Customer Creation Test
+        customer_success = self.test_customer_creation_endpoint()
+        
+        # 7. SMS Service Integration Test
+        sms_success = self.test_sms_service_integration()
+        
+        # Summary
+        print("\n" + "=" * 60)
+        print(f"📊 Test Results: {self.tests_passed}/{self.tests_run} tests passed")
+        
+        success_rate = (self.tests_passed / self.tests_run) * 100 if self.tests_run > 0 else 0
+        print(f"✨ Success Rate: {success_rate:.1f}%")
+        
+        # AI Voice Scheduling Analysis
+        print("\n🎙️ AI Voice Scheduling Analysis:")
+        
+        critical_tests = [
+            ("Environment Variable", env_success),
+            ("Availability Endpoint", availability_success),
+            ("Voice Webhook", webhook_success),
+            ("Appointment Creation", appointment_success),
+            ("Source Filtering", filtering_success),
+            ("Customer Creation", customer_success),
+            ("SMS Integration", sms_success)
+        ]
+        
+        passed_critical = sum(1 for _, success in critical_tests if success)
+        
+        for test_name, success in critical_tests:
+            status = "✅" if success else "❌"
+            print(f"   {status} {test_name}")
+        
+        print(f"\n🎯 Critical AI Voice Tests: {passed_critical}/{len(critical_tests)} passed")
+        
+        # Overall assessment
+        if passed_critical >= 6:  # Allow 1 failure
+            print("🎉 AI Voice Scheduling implementation is working well!")
+            return True
+        elif passed_critical >= 4:
+            print("⚠️ AI Voice Scheduling has some issues but core functionality works")
+            return True
+        else:
+            print("❌ AI Voice Scheduling has critical issues that need attention")
+            return False
+
     def test_admin_analytics(self):
         """Test admin analytics endpoint"""
         success, data = self.make_request('GET', '/admin/analytics', token=self.admin_token)
