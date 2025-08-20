@@ -328,7 +328,7 @@ const Appointments = ({ currentUser, aiVoiceEnabled }) => {
             Calendar View
           </Button>
           {!aiVoiceEnabled && (
-            <Button>
+            <Button onClick={() => setShowScheduleForm(true)}>
               <Plus className="w-4 h-4 mr-2" />
               Schedule Appointment
             </Button>
