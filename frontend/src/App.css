@@ -1,49 +1,41 @@
-/* Stripe.com Inspired HVAC Assistant Theme */
+/* Stripe.com Inspired HVAC Assistant Theme - FORCE OVERRIDE */
 
-:root {
-  --bg: #ffffff;
-  --bg-secondary: #fafbfc;
-  --card: #ffffff;
-  --text-primary: #0a2540;
-  --text-secondary: #425466;
-  --text-muted: #8898aa;
-  --border: #e6ebf1;
-  --border-hover: #d1d9e0;
-  --primary: #635bff;
-  --primary-hover: #5a52e5;
-  --success: #00d924;
-  --warning: #ff5a1f;
-  --danger: #df1b41;
-  --radius: 8px;
-  --shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  --shadow-hover: 0 4px 8px rgba(0, 0, 0, 0.15);
-}
-
-/* Base styling */
 * {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
+  margin: 0 !important;
+  padding: 0 !important;
+  box-sizing: border-box !important;
 }
 
-html, body, #root {
+html {
   background: #ffffff !important;
   color: #0a2540 !important;
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif !important;
-  font-weight: 400;
-  line-height: 1.6;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  height: 100%;
-  width: 100%;
 }
 
 body {
   background: #ffffff !important;
   color: #0a2540 !important;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif !important;
+  font-weight: 400 !important;
+  line-height: 1.6 !important;
 }
 
-/* Strong Typography like Stripe.com */
+#root {
+  background: #ffffff !important;
+  color: #0a2540 !important;
+  min-height: 100vh !important;
+}
+
+/* Fix main container background */
+.App, [class*="app"], main, div[class*="space-y"] {
+  background: #ffffff !important;
+}
+
+/* Override all possible background classes */
+.bg-background, .bg-gray-50, .bg-muted, .bg-yellow-50 {
+  background: #ffffff !important;
+}
+
+/* Strong Typography */
 h1, h2, h3, h4, h5, h6 {
   font-weight: 700 !important;
   color: #0a2540 !important;
@@ -69,7 +61,7 @@ h3 {
   color: #0a2540 !important;
 }
 
-/* Strong readable text */
+/* Text colors */
 p, div, span {
   color: #425466 !important;
   font-weight: 400 !important;
@@ -81,7 +73,7 @@ label {
   font-size: 0.875rem !important;
 }
 
-.text-muted-foreground {
+.text-muted-foreground, .text-gray-600 {
   color: #8898aa !important;
   font-weight: 400 !important;
 }
@@ -91,14 +83,13 @@ label {
   color: #0a2540 !important;
 }
 
-/* Cards with proper borders like Stripe */
-[class*="card"], .card {
+/* Cards */
+.card, [class*="card"] {
   background: #ffffff !important;
   border: 1px solid #e6ebf1 !important;
   border-radius: 8px !important;
   color: #0a2540 !important;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1) !important;
-  transition: all 0.15s ease !important;
 }
 
 .card:hover {
@@ -106,7 +97,7 @@ label {
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15) !important;
 }
 
-/* Strong Stripe-style buttons */
+/* Buttons */
 button {
   font-weight: 600 !important;
   border-radius: 8px !important;
@@ -115,21 +106,21 @@ button {
   padding: 0.5rem 1rem !important;
 }
 
-/* Primary buttons like Stripe */
-button[data-variant="default"], .bg-primary, button:not([data-variant]) {
+/* Primary buttons */
+button[data-variant="default"], .bg-primary, button:not([data-variant]):not([data-variant="outline"]):not([data-variant="ghost"]) {
   background: #635bff !important;
   color: white !important;
   border: 1px solid #635bff !important;
   font-weight: 600 !important;
 }
 
-button[data-variant="default"]:hover, .bg-primary:hover, button:not([data-variant]):hover {
+button[data-variant="default"]:hover, .bg-primary:hover {
   background: #5a52e5 !important;
   border-color: #5a52e5 !important;
   transform: translateY(-1px) !important;
 }
 
-/* Outline buttons with strong borders */
+/* Outline buttons */
 button[data-variant="outline"] {
   background: #ffffff !important;
   color: #0a2540 !important;
@@ -143,7 +134,14 @@ button[data-variant="outline"]:hover {
   transform: translateY(-1px) !important;
 }
 
-/* Strong input styling like Stripe forms */
+/* Ghost buttons */
+button[data-variant="ghost"] {
+  background: transparent !important;
+  color: #0a2540 !important;
+  border: none !important;
+}
+
+/* Inputs */
 input, textarea, select {
   background: #ffffff !important;
   border: 1px solid #e6ebf1 !important;
@@ -152,7 +150,6 @@ input, textarea, select {
   font-weight: 400 !important;
   padding: 0.75rem !important;
   font-size: 0.875rem !important;
-  transition: all 0.15s ease !important;
 }
 
 input:focus, textarea:focus, select:focus {
@@ -165,21 +162,32 @@ input::placeholder, textarea::placeholder {
   color: #8898aa !important;
 }
 
-/* Sidebar styling */
-nav[class*="sidebar"], .sidebar, aside {
+/* Sidebar */
+nav, .sidebar, aside {
   background: #fafbfc !important;
   border-right: 1px solid #e6ebf1 !important;
+  color: #0a2540 !important;
 }
 
-/* Stats numbers - very bold like Stripe */
+/* Navigation links */
+nav a, .sidebar a {
+  color: #425466 !important;
+  font-weight: 500 !important;
+}
+
+nav a:hover, .sidebar a:hover {
+  color: #0a2540 !important;
+  background: rgba(99, 91, 255, 0.1) !important;
+}
+
+/* Stats numbers */
 .text-2xl, .text-3xl, .text-4xl {
   font-weight: 900 !important;
   color: #0a2540 !important;
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif !important;
 }
 
-/* Badge styling with strong colors */
-[class*="badge"], .badge {
+/* Badge styling */
+.badge, [class*="badge"] {
   font-weight: 600 !important;
   font-size: 0.75rem !important;
   border-radius: 6px !important;
@@ -188,64 +196,32 @@ nav[class*="sidebar"], .sidebar, aside {
   letter-spacing: 0.025em !important;
 }
 
-/* Success badges - green like Stripe */
+/* Success badges */
 .text-green-600, .bg-green-50, .border-green-200, [data-variant="success"] {
   background: rgba(0, 217, 36, 0.1) !important;
   color: #00a020 !important;
   border-color: rgba(0, 217, 36, 0.3) !important;
 }
 
-/* Warning badges - orange like Stripe */
+/* Warning badges */
 .text-amber-600, .bg-amber-50, .border-amber-200, [data-variant="warning"] {
   background: rgba(255, 90, 31, 0.1) !important;
   color: #ff5a1f !important;
   border-color: rgba(255, 90, 31, 0.3) !important;
 }
 
-/* Danger badges - red like Stripe */
+/* Danger badges */
 .text-red-600, .bg-red-50, .border-red-200, [data-variant="destructive"] {
   background: rgba(223, 27, 65, 0.1) !important;
   color: #df1b41 !important;
   border-color: rgba(223, 27, 65, 0.3) !important;
 }
 
-/* Blue badges - Stripe blue */
+/* Blue badges */
 .text-blue-600, .bg-blue-50, .border-blue-200 {
   background: rgba(99, 91, 255, 0.1) !important;
   color: #635bff !important;
   border-color: rgba(99, 91, 255, 0.3) !important;
-}
-
-/* Search input styling */
-input[type="search"], input[placeholder*="Search"] {
-  background: #fafbfc !important;
-  border: 1px solid #e6ebf1 !important;
-  padding-left: 2.5rem !important;
-}
-
-/* Table styling */
-table {
-  background: #ffffff !important;
-  border: 1px solid #e6ebf1 !important;
-  border-radius: 8px !important;
-}
-
-th {
-  background: #fafbfc !important;
-  color: #0a2540 !important;
-  font-weight: 600 !important;
-  border-bottom: 1px solid #e6ebf1 !important;
-}
-
-td {
-  border-bottom: 1px solid #e6ebf1 !important;
-  color: #425466 !important;
-}
-
-/* Loading states */
-.animate-pulse {
-  background: #fafbfc !important;
-  border-radius: 8px !important;
 }
   --font-size-base: 1rem;
   --font-size-lg: 1.125rem;
