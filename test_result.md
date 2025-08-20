@@ -102,9 +102,57 @@
 # Testing Data - Main Agent and testing sub agent both should log testing data below this section
 #====================================================================================================
 
-user_problem_statement: "Test the backend API endpoints that the frontend Dashboard component is trying to access. The frontend is showing 'Unable to load dashboard' but backend returns data when curled directly."
+user_problem_statement: "Complete AI Voice Scheduling implementation with mock Twilio adapters. Backend needs to handle voice state machine, create appointments from phone calls, and send SMS confirmations. Frontend needs to hide Schedule Appointment button when AI_VOICE_SCHEDULING_ENABLED=true, show AI Voice badges, and wire Add Customer button."
 
 backend:
+  - task: "AI Voice Scheduling environment variable"
+    implemented: true
+    working: true
+    file: "backend/.env"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+        - working: true
+        - agent: "main"
+        - comment: "Added AI_VOICE_SCHEDULING_ENABLED=true to backend/.env file"
+
+  - task: "AI Voice Scheduling models and enums"
+    implemented: true
+    working: true
+    file: "backend/models.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+        - working: true
+        - agent: "main"
+        - comment: "Added AppointmentSource enum, Availability model, VoiceSessionState model and is_ai_generated field to Appointment model"
+
+  - task: "AI Voice Scheduling endpoints"
+    implemented: true
+    working: false
+    file: "backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+        - working: false
+        - agent: "main"
+        - comment: "Implemented /api/voice/inbound webhook and /api/availability endpoints with state machine logic, but needs testing for proper functionality"
+
+  - task: "Mock SMS service integration"
+    implemented: true
+    working: false
+    file: "backend/services.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+        - working: false
+        - agent: "main"
+        - comment: "Added send_message method to MockTwilioService for SMS confirmations, needs testing"
+
   - task: "Dashboard API endpoint accessibility"
     implemented: true
     working: false
@@ -166,15 +214,28 @@ frontend:
         - agent: "testing"
         - comment: "Dashboard component calls authService.authenticatedFetch('dashboard/company-001') which resolves to /dashboard/company-001 instead of /api/dashboard/company-001. This causes frontend to receive React app HTML instead of API JSON data, resulting in 'Unable to load dashboard' error."
 
+  - task: "AI Voice Scheduling frontend integration"
+    implemented: false
+    working: false
+    file: "frontend/src/components/"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+        - working: false
+        - agent: "main"
+        - comment: "Need to implement: Hide Schedule Appointment button when AI_VOICE_SCHEDULING_ENABLED=true, show Created by AI Voice badge for AI appointments, wire Add Customer button"
+
 metadata:
-  created_by: "testing_agent"
-  version: "1.0"
+  created_by: "main_agent"
+  version: "1.1"
   test_sequence: 1
   run_ui: false
 
 test_plan:
   current_focus:
-    - "Dashboard API endpoint accessibility"
+    - "AI Voice Scheduling endpoints"
+    - "Mock SMS service integration"
     - "Dashboard component API integration"
   stuck_tasks:
     - "Dashboard component API integration"
@@ -182,5 +243,5 @@ test_plan:
   test_priority: "high_first"
 
 agent_communication:
-    - agent: "testing"
-    - message: "CRITICAL ISSUE FOUND: Frontend Dashboard component is calling wrong URL path. The authService.authenticatedFetch() method is not adding /api prefix to dashboard endpoint calls. Backend API works perfectly at /api/dashboard/company-001 but frontend calls /dashboard/company-001 which returns React app HTML. This is the root cause of 'Unable to load dashboard' error. Main agent needs to fix the frontend authService to properly construct API URLs with /api prefix."
+    - agent: "main"
+    - message: "Completed backend AI Voice Scheduling implementation: Added environment variable, updated models with AppointmentSource enum and Availability model, implemented /api/voice/inbound webhook with state machine for collecting customer data (name, address, issue type, time preference), and /api/availability endpoint. Fixed session data initialization issues in state machine. Mock SMS service enhanced with send_message method. Ready for backend testing of AI Voice endpoints and SMS confirmation flow."
