@@ -255,7 +255,7 @@ const CalendarSection = ({ settings, onSave }) => {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="event_duration">Default Event Duration (minutes)</Label>
+                <Label htmlFor="event_duration" className="text-[#0B0F19] font-medium">Default Event Duration (minutes)</Label>
                 <Input
                   id="event_duration"
                   type="number"
