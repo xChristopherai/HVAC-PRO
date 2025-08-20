@@ -408,6 +408,13 @@ const Settings = ({ currentUser }) => {
             saving={saving}
           />
         );
+      case 'calendar':
+        return (
+          <CalendarSection 
+            settings={settings}
+            onSave={handleSave}
+          />
+        );
       case 'integrations':
         return (
           <div className="space-y-6">
