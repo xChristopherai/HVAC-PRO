@@ -1,8 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { Settings as SettingsIcon, Save, TestTube, Building, Bot, MessageSquare, Calendar, Bell, CreditCard, Map, Link, Shield, Cog } from 'lucide-react';
+import { Settings as SettingsIcon, Save, TestTube, Building, Bot, MessageSquare, Calendar, Bell, CreditCard, Map, Link, Shield, Cog, Plus, Trash2, Check, X, ExternalLink } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
+import { Label } from './ui/label';
+import { Switch } from './ui/switch';
+import { Badge } from './ui/badge';
 import { cn } from '../lib/utils';
 import authService from '../utils/auth';
 
