@@ -82,11 +82,12 @@
 
   /* Global Text Styling - Stripe.com inspired */
   h1, h2, h3, h4, h5, h6 {
-    @apply text-gray-800 font-medium;
+    color: rgb(31 41 55) !important; /* text-gray-800 */
+    font-weight: 500;
   }
 
-  p, span, div, label, button, a {
-    @apply text-gray-800;
+  p, span, div, label, button:not(.bg-primary), a {
+    color: rgb(31 41 55) !important; /* text-gray-800 */
   }
 
   /* Secondary/Muted text elements */
@@ -97,22 +98,26 @@
   [class*="subtitle"],
   [class*="helper"],
   time {
-    @apply text-gray-600 !important;
+    color: rgb(75 85 99) !important; /* text-gray-600 */
   }
 
   /* Form elements */
   input, textarea, select {
-    @apply text-gray-800 placeholder-gray-500;
+    color: rgb(31 41 55) !important; /* text-gray-800 */
+  }
+
+  input::placeholder, textarea::placeholder, select::placeholder {
+    color: rgb(107 114 128) !important; /* text-gray-500 */
   }
 
   /* Table elements */
   th, td {
-    @apply text-gray-800;
+    color: rgb(31 41 55) !important; /* text-gray-800 */
   }
 
   /* Sidebar and navigation */
   nav, nav a, nav button, nav span {
-    @apply text-gray-800;
+    color: rgb(31 41 55) !important; /* text-gray-800 */
   }
 
   /* Card content */
@@ -123,37 +128,41 @@
   [class*="card"] span,
   [class*="card"] div,
   [class*="card"] label {
-    @apply text-gray-800;
+    color: rgb(31 41 55) !important; /* text-gray-800 */
   }
 
-  /* Override any white text except on dark backgrounds */
-  .text-white {
-    @apply text-gray-800 !important;
+  /* Override problematic light text except on dark backgrounds */
+  .text-white:not(.bg-primary *):not(.bg-blue-600 *):not(.bg-gray-900 *):not(.bg-black *) {
+    color: rgb(31 41 55) !important; /* text-gray-800 */
   }
 
   /* Keep white text only on dark backgrounds */
-  .bg-primary .text-white,
-  .bg-blue-600 .text-white,
-  .bg-gray-900 .text-white,
-  .bg-black .text-white,
-  button:not(.bg-white):not(.bg-gray-100) .text-white,
-  [class*="primary"]:not(.bg-white) .text-white {
-    @apply text-white !important;
+  .bg-primary, .bg-primary *,
+  .bg-blue-600, .bg-blue-600 *,
+  .bg-gray-900, .bg-gray-900 *,
+  .bg-black, .bg-black *,
+  button.bg-primary, button.bg-primary *,
+  button.bg-blue-600, button.bg-blue-600 * {
+    color: rgb(255 255 255) !important; /* white */
   }
 
   /* Timestamps and dates */
   time, [class*="timestamp"], [class*="date"] {
-    @apply text-gray-600;
+    color: rgb(75 85 99) !important; /* text-gray-600 */
   }
 
   /* Links */
   a:not(.button) {
-    @apply text-gray-800 hover:text-gray-700;
+    color: rgb(31 41 55) !important; /* text-gray-800 */
+  }
+
+  a:not(.button):hover {
+    color: rgb(55 65 81) !important; /* text-gray-700 */
   }
 
   /* Badge and status elements */
   [class*="badge"], [class*="status"] {
-    @apply text-gray-800;
+    color: rgb(31 41 55) !important; /* text-gray-800 */
   }
 }
 
