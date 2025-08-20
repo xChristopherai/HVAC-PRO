@@ -147,6 +147,158 @@ const AISection = ({ settings, onSettingsChange, onSave, saving }) => {
   );
 };
 
+// Calendar Settings Section
+const CalendarSection = ({ settings, onSave }) => {
+  const [calendarSettings, setCalendarSettings] = useState({
+    google_connected: settings?.calendar?.google_connected || false,
+    default_calendar: settings?.calendar?.default_calendar || 'primary',
+    default_event_duration: settings?.calendar?.default_event_duration || 60,
+    auto_create_events: settings?.calendar?.auto_create_events || false,
+    ...settings?.calendar
+  });
+  const [saving, setSaving] = useState(false);
+  const [testingEvent, setTestingEvent] = useState(false);
+
+  const handleSave = async () => {
+    setSaving(true);
+    try {
+      const response = await authService.authenticatedFetch('/api/settings/calendar', {
+        method: 'POST',
+        body: JSON.stringify(calendarSettings)
+      });
+      
+      if (response.ok) {
+        console.log('Calendar settings saved successfully!');
+      }
+    } catch (err) {
+      console.error('Failed to save calendar settings:', err);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleTestEvent = async () => {
+    setTestingEvent(true);
+    try {
+      const testData = {
+        title: "Test HVAC Appointment",
+        start: new Date().toISOString(),
+        end: new Date(Date.now() + 60 * 60 * 1000).toISOString(),
+        customerId: "test-customer",
+        techId: "test-tech"
+      };
+      
+      const response = await authService.authenticatedFetch('/api/calendar/create', {
+        method: 'POST',
+        body: JSON.stringify(testData)
+      });
+      
+      if (response.ok) {
+        const result = await response.json();
+        alert('Test event created successfully! Event ID: ' + result.eventId);
+      }
+    } catch (err) {
+      alert('Failed to create test event: ' + err.message);
+    } finally {
+      setTestingEvent(false);
+    }
+  };
+
+  const handleConnect = () => {
+    // Mock Google OAuth flow
+    setCalendarSettings(prev => ({
+      ...prev,
+      google_connected: true,
+      connection_status: 'connected'
+    }));
+  };
+
+  return (
+    <div className="space-y-6">
+      <div>
+        <h2 className="text-2xl font-bold">Calendar Settings</h2>
+        <p className="text-muted-foreground">Configure calendar integration and event settings</p>
+      </div>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Google Calendar Integration</CardTitle>
+          <CardDescription>Connect your Google Calendar to sync appointments</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <Label className="text-sm font-medium">Google Calendar Connection</Label>
+              <p className="text-xs text-muted-foreground">
+                {calendarSettings.google_connected ? 'Connected to Google Calendar' : 'Not connected'}
+              </p>
+            </div>
+            <Button 
+              variant={calendarSettings.google_connected ? "outline" : "default"}
+              onClick={handleConnect}
+              disabled={calendarSettings.google_connected}
+            >
+              {calendarSettings.google_connected ? 'Connected' : 'Connect (Mock)'}
+            </Button>
+          </div>
+
+          {calendarSettings.google_connected && (
+            <>
+              <div className="space-y-2">
+                <Label htmlFor="default_calendar">Default Calendar</Label>
+                <Input
+                  id="default_calendar"
+                  value={calendarSettings.default_calendar}
+                  onChange={(e) => setCalendarSettings(prev => ({...prev, default_calendar: e.target.value}))}
+                  placeholder="primary"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="event_duration">Default Event Duration (minutes)</Label>
+                <Input
+                  id="event_duration"
+                  type="number"
+                  value={calendarSettings.default_event_duration}
+                  onChange={(e) => setCalendarSettings(prev => ({...prev, default_event_duration: parseInt(e.target.value)}))}
+                  placeholder="60"
+                />
+              </div>
+
+              <div className="flex items-center space-x-2">
+                <Switch
+                  id="auto_create"
+                  checked={calendarSettings.auto_create_events}
+                  onCheckedChange={(checked) => setCalendarSettings(prev => ({...prev, auto_create_events: checked}))}
+                />
+                <Label htmlFor="auto_create">Auto-create events for new appointments</Label>
+              </div>
+
+              <div className="pt-2">
+                <Button
+                  variant="outline"
+                  onClick={handleTestEvent}
+                  disabled={testingEvent}
+                >
+                  <TestTube className="w-4 h-4 mr-2" />
+                  {testingEvent ? 'Creating...' : 'Create Test Event'}
+                </Button>
+              </div>
+            </>
+          )}
+        </CardContent>
+      </Card>
+
+      <div className="flex justify-end">
+        <Button onClick={handleSave} disabled={saving}>
+          <Save className="w-4 h-4 mr-2" />
+          {saving ? 'Saving...' : 'Save Changes'}
+        </Button>
+      </div>
+    </div>
+  );
+};
+
 // Integration Status Card
 const IntegrationCard = ({ title, description, status, onTest }) => {
   const getStatusColor = (status) => {
