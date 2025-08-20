@@ -216,8 +216,8 @@ const CalendarSection = ({ settings, onSave }) => {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-2xl font-bold">Calendar Settings</h2>
-        <p className="text-muted-foreground">Configure calendar integration and event settings</p>
+        <h2 className="text-2xl font-bold text-[#0B0F19]">Calendar Settings</h2>
+        <p className="text-[#64748B]">Configure calendar integration and event settings</p>
       </div>
 
       <Card>
