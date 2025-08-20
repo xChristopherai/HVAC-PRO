@@ -877,8 +877,8 @@ const ServiceAreasSection = ({ settings, onSave }) => {
 
       <Card>
         <CardHeader>
-          <CardTitle>Service Coverage</CardTitle>
-          <CardDescription>Add ZIP codes, cities, or neighborhoods you serve</CardDescription>
+          <CardTitle className="text-[#0B0F19]">Service Coverage</CardTitle>
+          <CardDescription className="text-[#64748B]">Add ZIP codes, cities, or neighborhoods you serve</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="flex space-x-2">
