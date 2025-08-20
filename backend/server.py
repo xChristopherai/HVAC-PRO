@@ -427,6 +427,8 @@ async def handle_voice_state(session: dict, form_data) -> dict:
                     break
             
             if detected_issue:
+                if "data" not in session:
+                    session["data"] = {}
                 session["data"]["issue_type"] = detected_issue
                 
                 # Get today's availability
