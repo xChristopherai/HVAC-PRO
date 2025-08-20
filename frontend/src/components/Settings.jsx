@@ -370,8 +370,8 @@ const NotificationsSection = ({ settings, onSave }) => {
 
       <Card>
         <CardHeader>
-          <CardTitle>Notification Preferences</CardTitle>
-          <CardDescription>Choose which notifications you want to receive</CardDescription>
+          <CardTitle className="text-[#0B0F19]">Notification Preferences</CardTitle>
+          <CardDescription className="text-[#64748B]">Choose which notifications you want to receive</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="space-y-4">
