@@ -1083,8 +1083,8 @@ const IntegrationsSection = ({ settings, onSave }) => {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-2xl font-bold">Integrations</h2>
-        <p className="text-muted-foreground">Connect external services to expand your HVAC Pro capabilities</p>
+        <h2 className="text-2xl font-bold text-[#0B0F19]">Integrations</h2>
+        <p className="text-[#64748B]">Connect external services to expand your HVAC Pro capabilities</p>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
