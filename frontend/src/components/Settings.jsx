@@ -1138,8 +1138,8 @@ const IntegrationsSection = ({ settings, onSave }) => {
 
       <Card>
         <CardHeader>
-          <CardTitle>Integration Status</CardTitle>
-          <CardDescription>Overview of all connected services</CardDescription>
+          <CardTitle className="text-[#0B0F19]">Integration Status</CardTitle>
+          <CardDescription className="text-[#64748B]">Overview of all connected services</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
