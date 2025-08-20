@@ -391,7 +391,7 @@ const Appointments = ({ currentUser, aiVoiceEnabled }) => {
                   }
                 </p>
                 {filter === 'all' && !aiVoiceEnabled && (
-                  <Button>
+                  <Button onClick={() => setShowScheduleForm(true)}>
                     <Plus className="w-4 h-4 mr-2" />
                     Schedule Your First Appointment
                   </Button>
