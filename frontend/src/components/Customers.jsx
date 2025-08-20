@@ -277,13 +277,19 @@ const Customers = ({ currentUser, aiVoiceEnabled }) => {
                   </div>
                   
                   <div className="flex space-x-1">
-                    <Button size="sm" variant="ghost" className="h-7 px-2">
+                    <Button size="sm" variant="ghost" className="h-7 px-2" title="View Customer">
                       <Eye className="w-3 h-3" />
                     </Button>
-                    <Button size="sm" variant="ghost" className="h-7 px-2">
+                    <Button size="sm" variant="ghost" className="h-7 px-2" title="Edit Customer">
                       <Edit className="w-3 h-3" />
                     </Button>
-                    <Button size="sm" variant="ghost" className="h-7 px-2">
+                    <Button 
+                      size="sm" 
+                      variant="ghost" 
+                      className="h-7 px-2" 
+                      title="Schedule Appointment"
+                      onClick={() => window.location.href = '/appointments'}
+                    >
                       <Calendar className="w-3 h-3" />
                     </Button>
                   </div>
