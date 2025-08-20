@@ -339,8 +339,8 @@ const NotificationsSection = ({ settings, onSave }) => {
 
       <Card>
         <CardHeader>
-          <CardTitle>Owner Contact Information</CardTitle>
-          <CardDescription>Where to send important notifications</CardDescription>
+          <CardTitle className="text-[#0B0F19]">Owner Contact Information</CardTitle>
+          <CardDescription className="text-[#64748B]">Where to send important notifications</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
