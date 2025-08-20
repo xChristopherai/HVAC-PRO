@@ -942,8 +942,8 @@ const ServiceAreasSection = ({ settings, onSave }) => {
 
       <Card>
         <CardHeader>
-          <CardTitle>Service Area Examples</CardTitle>
-          <CardDescription>Common ways to define your service coverage</CardDescription>
+          <CardTitle className="text-[#0B0F19]">Service Area Examples</CardTitle>
+          <CardDescription className="text-[#64748B]">Common ways to define your service coverage</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
