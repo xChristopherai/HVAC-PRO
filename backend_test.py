@@ -688,7 +688,9 @@ class HVACAPITester:
 def main():
     """Main test execution"""
     tester = HVACAPITester()
-    success = tester.run_dashboard_focused_tests()
+    
+    # Run AI Voice Scheduling tests as requested
+    success = tester.run_ai_voice_scheduling_tests()
     return 0 if success else 1
 
 if __name__ == "__main__":
