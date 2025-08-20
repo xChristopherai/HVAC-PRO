@@ -301,7 +301,7 @@ const Customers = ({ currentUser, aiVoiceEnabled }) => {
                   {searchTerm ? 'No customers match your search criteria.' : "You haven't added any customers yet."}
                 </p>
                 {!searchTerm && (
-                  <Button>
+                  <Button onClick={() => setShowAddCustomer(true)}>
                     <Plus className="w-4 h-4 mr-2" />
                     Add Your First Customer
                   </Button>
