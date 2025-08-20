@@ -233,6 +233,7 @@ async def list_appointments(
     technician_id: Optional[str] = None,
     date_from: Optional[datetime] = None,
     date_to: Optional[datetime] = None,
+    source: Optional[str] = Query(None, description="Filter by appointment source: ai-voice, ai-sms, manual"),
     current_user: dict = Depends(get_current_user)
 ):
     """List appointments with filters"""
@@ -246,6 +247,8 @@ async def list_appointments(
         filters["scheduled_date"] = {"$gte": date_from}
     if date_to:
         filters.setdefault("scheduled_date", {})["$lte"] = date_to
+    if source:
+        filters["source"] = source
     
     appointments = await db.appointments.find(filters).sort("scheduled_date", 1).to_list(100)
     return [Appointment(**appt) for appt in appointments]
