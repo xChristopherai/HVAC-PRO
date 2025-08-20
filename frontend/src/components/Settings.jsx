@@ -552,6 +552,13 @@ const Settings = ({ currentUser }) => {
             onSave={handleSave}
           />
         );
+      case 'notifications':
+        return (
+          <NotificationsSection 
+            settings={settings}
+            onSave={handleSave}
+          />
+        );
       case 'integrations':
         return (
           <div className="space-y-6">
