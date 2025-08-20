@@ -169,6 +169,11 @@ class Appointment(BaseDocument):
     estimated_cost: Optional[float] = None
     notes: str = ""
     calendar_event_id: Optional[str] = None
+    # New fields for AI Voice Scheduling
+    source: AppointmentSource = AppointmentSource.MANUAL
+    issue_type: Optional[IssueType] = None
+    window: Optional[TimeWindow] = None
+    address: Optional[str] = None
 
 class AppointmentCreate(BaseModel):
     company_id: str
@@ -180,6 +185,37 @@ class AppointmentCreate(BaseModel):
     service_type: str
     priority: JobPriority = JobPriority.MEDIUM
     estimated_cost: Optional[float] = None
+    # New fields for AI Voice Scheduling
+    source: AppointmentSource = AppointmentSource.MANUAL
+    issue_type: Optional[IssueType] = None
+    window: Optional[TimeWindow] = None
+    address: Optional[str] = None
+
+# AI Voice Scheduling Models
+class Availability(BaseDocument):
+    company_id: str
+    date: str  # YYYY-MM-DD format
+    windows: List[Dict[str, Any]] = Field(default_factory=lambda: [
+        {"window": "8-11", "capacity": 4, "booked": 0},
+        {"window": "12-3", "capacity": 4, "booked": 0},
+        {"window": "3-6", "capacity": 4, "booked": 0}
+    ])
+
+class VoiceSessionState(BaseModel):
+    phone_number: str
+    state: str = "greet"  # greet, collect_name, collect_address, collect_issue, offer_windows, confirm
+    data: Dict[str, Any] = Field(default_factory=dict)
+    expires_at: datetime = Field(default_factory=lambda: datetime.utcnow().replace(microsecond=0))
+    
+class AvailabilityWindow(BaseModel):
+    window: TimeWindow
+    capacity: int
+    booked: int
+    available: int
+    
+class AvailabilityResponse(BaseModel):
+    date: str
+    windows: List[AvailabilityWindow]
 
 # Job Models
 class Job(BaseDocument):
