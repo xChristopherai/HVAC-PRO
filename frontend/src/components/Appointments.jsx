@@ -316,6 +316,13 @@ const Appointments = ({ currentUser, aiVoiceEnabled }) => {
 
   return (
     <div className="space-y-6">
+      {/* Schedule Appointment Dialog */}
+      <ScheduleAppointmentDialog 
+        open={showScheduleForm} 
+        onOpenChange={setShowScheduleForm}
+        onScheduleAppointment={handleScheduleAppointment}
+      />
+      
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
