@@ -353,14 +353,14 @@ const Settings = ({ currentUser }) => {
                     key={item.id}
                     onClick={() => setActiveSection(item.id)}
                     className={cn(
-                      "w-full flex items-center px-3 py-2 text-sm font-medium rounded-lg transition-colors text-left",
+                      "w-full flex items-center px-4 py-3 text-base font-medium transition-colors text-left rounded-lg",
                       activeSection === item.id
-                        ? "bg-primary text-primary-foreground"
-                        : "text-muted-foreground hover:text-foreground hover:bg-accent"
+                        ? "bg-[#E6F1FD] text-[#0B0F19] border-l-2 border-[#0070E0]"
+                        : "text-[#0B0F19] hover:bg-[#F9FAFB]"
                     )}
                   >
-                    <Icon className="w-4 h-4 mr-3" />
-                    {item.name}
+                    <Icon className="w-[18px] h-[18px] mr-3" />
+                    <span className="font-medium">{item.name}</span>
                   </button>
                 );
               })}
