@@ -120,16 +120,22 @@ const Appointments = ({ currentUser }) => {
       
       if (response.ok) {
         const data = await response.json();
-        setAppointments(data);
+        // Ensure data is always an array
+        setAppointments(Array.isArray(data) ? data : []);
+      } else {
+        // Set empty array on error
+        setAppointments([]);
       }
     } catch (err) {
       console.error('Failed to fetch appointments:', err);
+      // Set empty array on exception  
+      setAppointments([]);
     } finally {
       setLoading(false);
     }
   };
 
-  const filteredAppointments = appointments.filter(appointment => {
+  const filteredAppointments = (appointments || []).filter(appointment => {
     if (filter === 'all') return true;
     return appointment.status === filter;
   });
