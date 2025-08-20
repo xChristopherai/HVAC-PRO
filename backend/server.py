@@ -395,6 +395,8 @@ async def handle_voice_state(session: dict, form_data) -> dict:
     
     elif current_state == "collect_address":
         if speech_result:
+            if "data" not in session:
+                session["data"] = {}
             session["data"]["address"] = speech_result
             twiml["Say"] = "Got it. What type of issue are you experiencing? Please say: no heat, no cooling, maintenance, or plumbing."
             twiml["Gather"] = {"input": "speech", "action": "/api/voice/inbound", "method": "POST"}
