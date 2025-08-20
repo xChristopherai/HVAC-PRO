@@ -197,10 +197,12 @@ const Appointments = ({ currentUser, aiVoiceEnabled }) => {
             <CalendarView className="w-4 h-4 mr-2" />
             Calendar View
           </Button>
-          <Button>
-            <Plus className="w-4 h-4 mr-2" />
-            Schedule Appointment
-          </Button>
+          {!aiVoiceEnabled && (
+            <Button>
+              <Plus className="w-4 h-4 mr-2" />
+              Schedule Appointment
+            </Button>
+          )}
         </div>
       </div>
 
