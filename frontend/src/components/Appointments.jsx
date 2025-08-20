@@ -40,6 +40,8 @@ const StatusBadge = ({ status }) => {
 };
 
 const AppointmentCard = ({ appointment }) => {
+  const isAIGenerated = appointment.source === 'ai-voice' || appointment.is_ai_generated;
+  
   return (
     <Card className="hover:shadow-md transition-shadow">
       <CardHeader className="pb-3">
@@ -50,6 +52,11 @@ const AppointmentCard = ({ appointment }) => {
           </div>
           <div className="flex items-center space-x-2">
             <StatusBadge status={appointment.status} />
+            {isAIGenerated && (
+              <Badge variant="secondary" className="bg-blue-50 text-blue-700 border-blue-200">
+                AI Voice
+              </Badge>
+            )}
             <Button variant="ghost" size="icon" className="h-8 w-8">
               <MoreHorizontal className="h-4 w-4" />
             </Button>
