@@ -151,7 +151,7 @@ backend:
     status_history:
         - working: true
         - agent: "testing"
-        - comment: "Backend API is fully operational. Health check passes, root endpoint responds correctly. API is accessible from production URL https://hvac-assist-1.preview.emergentagent.com"
+        - comment: "Backend API is fully operational. Health check passes, root endpoint responds correctly. API is accessible from production URL https://techhvac-manager.preview.emergentagent.com"
 
 frontend:
   - task: "Dashboard component API integration"
