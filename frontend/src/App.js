@@ -33,6 +33,9 @@ const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 // Feature Flag for NEW_UI
 const NEW_UI = true;
 
+// AI Voice Scheduling Feature Flag
+const AI_VOICE_SCHEDULING_ENABLED = process.env.REACT_APP_AI_VOICE_SCHEDULING_ENABLED === 'true';
+
 // Navigation items
 const navigation = [
   { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
