@@ -289,7 +289,7 @@ const Appointments = ({ currentUser, aiVoiceEnabled }) => {
         <div className="flex items-center justify-between">
           <h1 className="text-3xl font-bold">Appointments</h1>
           {!aiVoiceEnabled && (
-            <Button>
+            <Button onClick={() => setShowScheduleForm(true)}>
               <Plus className="w-4 h-4 mr-2" />
               Schedule Appointment
             </Button>
