@@ -98,41 +98,29 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
   );
 };
 
-// Top Bar Component
-const TopBar = ({ sidebarOpen, setSidebarOpen }) => {
-  return (
-    <header className="h-16 bg-card border-b border-border flex items-center justify-between px-6">
-      {/* Left side */}
-      <div className="flex items-center space-x-4">
-        <Button
-          variant="ghost"
-          size="icon"
-          className="md:hidden"
-          onClick={() => setSidebarOpen(!sidebarOpen)}
-        >
-          <Menu className="w-4 h-4" />
-        </Button>
-        
-        <div className="relative hidden sm:block">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-          <Input
-            placeholder="Search customers, jobs..."
-            className="pl-10 w-80"
-          />
-        </div>
-      </div>
-      
-      {/* Right side */}
-      <div className="flex items-center space-x-4">
-        <Button variant="ghost" size="icon">
-          <Bell className="w-4 h-4" />
-        </Button>
-        <Button variant="ghost" size="icon">
-          <SettingsIcon className="w-4 h-4" />
-        </Button>
-      </div>
-    </header>
-  );
+// Authentication hook
+const useAuth = () => {
+  const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const initAuth = async () => {
+      try {
+        const authResult = await authService.login('owner', 'company-001');
+        if (authResult.success) {
+          setUser(authResult.user);
+        }
+      } catch (err) {
+        console.error('Authentication failed:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    initAuth();
+  }, []);
+
+  return { user, loading };
 };
 
 // Main Layout Component - PayPal style
