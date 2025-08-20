@@ -243,6 +243,33 @@ const Appointments = ({ currentUser, aiVoiceEnabled }) => {
     }
   };
 
+  const handleScheduleAppointment = async (appointmentData) => {
+    try {
+      const response = await authService.authenticatedFetch('/api/appointments', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          company_id: currentUser?.company_id || 'company-001',
+          customer_id: 'temp-customer-id', // In real app, would select from customers
+          ...appointmentData,
+          scheduled_date: new Date(appointmentData.scheduled_date).toISOString(),
+          estimated_duration: 60,
+          source: 'manual'
+        })
+      });
+      
+      if (response.ok) {
+        const newAppointment = await response.json();
+        setAppointments(prev => [newAppointment, ...prev]);
+        setShowScheduleForm(false);
+      } else {
+        console.error('Failed to schedule appointment');
+      }
+    } catch (err) {
+      console.error('Error scheduling appointment:', err);
+    }
+  };
+
   const filteredAppointments = (appointments || []).filter(appointment => {
     if (filter === 'all') return true;
     return appointment.status === filter;
