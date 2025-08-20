@@ -160,10 +160,12 @@ const Appointments = ({ currentUser, aiVoiceEnabled }) => {
       <div className="space-y-6">
         <div className="flex items-center justify-between">
           <h1 className="text-3xl font-bold">Appointments</h1>
-          <Button>
-            <Plus className="w-4 h-4 mr-2" />
-            Schedule Appointment
-          </Button>
+          {!aiVoiceEnabled && (
+            <Button>
+              <Plus className="w-4 h-4 mr-2" />
+              Schedule Appointment
+            </Button>
+          )}
         </div>
         
         <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
