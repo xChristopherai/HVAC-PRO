@@ -394,8 +394,8 @@ const NotificationsSection = ({ settings, onSave }) => {
                 onCheckedChange={(checked) => setNotificationSettings(prev => ({...prev, missed_call_alert: checked}))}
               />
               <div>
-                <Label htmlFor="missed_call_alert">Missed-call Alert to Owner</Label>
-                <p className="text-xs text-muted-foreground">Get notified when customers call but aren't answered</p>
+                <Label htmlFor="missed_call_alert" className="text-[#0B0F19] font-medium">Missed-call Alert to Owner</Label>
+                <p className="text-xs text-[#64748B]">Get notified when customers call but aren't answered</p>
               </div>
             </div>
 
