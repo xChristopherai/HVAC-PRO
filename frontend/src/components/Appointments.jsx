@@ -111,7 +111,7 @@ const AppointmentCard = ({ appointment }) => {
   );
 };
 
-const Appointments = ({ currentUser }) => {
+const Appointments = ({ currentUser, aiVoiceEnabled }) => {
   const [appointments, setAppointments] = useState([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState('all');
