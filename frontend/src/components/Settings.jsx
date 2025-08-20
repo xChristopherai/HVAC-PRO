@@ -704,6 +704,13 @@ const Settings = ({ currentUser }) => {
             onSave={handleSave}
           />
         );
+      case 'services':
+        return (
+          <ServiceAreasSection 
+            settings={settings}
+            onSave={handleSave}
+          />
+        );
       case 'integrations':
         return (
           <div className="space-y-6">
