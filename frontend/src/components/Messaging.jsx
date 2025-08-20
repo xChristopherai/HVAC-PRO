@@ -9,19 +9,230 @@ import {
   User,
   Clock,
   CheckCircle,
-  AlertCircle
+  AlertCircle,
+  Paperclip,
+  Smile,
+  ArrowLeft,
+  MoreVertical,
+  Template
 } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { Badge } from './ui/badge';
+import { Textarea } from './ui/textarea';
 import { cn, formatTime } from '../lib/utils';
 import authService from '../utils/auth';
 
+// Message Composer Component
+const MessageComposer = ({ onSend, isLoading, templates = [] }) => {
+  const [message, setMessage] = useState('');
+  const [showTemplates, setShowTemplates] = useState(false);
+  
+  const handleSend = () => {
+    if (message.trim() && onSend) {
+      onSend(message.trim());
+      setMessage('');
+    }
+  };
+  
+  const handleKeyPress = (e) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      handleSend();
+    }
+  };
+  
+  const insertTemplate = (template) => {
+    setMessage(template);
+    setShowTemplates(false);
+  };
+  
+  return (
+    <div className="border-t border-border p-4 space-y-3">
+      {/* Template Quick Actions */}
+      {showTemplates && (
+        <div className="flex flex-wrap gap-2 mb-3">
+          {templates.map((template, index) => (
+            <Button
+              key={index}
+              variant="outline"
+              size="sm"
+              onClick={() => insertTemplate(template.text)}
+              className="text-xs"
+            >
+              {template.name}
+            </Button>
+          ))}
+        </div>
+      )}
+      
+      {/* Message Input */}
+      <div className="flex space-x-2">
+        <div className="flex-1 relative">
+          <Textarea
+            value={message}
+            onChange={(e) => setMessage(e.target.value)}
+            onKeyPress={handleKeyPress}
+            placeholder="Type your message..."
+            rows={3}
+            className="resize-none pr-20"
+          />
+          <div className="absolute bottom-2 right-2 flex space-x-1">
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon"
+              onClick={() => setShowTemplates(!showTemplates)}
+              className="h-7 w-7"
+            >
+              <Template className="h-4 w-4" />
+            </Button>
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon"
+              className="h-7 w-7"
+            >
+              <Paperclip className="h-4 w-4" />
+            </Button>
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon"
+              className="h-7 w-7"
+            >
+              <Smile className="h-4 w-4" />
+            </Button>
+          </div>
+        </div>
+        <Button
+          onClick={handleSend}
+          disabled={!message.trim() || isLoading}
+          className="self-end"
+        >
+          <Send className="h-4 w-4" />
+        </Button>
+      </div>
+      
+      <div className="text-xs text-muted-foreground">
+        Press Enter to send, Shift+Enter for new line
+      </div>
+    </div>
+  );
+};
+
+// Conversation Thread View
+const ConversationThread = ({ conversation, onBack, onSendMessage }) => {
+  const [isLoading, setIsLoading] = useState(false);
+  
+  const templates = [
+    { name: 'Greeting', text: 'Hello! How can I help you with your HVAC system today?' },
+    { name: 'Schedule', text: 'I can schedule a technician to visit you. What time works best?' },
+    { name: 'Emergency', text: 'This sounds like an emergency. I\'m dispatching a technician immediately.' },
+    { name: 'Quote', text: 'I\'ll have one of our experts prepare a detailed quote for you.' },
+    { name: 'Follow-up', text: 'How did everything go with your recent service?' }
+  ];
+  
+  const handleSendMessage = async (messageText) => {
+    setIsLoading(true);
+    try {
+      // Simulate API call
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      if (onSendMessage) {
+        onSendMessage(conversation.id, messageText);
+      }
+    } finally {
+      setIsLoading(false);
+    }
+  };
+  
+  return (
+    <div className="flex flex-col h-full">
+      {/* Thread Header */}
+      <div className="border-b border-border p-4 flex items-center space-x-3">
+        <Button variant="ghost" size="icon" onClick={onBack}>
+          <ArrowLeft className="h-4 w-4" />
+        </Button>
+        <div className="flex items-center space-x-3 flex-1">
+          <div className="w-10 h-10 bg-muted rounded-full flex items-center justify-center">
+            <User className="w-5 h-5" />
+          </div>
+          <div className="flex-1">
+            <h3 className="font-semibold">{conversation.customer_name}</h3>
+            <p className="text-sm text-muted-foreground">
+              {conversation.customer_phone}
+            </p>
+          </div>
+          {conversation.job_id && (
+            <Badge variant="outline" className="text-xs">
+              Job #{conversation.job_id}
+            </Badge>
+          )}
+        </div>
+        <Button variant="ghost" size="icon">
+          <MoreVertical className="h-4 w-4" />
+        </Button>
+      </div>
+      
+      {/* Messages */}
+      <div className="flex-1 overflow-y-auto p-4 space-y-4">
+        {conversation.messages?.map((msg, index) => (
+          <div
+            key={index}
+            className={cn(
+              "flex",
+              msg.sender === 'customer' ? 'justify-start' : 'justify-end'
+            )}
+          >
+            <div
+              className={cn(
+                "max-w-xs lg:max-w-md px-4 py-2 rounded-lg",
+                msg.sender === 'customer'
+                  ? "bg-muted text-foreground"
+                  : "bg-primary text-primary-foreground"
+              )}
+            >
+              <p className="text-sm">{msg.message}</p>
+              <p className="text-xs mt-1 opacity-70">
+                {formatTime(msg.timestamp)}
+              </p>
+            </div>
+          </div>
+        ))}
+        
+        {isLoading && (
+          <div className="flex justify-end">
+            <div className="bg-primary text-primary-foreground px-4 py-2 rounded-lg opacity-70">
+              <div className="flex items-center space-x-2">
+                <div className="flex space-x-1">
+                  <div className="w-2 h-2 bg-current rounded-full animate-bounce" />
+                  <div className="w-2 h-2 bg-current rounded-full animate-bounce delay-75" />
+                  <div className="w-2 h-2 bg-current rounded-full animate-bounce delay-150" />
+                </div>
+                <span className="text-xs">Sending...</span>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+      
+      {/* Message Composer */}
+      <MessageComposer
+        onSend={handleSendMessage}
+        isLoading={isLoading}
+        templates={templates}
+      />
+    </div>
+  );
+};
+
 const Messaging = ({ currentUser }) => {
   const [conversations, setConversations] = useState([]);
+  const [selectedConversation, setSelectedConversation] = useState(null);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
+  const [filter, setFilter] = useState('all');
 
   useEffect(() => {
     fetchConversations();
@@ -34,20 +245,54 @@ const Messaging = ({ currentUser }) => {
       
       if (response.ok) {
         const data = await response.json();
-        setConversations(data);
+        // Ensure conversations have message history
+        const conversationsWithMessages = (data || []).map(conv => ({
+          ...conv,
+          messages: conv.conversation_history || [
+            {
+              sender: 'customer',
+              message: conv.initial_message,
+              timestamp: conv.created_at
+            }
+          ]
+        }));
+        setConversations(conversationsWithMessages);
       }
     } catch (err) {
       console.error('Failed to fetch conversations:', err);
+      setConversations([]);
     } finally {
       setLoading(false);
     }
   };
 
-  const filteredConversations = conversations.filter(conversation => 
-    conversation.customer_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    conversation.customer_phone?.includes(searchTerm) ||
-    conversation.last_message?.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const filteredConversations = (conversations || []).filter(conversation => {
+    const matchesSearch = conversation.customer_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         conversation.customer_phone?.includes(searchTerm) ||
+                         conversation.last_message?.toLowerCase().includes(searchTerm.toLowerCase());
+    
+    const matchesFilter = filter === 'all' || conversation.status === filter;
+    
+    return matchesSearch && matchesFilter;
+  });
+
+  const handleSendMessage = (conversationId, message) => {
+    // Update the conversation with the new message
+    setConversations(prev => prev.map(conv => 
+      conv.id === conversationId 
+        ? {
+            ...conv,
+            messages: [...(conv.messages || []), {
+              sender: 'assistant',
+              message: message,
+              timestamp: new Date().toISOString()
+            }],
+            last_message: message,
+            last_message_at: new Date().toISOString()
+          }
+        : conv
+    ));
+  };
 
   if (loading) {
     return (
@@ -82,6 +327,24 @@ const Messaging = ({ currentUser }) => {
     );
   }
 
+  // Show conversation thread if one is selected
+  if (selectedConversation) {
+    return (
+      <ConversationThread
+        conversation={selectedConversation}
+        onBack={() => setSelectedConversation(null)}
+        onSendMessage={handleSendMessage}
+      />
+    );
+  }
+
+  const filterOptions = [
+    { value: 'all', label: 'All Conversations' },
+    { value: 'in_progress', label: 'Active' },
+    { value: 'converted', label: 'Converted' },
+    { value: 'pending', label: 'Pending' },
+  ];
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -107,10 +370,18 @@ const Messaging = ({ currentUser }) => {
             className="pl-10"
           />
         </div>
-        <Button variant="outline">
-          <Filter className="w-4 h-4 mr-2" />
-          Filters
-        </Button>
+        <div className="flex space-x-2">
+          {filterOptions.map((option) => (
+            <Button
+              key={option.value}
+              variant={filter === option.value ? "default" : "outline"}
+              size="sm"
+              onClick={() => setFilter(option.value)}
+            >
+              {option.label}
+            </Button>
+          ))}
+        </div>
       </div>
 
       {/* Stats Cards */}
@@ -139,7 +410,11 @@ const Messaging = ({ currentUser }) => {
       <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
         {filteredConversations.length > 0 ? (
           filteredConversations.map((conversation) => (
-            <Card key={conversation.id} className="hover:shadow-md transition-shadow cursor-pointer">
+            <Card 
+              key={conversation.id} 
+              className="hover:shadow-md transition-shadow cursor-pointer"
+              onClick={() => setSelectedConversation(conversation)}
+            >
               <CardHeader className="pb-3">
                 <div className="flex items-start justify-between">
                   <div className="flex items-start space-x-3">
@@ -147,7 +422,7 @@ const Messaging = ({ currentUser }) => {
                       <User className="w-5 h-5 text-muted-foreground" />
                     </div>
                     <div className="space-y-1">
-                      <CardTitle className="text-lg">{conversation.customer_name}</CardTitle>
+                      <CardTitle className="text-lg">{conversation.customer_name || 'Unknown Customer'}</CardTitle>
                       <div className="flex items-center space-x-2 text-sm text-muted-foreground">
                         <Phone className="w-4 h-4" />
                         <span>{conversation.customer_phone}</span>
@@ -173,11 +448,11 @@ const Messaging = ({ currentUser }) => {
                 {/* Last Message */}
                 <div className="space-y-2">
                   <p className="text-sm text-muted-foreground line-clamp-2">
-                    "{conversation.last_message}"
+                    "{conversation.last_message || conversation.initial_message}"
                   </p>
                   <div className="flex items-center justify-between">
                     <span className="text-xs text-muted-foreground">
-                      {formatTime(conversation.last_message_at)}
+                      {formatTime(conversation.last_message_at || conversation.created_at)}
                     </span>
                     <div className="flex items-center space-x-1">
                       {conversation.status === 'delivered' ? (
@@ -205,18 +480,6 @@ const Messaging = ({ currentUser }) => {
                     </div>
                   </div>
                 )}
-                
-                {/* Actions */}
-                <div className="pt-2 flex space-x-2">
-                  <Button size="sm" variant="outline" className="flex-1">
-                    <MessageSquare className="w-3 h-3 mr-1" />
-                    View
-                  </Button>
-                  <Button size="sm" variant="outline" className="flex-1">
-                    <Send className="w-3 h-3 mr-1" />
-                    Reply
-                  </Button>
-                </div>
               </CardContent>
             </Card>
           ))
