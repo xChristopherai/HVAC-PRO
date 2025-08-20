@@ -117,7 +117,7 @@ const Customers = ({ currentUser, aiVoiceEnabled }) => {
           <h1 className="text-3xl font-bold">Customers</h1>
           <p className="text-muted-foreground">Manage your customer database</p>
         </div>
-        <Button>
+        <Button onClick={() => setShowAddCustomer(true)}>
           <Plus className="w-4 h-4 mr-2" />
           Add Customer
         </Button>
