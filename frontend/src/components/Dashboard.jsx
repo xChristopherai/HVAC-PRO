@@ -231,36 +231,36 @@ const Dashboard = ({ currentUser }) => {
   ];
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
+    <div className="space-y-8">
+      {/* Header - PayPal style */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold">Dashboard</h1>
-          <p className="text-muted-foreground">Welcome back, {currentUser?.name}!</p>
+          <h1 className="section-header">Dashboard</h1>
+          <p className="text-[#475569]">Welcome back, {currentUser?.name || 'John Smith'}!</p>
         </div>
-        <Button>
+        <Button className="bg-[#0070E0] hover:bg-[#065FC6] text-white">
           <ArrowUpRight className="w-4 h-4 mr-2" />
           View Reports
         </Button>
       </div>
 
-      {/* Stats Grid */}
+      {/* Stats Grid - PayPal style */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
         {stats.map((stat, index) => (
           <StatCard key={index} {...stat} />
         ))}
       </div>
 
-      {/* Main Content Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      {/* Main Content Grid - PayPal style */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         {/* Today's Appointments */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center space-x-2">
-              <Calendar className="w-5 h-5" />
+        <Card className="bg-white border border-[#E5E7EB] rounded-xl shadow-sm">
+          <CardHeader className="pb-4">
+            <CardTitle className="flex items-center space-x-2 text-[#0B0F19]">
+              <Calendar className="w-5 h-5 text-[#0070E0]" />
               <span>Today's Appointments</span>
             </CardTitle>
-            <CardDescription>
+            <CardDescription className="text-[#475569]">
               Scheduled appointments for today
             </CardDescription>
           </CardHeader>
