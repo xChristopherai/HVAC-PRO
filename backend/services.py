@@ -23,6 +23,10 @@ class MockTwilioService:
         self.phone_number = os.getenv("TWILIO_PHONE_NUMBER", "+1234567890")
         self.sent_messages = []  # Store mock sent messages
         
+    async def send_message(self, to_number: str, message: str) -> Dict[str, Any]:
+        """Send message (alias for send_sms)"""
+        return await self.send_sms(to_number, message)
+
     async def send_sms(self, to: str, body: str, from_number: str = None) -> Dict[str, Any]:
         """Mock SMS sending"""
         if not from_number:
