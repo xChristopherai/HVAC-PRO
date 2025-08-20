@@ -271,7 +271,7 @@ const CalendarSection = ({ settings, onSave }) => {
                   checked={calendarSettings.auto_create_events}
                   onCheckedChange={(checked) => setCalendarSettings(prev => ({...prev, auto_create_events: checked}))}
                 />
-                <Label htmlFor="auto_create">Auto-create events for new appointments</Label>
+                <Label htmlFor="auto_create" className="text-[#0B0F19] font-medium">Auto-create events for new appointments</Label>
               </div>
 
               <div className="pt-2">
