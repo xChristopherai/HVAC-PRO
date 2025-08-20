@@ -86,7 +86,7 @@ const MessageComposer = ({ onSend, isLoading, templates = [] }) => {
               onClick={() => setShowTemplates(!showTemplates)}
               className="h-7 w-7"
             >
-              <Template className="h-4 w-4" />
+              <FileText className="h-4 w-4" />
             </Button>
             <Button
               type="button"
