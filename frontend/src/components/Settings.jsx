@@ -406,8 +406,8 @@ const NotificationsSection = ({ settings, onSave }) => {
                 onCheckedChange={(checked) => setNotificationSettings(prev => ({...prev, daily_summary: checked}))}
               />
               <div>
-                <Label htmlFor="daily_summary">Daily Summary</Label>
-                <p className="text-xs text-muted-foreground">Receive daily summary of completed jobs and revenue</p>
+                <Label htmlFor="daily_summary" className="text-[#0B0F19] font-medium">Daily Summary</Label>
+                <p className="text-xs text-[#64748B]">Receive daily summary of completed jobs and revenue</p>
               </div>
             </div>
 
