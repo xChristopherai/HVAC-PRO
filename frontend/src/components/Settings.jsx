@@ -418,8 +418,8 @@ const NotificationsSection = ({ settings, onSave }) => {
                 onCheckedChange={(checked) => setNotificationSettings(prev => ({...prev, emergency_escalations: checked}))}
               />
               <div>
-                <Label htmlFor="emergency_escalations">Emergency Escalations</Label>
-                <p className="text-xs text-muted-foreground">Immediate alerts for emergency service requests</p>
+                <Label htmlFor="emergency_escalations" className="text-[#0B0F19] font-medium">Emergency Escalations</Label>
+                <p className="text-xs text-[#64748B]">Immediate alerts for emergency service requests</p>
               </div>
             </div>
           </div>
