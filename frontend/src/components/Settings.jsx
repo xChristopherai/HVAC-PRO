@@ -245,7 +245,7 @@ const CalendarSection = ({ settings, onSave }) => {
           {calendarSettings.google_connected && (
             <>
               <div className="space-y-2">
-                <Label htmlFor="default_calendar">Default Calendar</Label>
+                <Label htmlFor="default_calendar" className="text-[#0B0F19] font-medium">Default Calendar</Label>
                 <Input
                   id="default_calendar"
                   value={calendarSettings.default_calendar}
