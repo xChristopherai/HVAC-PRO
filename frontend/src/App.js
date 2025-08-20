@@ -135,19 +135,40 @@ const TopBar = ({ sidebarOpen, setSidebarOpen }) => {
   );
 };
 
-// Main Layout Component
+// Main Layout Component - PayPal style
 const Layout = ({ children }) => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   
   return (
-    <div className="flex h-screen bg-background">
+    <div className="flex h-screen bg-[#F7F9FC]">
       <Sidebar isOpen={sidebarOpen} setIsOpen={setSidebarOpen} />
       
+      {/* Mobile backdrop */}
+      {sidebarOpen && (
+        <div 
+          className="fixed inset-0 bg-black bg-opacity-50 z-40 lg:hidden"
+          onClick={() => setSidebarOpen(false)}
+        />
+      )}
+      
       <div className="flex-1 flex flex-col min-w-0">
-        <TopBar sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} />
+        {/* Top Bar - Mobile only */}
+        <header className="h-16 bg-white border-b border-[#E5E7EB] flex items-center justify-between px-6 lg:hidden">
+          <div className="flex items-center space-x-4">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setSidebarOpen(!sidebarOpen)}
+            >
+              <Menu className="w-5 h-5" />
+            </Button>
+            <span className="text-lg font-semibold text-[#0B0F19]">HVAC Pro</span>
+          </div>
+        </header>
         
+        {/* Main content area - PayPal style */}
         <main className="flex-1 overflow-auto">
-          <div className="p-6">
+          <div className="content-wrapper">
             {children}
           </div>
         </main>
