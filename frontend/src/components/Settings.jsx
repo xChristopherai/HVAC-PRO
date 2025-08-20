@@ -906,7 +906,7 @@ const ServiceAreasSection = ({ settings, onSave }) => {
               onChange={(e) => setServiceAreaSettings(prev => ({...prev, default_radius: parseInt(e.target.value)}))}
               placeholder="25"
             />
-            <p className="text-xs text-muted-foreground">Default radius for service areas when specific boundaries aren't defined</p>
+            <p className="text-xs text-[#64748B]">Default radius for service areas when specific boundaries aren't defined</p>
           </div>
 
           {serviceAreaSettings.areas.length > 0 && (
