@@ -171,6 +171,7 @@ class Appointment(BaseDocument):
     calendar_event_id: Optional[str] = None
     # New fields for AI Voice Scheduling
     source: AppointmentSource = AppointmentSource.MANUAL
+    is_ai_generated: Optional[bool] = False
     issue_type: Optional[IssueType] = None
     window: Optional[TimeWindow] = None
     address: Optional[str] = None
