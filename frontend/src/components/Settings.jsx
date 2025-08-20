@@ -368,6 +368,7 @@ const Settings = ({ currentUser }) => {
             </nav>
           </CardContent>
         </Card>
+        </div>
 
         {/* Settings Content */}
         <div className="lg:col-span-3">
