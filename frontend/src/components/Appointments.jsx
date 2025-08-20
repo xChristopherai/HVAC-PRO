@@ -102,8 +102,12 @@ const AppointmentCard = ({ appointment }) => {
           </div>
           
           <div className="flex space-x-2">
-            <Button size="sm" variant="outline">View Details</Button>
-            <Button size="sm">Edit</Button>
+            <Button size="sm" variant="outline" onClick={() => console.log('View appointment:', appointment.id)}>
+              View Details
+            </Button>
+            <Button size="sm" onClick={() => console.log('Edit appointment:', appointment.id)}>
+              Edit
+            </Button>
           </div>
         </div>
       </CardContent>
