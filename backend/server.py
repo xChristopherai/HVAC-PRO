@@ -1149,6 +1149,165 @@ async def update_company_settings(
     
     return {"message": "Settings updated successfully"}
 
+# ==================== SPECIFIC SETTINGS ENDPOINTS ====================
+
+@app.post("/api/settings/calendar")
+async def save_calendar_settings(calendar_settings: dict, current_user: dict = Depends(get_current_user)):
+    """Save calendar-specific settings"""
+    
+    company_id = current_user.get("company_id", "company-001")
+    
+    await db.companies.update_one(
+        {"id": company_id},
+        {
+            "$set": {
+                "settings.calendar": calendar_settings,
+                "updated_at": datetime.utcnow()
+            }
+        },
+        upsert=True
+    )
+    
+    return {"message": "Calendar settings saved successfully"}
+
+@app.post("/api/calendar/create")
+async def create_calendar_event(event_data: dict, current_user: dict = Depends(get_current_user)):
+    """Create a calendar event (mock or real)"""
+    
+    try:
+        calendar_service = get_calendar_service()
+        
+        # Format event data for Google Calendar
+        formatted_event = {
+            "summary": event_data.get("title", "HVAC Appointment"),
+            "start": {
+                "dateTime": event_data.get("start"),
+                "timeZone": "America/New_York"
+            },
+            "end": {
+                "dateTime": event_data.get("end"),
+                "timeZone": "America/New_York"
+            },
+            "description": f"Customer: {event_data.get('customerId', 'N/A')}, Technician: {event_data.get('techId', 'N/A')}"
+        }
+        
+        event_id = await calendar_service.create_event(formatted_event)
+        
+        return {
+            "success": True,
+            "eventId": event_id,
+            "message": "Test event created successfully"
+        }
+    except Exception as e:
+        logger.error(f"Failed to create calendar event: {str(e)}")
+        return {
+            "success": False,
+            "error": str(e),
+            "message": "Failed to create test event"
+        }
+
+@app.post("/api/settings/notifications")
+async def save_notifications_settings(notifications_settings: dict, current_user: dict = Depends(get_current_user)):
+    """Save notifications settings"""
+    
+    company_id = current_user.get("company_id", "company-001")
+    
+    await db.companies.update_one(
+        {"id": company_id},
+        {
+            "$set": {
+                "settings.notifications": notifications_settings,
+                "updated_at": datetime.utcnow()
+            }
+        },
+        upsert=True
+    )
+    
+    return {"message": "Notifications settings saved successfully"}
+
+@app.post("/api/billing/checkout")
+async def create_billing_checkout(billing_data: dict, current_user: dict = Depends(get_current_user)):
+    """Create billing checkout session (mock or real Stripe)"""
+    
+    stripe_secret = os.getenv("STRIPE_SECRET_KEY", "")
+    
+    if stripe_secret and not stripe_secret.startswith("mock_"):
+        # Real Stripe integration would go here
+        # For now, return mock response
+        checkout_url = f"https://checkout.stripe.com/pay/mock_session_{datetime.utcnow().timestamp()}"
+    else:
+        # Mock checkout
+        checkout_url = f"https://mock-billing.com/checkout?plan={billing_data.get('plan', 'pro')}&company_id={current_user.get('company_id')}"
+    
+    # Save billing info
+    company_id = current_user.get("company_id", "company-001")
+    await db.companies.update_one(
+        {"id": company_id},
+        {
+            "$set": {
+                "settings.billing.plan": billing_data.get("plan", "trial"),
+                "settings.billing.last_checkout": datetime.utcnow(),
+                "updated_at": datetime.utcnow()
+            }
+        },
+        upsert=True
+    )
+    
+    return {
+        "checkoutUrl": checkout_url,
+        "message": "Checkout session created"
+    }
+
+@app.post("/api/settings/service-areas")
+async def save_service_areas_settings(service_areas: dict, current_user: dict = Depends(get_current_user)):
+    """Save service areas settings"""
+    
+    company_id = current_user.get("company_id", "company-001")
+    
+    await db.companies.update_one(
+        {"id": company_id},
+        {
+            "$set": {
+                "settings.serviceAreas": service_areas,
+                "updated_at": datetime.utcnow()
+            }
+        },
+        upsert=True
+    )
+    
+    return {"message": "Service areas settings saved successfully"}
+
+@app.post("/api/settings/integrations/{provider}")
+async def save_integration_settings(provider: str, integration_data: dict, current_user: dict = Depends(get_current_user)):
+    """Save integration settings for a specific provider"""
+    
+    company_id = current_user.get("company_id", "company-001")
+    
+    # Mock connection status - in real implementation, this would validate the keys
+    mock_status = "connected" if integration_data.get("api_key") or integration_data.get("client_id") else "not_configured"
+    
+    integration_settings = {
+        **integration_data,
+        "status": mock_status,
+        "connected_at": datetime.utcnow() if mock_status == "connected" else None
+    }
+    
+    await db.companies.update_one(
+        {"id": company_id},
+        {
+            "$set": {
+                f"settings.integrations.{provider}": integration_settings,
+                "updated_at": datetime.utcnow()
+            }
+        },
+        upsert=True
+    )
+    
+    return {
+        "message": f"{provider} integration settings saved successfully",
+        "status": mock_status
+    }
+
 @app.post("/api/settings/test-sms")
 async def test_sms_settings(
     test_data: dict,
