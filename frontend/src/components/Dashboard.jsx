@@ -16,27 +16,27 @@ import { Button } from './ui/button';
 import { cn, formatCurrency, formatTime } from '../lib/utils';
 import authService from '../utils/auth';
 
-// Stat Card Component
+// Stat Card Component - PayPal style
 const StatCard = ({ title, value, change, icon: Icon, trend = 'up' }) => {
   return (
-    <Card>
+    <Card className="bg-white border border-[#E5E7EB] rounded-xl shadow-sm">
       <CardContent className="p-6">
         <div className="flex items-center justify-between">
           <div>
-            <p className="text-sm font-medium text-muted-foreground">{title}</p>
-            <p className="text-2xl font-bold">{value}</p>
+            <p className="text-sm font-medium text-[#475569] mb-1">{title}</p>
+            <p className="text-3xl font-bold text-[#0B0F19]">{value}</p>
             {change && (
               <p className={cn(
-                "text-xs mt-1 flex items-center",
+                "text-sm mt-2 flex items-center font-medium",
                 trend === 'up' ? "text-green-600" : "text-red-600"
               )}>
-                <TrendingUp className="w-3 h-3 mr-1" />
+                <TrendingUp className="w-4 h-4 mr-1" />
                 {change}
               </p>
             )}
           </div>
-          <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center">
-            <Icon className="w-6 h-6 text-primary" />
+          <div className="w-12 h-12 bg-[#E6F1FD] rounded-lg flex items-center justify-center">
+            <Icon className="w-6 h-6 text-[#0070E0]" />
           </div>
         </div>
       </CardContent>
