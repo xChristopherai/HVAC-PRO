@@ -268,6 +268,304 @@ async def update_appointment(appointment_id: str, appointment_data: dict, curren
     updated_appointment = await db.appointments.find_one({"id": appointment_id})
     return Appointment(**updated_appointment)
 
+# ==================== AI VOICE SCHEDULING ENDPOINTS ====================
+
+# In-memory session storage (for development)
+voice_sessions = {}
+ai_voice_enabled = os.environ.get('AI_VOICE_SCHEDULING_ENABLED', 'true').lower() == 'true'
+
+@app.get("/api/availability")
+async def get_availability(date: str = Query(..., description="Date in YYYY-MM-DD format")):
+    """Get available appointment windows for a specific date"""
+    try:
+        # Check if availability is configured for this date
+        availability_doc = await db.availability.find_one({"date": date})
+        
+        if availability_doc:
+            availability = Availability(**availability_doc)
+        else:
+            # Create default availability
+            availability = Availability(
+                company_id="default",
+                date=date,
+                windows=[
+                    {"window": "8-11", "capacity": 4, "booked": 0},
+                    {"window": "12-3", "capacity": 4, "booked": 0},
+                    {"window": "3-6", "capacity": 4, "booked": 0}
+                ]
+            )
+            # Save default availability
+            await db.availability.insert_one(availability.dict())
+        
+        # Count existing appointments for this date to calculate booked slots
+        existing_appointments = await db.appointments.find({
+            "scheduled_date": {"$regex": f"^{date}"}
+        }).to_list(100)
+        
+        # Update booked counts based on existing appointments
+        for window in availability.windows:
+            window["booked"] = sum(1 for apt in existing_appointments if apt.get("window") == window["window"])
+            window["available"] = window["capacity"] - window["booked"]
+        
+        windows = [
+            AvailabilityWindow(
+                window=TimeWindow(w["window"]),
+                capacity=w["capacity"],
+                booked=w["booked"],
+                available=max(0, w["capacity"] - w["booked"])
+            ) for w in availability.windows
+        ]
+        
+        return AvailabilityResponse(date=date, windows=windows)
+        
+    except Exception as e:
+        logger.error(f"Error getting availability: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/api/voice/inbound")
+async def voice_webhook(request: Request):
+    """Twilio voice webhook handler"""
+    if not ai_voice_enabled:
+        return {"error": "AI Voice Scheduling is disabled"}
+    
+    try:
+        form_data = await request.form()
+        phone_number = form_data.get("From", "").replace("+1", "")
+        call_sid = form_data.get("CallSid", "")
+        
+        logger.info(f"Voice call from {phone_number}, CallSid: {call_sid}")
+        
+        # Get or create session state
+        session_key = f"voice_{phone_number}_{call_sid}"
+        if session_key not in voice_sessions:
+            voice_sessions[session_key] = VoiceSessionState(
+                phone_number=phone_number,
+                state="greet",
+                expires_at=datetime.utcnow() + timedelta(minutes=15)
+            ).dict()
+        
+        session = voice_sessions[session_key]
+        current_state = session["state"]
+        
+        # Simple state machine
+        twiml_response = await handle_voice_state(session, form_data)
+        
+        return JSONResponse(
+            content=twiml_response,
+            headers={"Content-Type": "application/xml"}
+        )
+        
+    except Exception as e:
+        logger.error(f"Voice webhook error: {str(e)}")
+        return JSONResponse(
+            content={"Say": "I'm sorry, we're experiencing technical difficulties. Please call back later."},
+            headers={"Content-Type": "application/xml"}
+        )
+
+async def handle_voice_state(session: dict, form_data) -> dict:
+    """Handle voice call state machine"""
+    phone_number = session["phone_number"]
+    current_state = session["state"]
+    
+    # Extract speech input if available
+    speech_result = form_data.get("SpeechResult", "").lower().strip()
+    digits = form_data.get("Digits", "")
+    
+    twiml = {"Say": "", "Gather": None, "Hangup": False}
+    
+    if current_state == "greet":
+        twiml["Say"] = "Hello! Welcome to HVAC Pro. I'm here to help you schedule a service appointment. May I get your name please?"
+        twiml["Gather"] = {"input": "speech", "action": "/api/voice/inbound", "method": "POST"}
+        session["state"] = "collect_name"
+    
+    elif current_state == "collect_name":
+        if speech_result:
+            session["data"]["name"] = speech_result.title()
+            twiml["Say"] = f"Thank you {speech_result.title()}. What's your service address?"
+            twiml["Gather"] = {"input": "speech", "action": "/api/voice/inbound", "method": "POST"}
+            session["state"] = "collect_address"
+        else:
+            twiml["Say"] = "I didn't catch that. Could you please tell me your name?"
+            twiml["Gather"] = {"input": "speech", "action": "/api/voice/inbound", "method": "POST"}
+    
+    elif current_state == "collect_address":
+        if speech_result:
+            session["data"]["address"] = speech_result
+            twiml["Say"] = "Got it. What type of issue are you experiencing? Please say: no heat, no cooling, maintenance, or plumbing."
+            twiml["Gather"] = {"input": "speech", "action": "/api/voice/inbound", "method": "POST"}
+            session["state"] = "collect_issue"
+        else:
+            twiml["Say"] = "Could you please repeat your address?"
+            twiml["Gather"] = {"input": "speech", "action": "/api/voice/inbound", "method": "POST"}
+    
+    elif current_state == "collect_issue":
+        if speech_result:
+            # Map speech to issue types
+            issue_mapping = {
+                "no heat": "no_heat",
+                "no heating": "no_heat", 
+                "heat": "no_heat",
+                "no cool": "no_cool",
+                "no cooling": "no_cool",
+                "cool": "no_cool",
+                "air": "no_cool",
+                "maintenance": "maintenance",
+                "plumbing": "plumbing"
+            }
+            
+            detected_issue = None
+            for key, value in issue_mapping.items():
+                if key in speech_result:
+                    detected_issue = value
+                    break
+            
+            if detected_issue:
+                session["data"]["issue_type"] = detected_issue
+                
+                # Get today's availability
+                from datetime import date
+                today = date.today().strftime("%Y-%m-%d")
+                availability_resp = await get_availability(today)
+                
+                available_windows = [w for w in availability_resp.windows if w.available > 0]
+                
+                if available_windows:
+                    window_text = ", ".join([f"{w.window.replace('-', ' to ')}" for w in available_windows])
+                    twiml["Say"] = f"Perfect. I can schedule you for today between {window_text}. Please say which time window works best for you."
+                    twiml["Gather"] = {"input": "speech", "action": "/api/voice/inbound", "method": "POST"}
+                    session["state"] = "offer_windows"
+                    session["data"]["available_windows"] = [w.window for w in available_windows]
+                    session["data"]["date"] = today
+                else:
+                    twiml["Say"] = "I'm sorry, we don't have any availability today. Let me transfer you to our office for manual scheduling."
+                    twiml["Hangup"] = True
+            else:
+                twiml["Say"] = "I didn't understand the issue type. Please say: no heat, no cooling, maintenance, or plumbing."
+                twiml["Gather"] = {"input": "speech", "action": "/api/voice/inbound", "method": "POST"}
+        else:
+            twiml["Say"] = "Could you please repeat the type of issue you're experiencing?"
+            twiml["Gather"] = {"input": "speech", "action": "/api/voice/inbound", "method": "POST"}
+    
+    elif current_state == "offer_windows":
+        if speech_result:
+            # Try to match spoken window to available windows
+            available_windows = session["data"].get("available_windows", [])
+            selected_window = None
+            
+            # Simple matching logic
+            if "morning" in speech_result or "8" in speech_result or "eleven" in speech_result:
+                if "8-11" in available_windows:
+                    selected_window = "8-11"
+            elif "afternoon" in speech_result or "12" in speech_result or "noon" in speech_result:
+                if "12-3" in available_windows:
+                    selected_window = "12-3"
+            elif "evening" in speech_result or "3" in speech_result or "later" in speech_result:
+                if "3-6" in available_windows:
+                    selected_window = "3-6"
+            
+            if selected_window:
+                session["data"]["window"] = selected_window
+                
+                # Create appointment
+                try:
+                    appointment = await create_voice_appointment(session["data"], phone_number)
+                    window_text = selected_window.replace("-", " to ")
+                    twiml["Say"] = f"Perfect! You're all booked for {session['data']['date']} between {window_text}. Please keep your pets secured and ensure easy access to your HVAC system. You'll receive an SMS confirmation shortly. Thank you!"
+                    twiml["Hangup"] = True
+                    
+                    # Send SMS confirmation
+                    await send_appointment_sms(phone_number, session["data"], selected_window)
+                    
+                except Exception as e:
+                    logger.error(f"Error creating appointment: {str(e)}")
+                    twiml["Say"] = "I'm sorry, there was an error booking your appointment. Please call our office directly."
+                    twiml["Hangup"] = True
+            else:
+                available_text = ", ".join([w.replace("-", " to ") for w in available_windows])
+                twiml["Say"] = f"I didn't understand which time you prefer. Available times are: {available_text}. Which works for you?"
+                twiml["Gather"] = {"input": "speech", "action": "/api/voice/inbound", "method": "POST"}
+        else:
+            twiml["Say"] = "Which time window would you prefer?"
+            twiml["Gather"] = {"input": "speech", "action": "/api/voice/inbound", "method": "POST"}
+    
+    return twiml
+
+async def create_voice_appointment(session_data: dict, phone_number: str) -> Appointment:
+    """Create appointment from voice session data"""
+    try:
+        # Find or create customer
+        customer = await db.customers.find_one({"phone": phone_number})
+        
+        if not customer:
+            # Create new customer
+            customer_data = CustomerCreate(
+                company_id="company-001",  # Default company
+                name=session_data.get("name", "Voice Customer"),
+                phone=phone_number,
+                address={"full": session_data.get("address", "")},
+                preferred_contact="phone"
+            )
+            customer_obj = Customer(**customer_data.dict())
+            await db.customers.insert_one(customer_obj.dict())
+            customer_id = customer_obj.id
+        else:
+            customer_id = customer["id"]
+        
+        # Parse scheduled date and time
+        from datetime import datetime, date
+        appointment_date = session_data["date"]  # YYYY-MM-DD
+        window = session_data["window"]  # e.g. "8-11"
+        start_hour = int(window.split("-")[0])
+        
+        scheduled_datetime = datetime.strptime(f"{appointment_date} {start_hour:02d}:00", "%Y-%m-%d %H:%M")
+        
+        # Create appointment
+        appointment_data = AppointmentCreate(
+            company_id="company-001",
+            customer_id=customer_id,
+            title=f"HVAC Service - {session_data.get('issue_type', 'Service')}",
+            description=f"Issue: {session_data.get('issue_type', 'Service')}. Address: {session_data.get('address', '')}",
+            scheduled_date=scheduled_datetime,
+            estimated_duration=120,  # 2 hours default
+            service_type=session_data.get("issue_type", "maintenance"),
+            source=AppointmentSource.AI_VOICE,
+            issue_type=IssueType(session_data.get("issue_type", "maintenance")),
+            window=TimeWindow(window),
+            address=session_data.get("address", "")
+        )
+        
+        appointment_obj = Appointment(**appointment_data.dict())
+        await db.appointments.insert_one(appointment_obj.dict())
+        
+        # Update availability (increment booked count)
+        await db.availability.update_one(
+            {"date": appointment_date, "windows.window": window},
+            {"$inc": {"windows.$.booked": 1}}
+        )
+        
+        logger.info(f"Created voice appointment: {appointment_obj.id}")
+        return appointment_obj
+        
+    except Exception as e:
+        logger.error(f"Error creating voice appointment: {str(e)}")
+        raise
+
+async def send_appointment_sms(phone_number: str, session_data: dict, window: str):
+    """Send SMS confirmation after appointment creation"""
+    try:
+        sms_service = get_sms_service()
+        window_text = window.replace("-", " to ")
+        message = f"Thanks, {session_data.get('name', '')}. You're booked for {session_data['date']} {window_text}. For help reply HELP. To stop, reply STOP."
+        
+        await sms_service.send_message(
+            to_number=phone_number,
+            message=message
+        )
+        logger.info(f"Sent SMS confirmation to {phone_number}")
+        
+    except Exception as e:
+        logger.error(f"Error sending SMS confirmation: {str(e)}")
+
 # ==================== JOB MANAGEMENT ENDPOINTS ====================
 
 @app.post("/api/jobs", response_model=Job)
