@@ -483,8 +483,8 @@ const BillingSection = ({ settings, onSave }) => {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-2xl font-bold">Billing</h2>
-        <p className="text-muted-foreground">Manage your subscription and billing information</p>
+        <h2 className="text-2xl font-bold text-[#0B0F19]">Billing</h2>
+        <p className="text-[#64748B]">Manage your subscription and billing information</p>
       </div>
 
       <Card>
