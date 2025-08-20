@@ -3,6 +3,22 @@
 @tailwind components;
 @tailwind utilities;
 
+/* FORCE LIGHT BLUE BACKGROUND - HIGHEST PRIORITY */
+* {
+  background-color: #F0F8FF !important;
+}
+
+/* Only cards and inputs should be white */
+.card, [class*="card"], .bg-white, button, input, textarea, select, 
+.sidebar, [class*="sidebar"], header, nav {
+  background-color: #FFFFFF !important;
+}
+
+/* Blue elements */
+.bg-primary, .bg-blue-600, [class*="primary"] {
+  background-color: #0070E0 !important;
+}
+
 @layer base {
   :root {
     --background: 240 248 255; /* #F0F8FF - Very Light Blue */
