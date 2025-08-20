@@ -896,7 +896,7 @@ const ServiceAreasSection = ({ settings, onSave }) => {
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="default_radius">Default Service Radius (miles)</Label>
+            <Label htmlFor="default_radius" className="text-[#0B0F19] font-medium">Default Service Radius (miles)</Label>
             <Input
               id="default_radius"
               type="number"
