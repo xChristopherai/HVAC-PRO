@@ -911,7 +911,7 @@ const ServiceAreasSection = ({ settings, onSave }) => {
 
           {serviceAreaSettings.areas.length > 0 && (
             <div className="space-y-2">
-              <Label>Current Service Areas</Label>
+              <Label className="text-[#0B0F19] font-medium">Current Service Areas</Label>
               <div className="space-y-2 max-h-48 overflow-y-auto">
                 {serviceAreaSettings.areas.map((area, index) => (
                   <div key={index} className="flex items-center justify-between p-2 bg-muted rounded-lg">
