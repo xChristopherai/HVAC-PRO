@@ -355,7 +355,7 @@ const NotificationsSection = ({ settings, onSave }) => {
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="owner_phone">Owner Phone</Label>
+              <Label htmlFor="owner_phone" className="text-[#0B0F19] font-medium">Owner Phone</Label>
               <Input
                 id="owner_phone"
                 type="tel"
