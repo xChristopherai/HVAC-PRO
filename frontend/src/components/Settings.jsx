@@ -222,8 +222,8 @@ const CalendarSection = ({ settings, onSave }) => {
 
       <Card>
         <CardHeader>
-          <CardTitle>Google Calendar Integration</CardTitle>
-          <CardDescription>Connect your Google Calendar to sync appointments</CardDescription>
+          <CardTitle className="text-[#0B0F19]">Google Calendar Integration</CardTitle>
+          <CardDescription className="text-[#64748B]">Connect your Google Calendar to sync appointments</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="flex items-center justify-between">
