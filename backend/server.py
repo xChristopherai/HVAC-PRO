@@ -377,7 +377,301 @@ async def voice_webhook(request: Request):
             headers={"Content-Type": "application/xml"}
         )
 
-async def handle_voice_state(session: dict, form_data) -> dict:
+async def manage_call_log(call_sid: str, phone_number: str, form_data) -> 'CallLog':
+    """Create or update call log entry"""
+    try:
+        # Check if call log already exists
+        existing_log = await db.call_logs.find_one({"call_sid": call_sid})
+        
+        if existing_log:
+            # Update existing log
+            call_log = CallLog(**existing_log)
+        else:
+            # Find customer by phone
+            customer = await db.customers.find_one({"phone": phone_number})
+            
+            # Create new call log
+            call_log_data = CallLogCreate(
+                company_id="company-001",
+                phone_number=phone_number,
+                call_sid=call_sid,
+                customer_name=customer.get("name", "Unknown") if customer else "Unknown"
+            )
+            
+            call_log = CallLog(
+                **call_log_data.dict(),
+                customer_id=customer.get("id") if customer else None,
+                status=CallStatus.INCOMING,
+                answered_by_ai=True
+            )
+            
+            await db.call_logs.insert_one(call_log.dict())
+            logger.info(f"Created call log: {call_log.id}")
+        
+        return call_log
+        
+    except Exception as e:
+        logger.error(f"Error managing call log: {str(e)}")
+        # Return minimal call log to prevent crashes
+        return CallLog(
+            company_id="company-001",
+            phone_number=phone_number,
+            call_sid=call_sid,
+            customer_name="Unknown"
+        )
+
+async def add_call_transcript(call_log_id: str, session: dict, speech_result: str):
+    """Add interaction to call transcript"""
+    try:
+        if not speech_result:
+            return
+            
+        transcript_entry = {
+            "timestamp": datetime.utcnow().isoformat(),
+            "state": session.get("state", "unknown"),
+            "speaker": "customer",
+            "content": speech_result,
+            "confidence": 0.9  # Mock confidence score
+        }
+        
+        await db.call_logs.update_one(
+            {"id": call_log_id},
+            {
+                "$push": {"transcript": transcript_entry},
+                "$set": {"updated_at": datetime.utcnow()}
+            }
+        )
+        
+    except Exception as e:
+        logger.error(f"Error adding call transcript: {str(e)}")
+
+async def finalize_call_log(call_log: 'CallLog', call_status: str, session: dict):
+    """Finalize call log when call ends"""
+    try:
+        # Determine call outcome based on session data
+        outcome = CallOutcome.TECHNICAL_ISSUE
+        
+        if session.get("state") == "completed" and session.get("data", {}).get("appointment_created"):
+            outcome = CallOutcome.APPOINTMENT_CREATED
+        elif session.get("state") in ["collect_name", "collect_address", "collect_issue"]:
+            outcome = CallOutcome.CUSTOMER_HANGUP
+        elif call_status == "completed":
+            outcome = CallOutcome.INFORMATION_PROVIDED
+        
+        # Calculate duration (mock for now)
+        duration = (datetime.utcnow() - call_log.start_time).seconds
+        
+        # Update call log
+        await db.call_logs.update_one(
+            {"id": call_log.id},
+            {
+                "$set": {
+                    "status": CallStatus.COMPLETED if call_status == "completed" else CallStatus.FAILED,
+                    "end_time": datetime.utcnow(),
+                    "duration": duration,
+                    "outcome": outcome,
+                    "session_data": session.get("data", {}),
+                    "issue_type": session.get("data", {}).get("issue_type"),
+                    "appointment_id": session.get("data", {}).get("appointment_id"),
+                    "ai_confidence": 0.85,  # Mock confidence score
+                    "updated_at": datetime.utcnow()
+                }
+            }
+        )
+        
+        logger.info(f"Finalized call log {call_log.id}: {outcome}")
+        
+    except Exception as e:
+        logger.error(f"Error finalizing call log: {str(e)}")
+
+async def handle_enhanced_voice_state(session: dict, form_data, call_log: 'CallLog') -> dict:
+    """Enhanced voice state machine with better logging"""
+    phone_number = session["phone_number"]
+    current_state = session["state"]
+    
+    # Extract speech input if available
+    speech_result = form_data.get("SpeechResult", "").lower().strip()
+    digits = form_data.get("Digits", "")
+    
+    twiml = {"Say": "", "Gather": None, "Hangup": False}
+    
+    if current_state == "greet":
+        twiml["Say"] = "Hello! Welcome to HVAC Pro. I'm here to help you schedule a service appointment. May I get your name please?"
+        twiml["Gather"] = {"input": "speech", "action": "/api/voice/inbound", "method": "POST"}
+        session["state"] = "collect_name"
+        
+        # Add AI response to transcript
+        await add_ai_response_to_transcript(call_log.id, "greet", twiml["Say"])
+    
+    elif current_state == "collect_name":
+        if speech_result:
+            if "data" not in session:
+                session["data"] = {}
+            session["data"]["name"] = speech_result.title()
+            twiml["Say"] = f"Thank you {speech_result.title()}. What's your service address?"
+            twiml["Gather"] = {"input": "speech", "action": "/api/voice/inbound", "method": "POST"}
+            session["state"] = "collect_address"
+            
+            await add_ai_response_to_transcript(call_log.id, "collect_name", twiml["Say"])
+        else:
+            twiml["Say"] = "I didn't catch that. Could you please tell me your name?"
+            twiml["Gather"] = {"input": "speech", "action": "/api/voice/inbound", "method": "POST"}
+    
+    elif current_state == "collect_address":
+        if speech_result:
+            if "data" not in session:
+                session["data"] = {}
+            session["data"]["address"] = speech_result
+            twiml["Say"] = "Got it. What type of issue are you experiencing? Please say: no heat, no cooling, maintenance, or plumbing."
+            twiml["Gather"] = {"input": "speech", "action": "/api/voice/inbound", "method": "POST"}
+            session["state"] = "collect_issue"
+            
+            await add_ai_response_to_transcript(call_log.id, "collect_address", twiml["Say"])
+        else:
+            twiml["Say"] = "Could you please repeat your address?"
+            twiml["Gather"] = {"input": "speech", "action": "/api/voice/inbound", "method": "POST"}
+    
+    elif current_state == "collect_issue":
+        if speech_result:
+            # Map speech to issue types
+            issue_mapping = {
+                "no heat": "no_heat",
+                "no heating": "no_heat", 
+                "heat": "no_heat",
+                "no cool": "no_cool",
+                "no cooling": "no_cool",
+                "cool": "no_cool",
+                "air": "no_cool",
+                "maintenance": "maintenance",
+                "plumbing": "plumbing"
+            }
+            
+            detected_issue = None
+            for key, value in issue_mapping.items():
+                if key in speech_result:
+                    detected_issue = value
+                    break
+            
+            if detected_issue:
+                if "data" not in session:
+                    session["data"] = {}
+                session["data"]["issue_type"] = detected_issue
+                
+                # Get today's availability
+                from datetime import date
+                today = date.today().strftime("%Y-%m-%d")
+                availability_resp = await get_availability(today)
+                
+                available_windows = [w for w in availability_resp.windows if w.available > 0]
+                
+                if available_windows:
+                    window_text = ", ".join([f"{w.window.replace('-', ' to ')}" for w in available_windows])
+                    twiml["Say"] = f"Perfect. I can schedule you for today between {window_text}. Please say which time window works best for you."
+                    twiml["Gather"] = {"input": "speech", "action": "/api/voice/inbound", "method": "POST"}
+                    session["state"] = "offer_windows"
+                    session["data"]["available_windows"] = [w.window for w in available_windows]
+                    session["data"]["date"] = today
+                    
+                    await add_ai_response_to_transcript(call_log.id, "collect_issue", twiml["Say"])
+                else:
+                    twiml["Say"] = "I'm sorry, we don't have any availability today. Let me transfer you to our office for manual scheduling."
+                    twiml["Hangup"] = True
+                    
+                    # Update call log for transfer
+                    await db.call_logs.update_one(
+                        {"id": call_log.id},
+                        {"$set": {"transferred_to_tech": True, "outcome": CallOutcome.TRANSFERRED_TO_HUMAN}}
+                    )
+            else:
+                twiml["Say"] = "I didn't understand the issue type. Please say: no heat, no cooling, maintenance, or plumbing."
+                twiml["Gather"] = {"input": "speech", "action": "/api/voice/inbound", "method": "POST"}
+        else:
+            twiml["Say"] = "Could you please repeat the type of issue you're experiencing?"
+            twiml["Gather"] = {"input": "speech", "action": "/api/voice/inbound", "method": "POST"}
+    
+    elif current_state == "offer_windows":
+        if speech_result:
+            # Try to match spoken window to available windows
+            available_windows = session["data"].get("available_windows", [])
+            selected_window = None
+            
+            # Simple matching logic
+            if "morning" in speech_result or "8" in speech_result or "eleven" in speech_result:
+                if "8-11" in available_windows:
+                    selected_window = "8-11"
+            elif "afternoon" in speech_result or "12" in speech_result or "noon" in speech_result:
+                if "12-3" in available_windows:
+                    selected_window = "12-3"
+            elif "evening" in speech_result or "3" in speech_result or "later" in speech_result:
+                if "3-6" in available_windows:
+                    selected_window = "3-6"
+            
+            if selected_window:
+                session["data"]["window"] = selected_window
+                
+                # Create appointment
+                try:
+                    appointment = await create_voice_appointment(session["data"], phone_number)
+                    session["data"]["appointment_created"] = True
+                    session["data"]["appointment_id"] = appointment.id
+                    session["state"] = "completed"
+                    
+                    window_text = selected_window.replace("-", " to ")
+                    twiml["Say"] = f"Perfect! You're all booked for {session['data']['date']} between {window_text}. Please keep your pets secured and ensure easy access to your HVAC system. You'll receive an SMS confirmation shortly. Thank you!"
+                    twiml["Hangup"] = True
+                    
+                    # Send SMS confirmation
+                    await send_appointment_sms(phone_number, session["data"], selected_window)
+                    
+                    # Update call log with appointment details
+                    await db.call_logs.update_one(
+                        {"id": call_log.id},
+                        {
+                            "$set": {
+                                "appointment_id": appointment.id,
+                                "outcome": CallOutcome.APPOINTMENT_CREATED,
+                                "issue_type": session["data"].get("issue_type")
+                            }
+                        }
+                    )
+                    
+                    await add_ai_response_to_transcript(call_log.id, "offer_windows", twiml["Say"])
+                    
+                except Exception as e:
+                    logger.error(f"Error creating appointment: {str(e)}")
+                    twiml["Say"] = "I'm sorry, there was an error booking your appointment. Please call our office directly."
+                    twiml["Hangup"] = True
+            else:
+                available_text = ", ".join([w.replace("-", " to ") for w in available_windows])
+                twiml["Say"] = f"I didn't understand which time you prefer. Available times are: {available_text}. Which works for you?"
+                twiml["Gather"] = {"input": "speech", "action": "/api/voice/inbound", "method": "POST"}
+        else:
+            twiml["Say"] = "Which time window would you prefer?"
+            twiml["Gather"] = {"input": "speech", "action": "/api/voice/inbound", "method": "POST"}
+    
+    return twiml
+
+async def add_ai_response_to_transcript(call_log_id: str, state: str, response: str):
+    """Add AI response to call transcript"""
+    try:
+        transcript_entry = {
+            "timestamp": datetime.utcnow().isoformat(),
+            "state": state,
+            "speaker": "ai",
+            "content": response,
+            "confidence": 1.0
+        }
+        
+        await db.call_logs.update_one(
+            {"id": call_log_id},
+            {
+                "$push": {"transcript": transcript_entry},
+                "$set": {"updated_at": datetime.utcnow()}
+            }
+        )
+        
+    except Exception as e:
+        logger.error(f"Error adding AI response to transcript: {str(e)}")
     """Handle voice call state machine"""
     phone_number = session["phone_number"]
     current_state = session["state"]
