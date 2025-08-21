@@ -865,7 +865,211 @@ async def create_voice_appointment(session_data: dict, phone_number: str) -> App
         logger.error(f"Error creating voice appointment: {str(e)}")
         raise
 
-async def send_appointment_sms(phone_number: str, session_data: dict, window: str):
+# ==================== CALL LOG ENDPOINTS (PHASE 6) ====================
+
+@app.get("/api/call-logs", response_model=CallLogSearchResponse)
+async def search_call_logs(
+    company_id: str = Query(..., description="Company ID"),
+    search: Optional[str] = Query(None, description="Search by customer name or phone number"),
+    date_filter: Optional[str] = Query(None, description="Date filter: today, yesterday, this_week, last_week, custom"),
+    date_from: Optional[str] = Query(None, description="Start date for custom filter (YYYY-MM-DD)"),
+    date_to: Optional[str] = Query(None, description="End date for custom filter (YYYY-MM-DD)"),
+    status: Optional[str] = Query(None, description="Call status filter"),
+    answered_by: Optional[str] = Query(None, description="Filter by who answered: ai, human, missed"),
+    outcome: Optional[str] = Query(None, description="Call outcome filter"),
+    issue_type: Optional[str] = Query(None, description="Issue type filter"),
+    transferred: Optional[bool] = Query(None, description="Filter by transferred calls"),
+    skip: int = Query(0, description="Skip records for pagination"),
+    limit: int = Query(50, description="Limit records returned"),
+    current_user: dict = Depends(get_current_user)
+):
+    """Search and filter call logs with comprehensive filters"""
+    
+    try:
+        # Build query filters
+        filters = {"company_id": company_id}
+        
+        # Search filter (customer name or phone)
+        if search:
+            search_regex = {"$regex": search.replace("+", "\\+"), "$options": "i"}
+            filters["$or"] = [
+                {"customer_name": search_regex},
+                {"phone_number": search_regex}
+            ]
+        
+        # Date filters
+        if date_filter:
+            today = datetime.now().replace(hour=0, minute=0, second=0, microsecond=0)
+            
+            if date_filter == "today":
+                filters["start_time"] = {"$gte": today}
+            elif date_filter == "yesterday":
+                yesterday = today - timedelta(days=1)
+                filters["start_time"] = {"$gte": yesterday, "$lt": today}
+            elif date_filter == "this_week":
+                week_start = today - timedelta(days=today.weekday())
+                filters["start_time"] = {"$gte": week_start}
+            elif date_filter == "last_week":
+                week_start = today - timedelta(days=today.weekday() + 7)
+                week_end = today - timedelta(days=today.weekday())
+                filters["start_time"] = {"$gte": week_start, "$lt": week_end}
+            elif date_filter == "custom" and date_from and date_to:
+                try:
+                    from_date = datetime.strptime(date_from, "%Y-%m-%d")
+                    to_date = datetime.strptime(date_to, "%Y-%m-%d") + timedelta(days=1)
+                    filters["start_time"] = {"$gte": from_date, "$lt": to_date}
+                except ValueError:
+                    raise HTTPException(status_code=400, detail="Invalid date format. Use YYYY-MM-DD")
+        
+        # Status filter
+        if status:
+            filters["status"] = status
+            
+        # Answered by filter
+        if answered_by:
+            if answered_by == "ai":
+                filters["answered_by_ai"] = True
+                filters["transferred_to_tech"] = False
+            elif answered_by == "human":
+                filters["transferred_to_tech"] = True
+            elif answered_by == "missed":
+                filters["status"] = {"$in": ["missed", "failed"]}
+                
+        # Outcome filter
+        if outcome:
+            filters["outcome"] = outcome
+            
+        # Issue type filter
+        if issue_type:
+            filters["issue_type"] = issue_type
+            
+        # Transferred filter
+        if transferred is not None:
+            filters["transferred_to_tech"] = transferred
+        
+        # Get total count
+        total_count = await db.call_logs.count_documents(filters)
+        
+        # Get paginated results
+        call_logs_data = await db.call_logs.find(filters)\
+            .sort("start_time", -1)\
+            .skip(skip)\
+            .limit(limit)\
+            .to_list(limit)
+        
+        call_logs = [CallLog(**log) for log in call_logs_data]
+        
+        return CallLogSearchResponse(
+            calls=call_logs,
+            total_count=total_count,
+            filters_applied={
+                "search": search,
+                "date_filter": date_filter,
+                "status": status,
+                "answered_by": answered_by,
+                "outcome": outcome,
+                "issue_type": issue_type,
+                "transferred": transferred
+            }
+        )
+        
+    except Exception as e:
+        logger.error(f"Error searching call logs: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/api/call-logs/{call_id}", response_model=CallLog)
+async def get_call_log(
+    call_id: str,
+    current_user: dict = Depends(get_current_user)
+):
+    """Get detailed call log with full transcript"""
+    
+    call_log = await db.call_logs.find_one({"id": call_id})
+    if not call_log:
+        raise HTTPException(status_code=404, detail="Call log not found")
+    
+    return CallLog(**call_log)
+
+@app.get("/api/call-logs/stats/{company_id}")
+async def get_call_stats(
+    company_id: str,
+    period: str = Query("today", description="Stats period: today, this_week, this_month"),
+    current_user: dict = Depends(get_current_user)
+):
+    """Get call statistics for dashboard"""
+    
+    try:
+        today = datetime.now().replace(hour=0, minute=0, second=0, microsecond=0)
+        
+        # Determine date range
+        if period == "today":
+            start_date = today
+        elif period == "this_week":
+            start_date = today - timedelta(days=today.weekday())
+        elif period == "this_month":
+            start_date = today.replace(day=1)
+        else:
+            start_date = today
+        
+        # Build aggregation pipeline
+        pipeline = [
+            {
+                "$match": {
+                    "company_id": company_id,
+                    "start_time": {"$gte": start_date}
+                }
+            },
+            {
+                "$group": {
+                    "_id": None,
+                    "total_calls": {"$sum": 1},
+                    "ai_answered": {"$sum": {"$cond": [{"$eq": ["$answered_by_ai", True]}, 1, 0]}},
+                    "transferred_to_human": {"$sum": {"$cond": ["$transferred_to_tech", 1, 0]}},
+                    "appointments_created": {"$sum": {"$cond": [{"$eq": ["$outcome", "appointment_created"]}, 1, 0]}},
+                    "avg_duration": {"$avg": "$duration"},
+                    "completed_calls": {"$sum": {"$cond": [{"$eq": ["$status", "completed"]}, 1, 0]}}
+                }
+            }
+        ]
+        
+        result = await db.call_logs.aggregate(pipeline).to_list(1)
+        
+        if not result:
+            return {
+                "period": period,
+                "total_calls": 0,
+                "ai_answered": 0,
+                "transferred_to_human": 0,
+                "appointments_created": 0,
+                "avg_duration": 0,
+                "completed_calls": 0,
+                "ai_success_rate": 0,
+                "appointment_conversion_rate": 0
+            }
+        
+        stats = result[0]
+        
+        # Calculate rates
+        ai_success_rate = (stats["ai_answered"] / stats["total_calls"] * 100) if stats["total_calls"] > 0 else 0
+        appointment_rate = (stats["appointments_created"] / stats["completed_calls"] * 100) if stats["completed_calls"] > 0 else 0
+        
+        return {
+            "period": period,
+            "total_calls": stats["total_calls"],
+            "ai_answered": stats["ai_answered"],
+            "transferred_to_human": stats["transferred_to_human"],
+            "appointments_created": stats["appointments_created"],
+            "avg_duration": round(stats["avg_duration"] or 0, 1),
+            "completed_calls": stats["completed_calls"],
+            "ai_success_rate": round(ai_success_rate, 1),
+            "appointment_conversion_rate": round(appointment_rate, 1)
+        }
+        
+    except Exception as e:
+        logger.error(f"Error getting call stats: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+# Update existing voice appointment creation to include call log reference
     """Send SMS confirmation after appointment creation"""
     try:
         sms_service = get_sms_service()
