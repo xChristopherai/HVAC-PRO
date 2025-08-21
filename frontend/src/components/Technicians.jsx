@@ -229,12 +229,8 @@ const Technicians = ({ currentUser }) => {
       console.error('Error adding technician:', err);
     }
   };
-    } finally {
-      setLoading(false);
-    }
-  };
 
-  const filteredTechnicians = (technicians || []).filter(tech => {
+  const filteredTechnicians = searchTerm.trim() ? searchResults : (technicians || []).filter(tech => {
     const matchesSearch = tech.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          tech.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          tech.phone?.includes(searchTerm);
