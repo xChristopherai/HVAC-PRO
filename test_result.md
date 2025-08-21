@@ -289,6 +289,10 @@ metadata:
 test_plan:
   current_focus:
     - "Dashboard component API integration"
+    - "Quick Actions - Add Customer endpoint"
+    - "Quick Actions - Schedule Job endpoint"
+    - "Quick Actions - Create Invoice endpoint"
+    - "Quick Actions - View Reports endpoint"
   stuck_tasks:
     - "Dashboard component API integration"
   test_all: false
