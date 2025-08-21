@@ -1446,6 +1446,11 @@ async def quick_view_reports(report_data: dict, current_user: dict = Depends(get
 
 # ==================== PHASE 3 ENDPOINTS - CUSTOMERS & APPOINTMENTS ====================
 
+@app.get("/api/test-phase3")
+async def test_phase3_endpoint():
+    """Test endpoint to verify PHASE 3 code is loaded"""
+    return {"message": "PHASE 3 endpoints are loaded", "timestamp": datetime.utcnow().isoformat()}
+
 @app.get("/api/customers/search")
 async def search_customers(
     q: Optional[str] = None,
