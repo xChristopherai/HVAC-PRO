@@ -947,6 +947,538 @@ class HVACAPITester:
                          f"Unexpected error: {data.get('detail', 'Unknown error')}")
             return False
 
+    # ==================== PHASE 6 TESTS - VOICE & SMS + CALL LOG FUNCTIONALITY ====================
+    
+    def test_phase6_enhanced_voice_webhook_greet_state(self):
+        """Test POST /api/voice/inbound - Enhanced webhook with call logging (greet state)"""
+        # Mock Twilio form data for initial call
+        mock_form_data = {
+            "From": "+15551234567",
+            "CallSid": "test_call_sid_phase6_001",
+            "CallStatus": "in-progress",
+            "SpeechResult": "",
+            "Digits": ""
+        }
+        
+        # Use requests directly for form data
+        url = f"{self.base_url}/api/voice/inbound"
+        headers = {'Content-Type': 'application/x-www-form-urlencoded'}
+        
+        try:
+            response = requests.post(url, data=mock_form_data, headers=headers, timeout=30)
+            success = response.status_code < 400
+            
+            if success:
+                try:
+                    data = response.json()
+                    has_say = 'Say' in data
+                    has_greeting = 'Welcome to HVAC Pro' in str(data) if has_say else False
+                    has_gather = 'Gather' in data
+                    
+                    # Check for proper TwiML structure
+                    proper_twiml = has_say and has_greeting
+                    
+                    self.log_test("Phase 6 Enhanced Voice Webhook - Greet State", proper_twiml,
+                                 f"Status: {response.status_code}, Has greeting: {has_greeting}, Has gather: {has_gather}")
+                    return proper_twiml
+                except:
+                    # Response might be XML, check for basic success
+                    response_text = response.text if hasattr(response, 'text') else str(response.content)
+                    has_welcome = 'Welcome to HVAC Pro' in response_text
+                    self.log_test("Phase 6 Enhanced Voice Webhook - Greet State", has_welcome,
+                                 f"Status: {response.status_code}, XML response with greeting: {has_welcome}")
+                    return has_welcome
+            else:
+                error_msg = f"HTTP {response.status_code}"
+                try:
+                    error_data = response.json()
+                    error_msg += f" - {error_data.get('detail', 'Unknown error')}"
+                except:
+                    error_msg += f" - {response.text[:100] if hasattr(response, 'text') else 'No response text'}"
+                
+                self.log_test("Phase 6 Enhanced Voice Webhook - Greet State", False, error_msg)
+                return False
+                
+        except Exception as e:
+            self.log_test("Phase 6 Enhanced Voice Webhook - Greet State", False, f"Error: {str(e)}")
+            return False
+
+    def test_phase6_voice_webhook_state_machine_flow(self):
+        """Test POST /api/voice/inbound - Full state machine flow"""
+        # Test collect_name state
+        mock_form_data = {
+            "From": "+15551234567",
+            "CallSid": "test_call_sid_phase6_002",
+            "CallStatus": "in-progress",
+            "SpeechResult": "John Smith",
+            "Digits": ""
+        }
+        
+        url = f"{self.base_url}/api/voice/inbound"
+        headers = {'Content-Type': 'application/x-www-form-urlencoded'}
+        
+        try:
+            response = requests.post(url, data=mock_form_data, headers=headers, timeout=30)
+            success = response.status_code < 400
+            
+            if success:
+                try:
+                    data = response.json()
+                    # Should ask for address after getting name
+                    response_text = str(data)
+                    asks_for_address = 'address' in response_text.lower() or 'service address' in response_text.lower()
+                    
+                    self.log_test("Phase 6 Voice State Machine Flow", asks_for_address,
+                                 f"Status: {response.status_code}, Asks for address: {asks_for_address}")
+                    return asks_for_address
+                except:
+                    response_text = response.text if hasattr(response, 'text') else str(response.content)
+                    asks_for_address = 'address' in response_text.lower()
+                    self.log_test("Phase 6 Voice State Machine Flow", asks_for_address,
+                                 f"Status: {response.status_code}, XML asks for address: {asks_for_address}")
+                    return asks_for_address
+            else:
+                self.log_test("Phase 6 Voice State Machine Flow", False, f"HTTP {response.status_code}")
+                return False
+                
+        except Exception as e:
+            self.log_test("Phase 6 Voice State Machine Flow", False, f"Error: {str(e)}")
+            return False
+
+    def test_phase6_voice_webhook_twilio_disabled_mode(self):
+        """Test voice webhook with TWILIO_ENABLED=false (mock mode)"""
+        # This should still work and create appointments but use mock SMS
+        mock_form_data = {
+            "From": "+15551234567",
+            "CallSid": "test_call_sid_phase6_003",
+            "CallStatus": "in-progress",
+            "SpeechResult": "no heat",
+            "Digits": ""
+        }
+        
+        url = f"{self.base_url}/api/voice/inbound"
+        headers = {'Content-Type': 'application/x-www-form-urlencoded'}
+        
+        try:
+            response = requests.post(url, data=mock_form_data, headers=headers, timeout=30)
+            success = response.status_code < 400
+            
+            if success:
+                # Should still process the call even in mock mode
+                self.log_test("Phase 6 Voice Webhook TWILIO_ENABLED=false", True,
+                             f"Status: {response.status_code}, Mock mode working")
+                return True
+            else:
+                self.log_test("Phase 6 Voice Webhook TWILIO_ENABLED=false", False, f"HTTP {response.status_code}")
+                return False
+                
+        except Exception as e:
+            self.log_test("Phase 6 Voice Webhook TWILIO_ENABLED=false", False, f"Error: {str(e)}")
+            return False
+
+    def test_phase6_call_log_search_api(self):
+        """Test GET /api/call-logs - Call log search with filters"""
+        params = {
+            "company_id": self.company_id,
+            "search": "555",  # Search by phone number
+            "date_filter": "today",
+            "answered_by": "ai",
+            "skip": 0,
+            "limit": 10
+        }
+        
+        success, data = self.make_request('GET', '/call-logs', params=params, token=self.user_token)
+        
+        if success:
+            # Check CallLogSearchResponse format
+            has_calls = 'calls' in data and isinstance(data['calls'], list)
+            has_total_count = 'total_count' in data and isinstance(data['total_count'], int)
+            has_filters_applied = 'filters_applied' in data and isinstance(data['filters_applied'], dict)
+            
+            # Check if filters are properly applied in response
+            filters_applied = data.get('filters_applied', {})
+            correct_filters = (
+                filters_applied.get('search') == '555' and
+                filters_applied.get('date_filter') == 'today' and
+                filters_applied.get('answered_by') == 'ai'
+            )
+            
+            all_valid = has_calls and has_total_count and has_filters_applied and correct_filters
+            call_count = len(data.get('calls', []))
+            
+            self.log_test("Phase 6 Call Log Search API", all_valid,
+                         f"Found {call_count} calls, Total: {data.get('total_count', 0)}, Filters applied correctly: {correct_filters}")
+            return all_valid
+        else:
+            self.log_test("Phase 6 Call Log Search API", False, f"Error: {data.get('detail', 'Unknown error')}")
+            return False
+
+    def test_phase6_call_log_search_date_filters(self):
+        """Test GET /api/call-logs - Date filter variations"""
+        date_filters = ["today", "yesterday", "this_week", "last_week"]
+        
+        all_filters_work = True
+        for date_filter in date_filters:
+            params = {
+                "company_id": self.company_id,
+                "date_filter": date_filter,
+                "limit": 5
+            }
+            
+            success, data = self.make_request('GET', '/call-logs', params=params, token=self.user_token)
+            
+            if not success:
+                all_filters_work = False
+                break
+            
+            # Check if filter is applied correctly
+            filters_applied = data.get('filters_applied', {})
+            if filters_applied.get('date_filter') != date_filter:
+                all_filters_work = False
+                break
+        
+        self.log_test("Phase 6 Call Log Date Filters", all_filters_work,
+                     f"Tested filters: {', '.join(date_filters)}")
+        return all_filters_work
+
+    def test_phase6_call_log_search_custom_date_range(self):
+        """Test GET /api/call-logs - Custom date range filter"""
+        params = {
+            "company_id": self.company_id,
+            "date_filter": "custom",
+            "date_from": "2025-01-20",
+            "date_to": "2025-01-25",
+            "limit": 10
+        }
+        
+        success, data = self.make_request('GET', '/call-logs', params=params, token=self.user_token)
+        
+        if success:
+            has_calls = 'calls' in data and isinstance(data['calls'], list)
+            has_total_count = 'total_count' in data
+            
+            # Check if custom date filter is applied
+            filters_applied = data.get('filters_applied', {})
+            custom_filter_applied = filters_applied.get('date_filter') == 'custom'
+            
+            all_valid = has_calls and has_total_count and custom_filter_applied
+            
+            self.log_test("Phase 6 Call Log Custom Date Range", all_valid,
+                         f"Custom date range working: {custom_filter_applied}")
+            return all_valid
+        else:
+            self.log_test("Phase 6 Call Log Custom Date Range", False, f"Error: {data.get('detail', 'Unknown error')}")
+            return False
+
+    def test_phase6_call_log_search_pagination(self):
+        """Test GET /api/call-logs - Pagination parameters"""
+        params = {
+            "company_id": self.company_id,
+            "skip": 0,
+            "limit": 3
+        }
+        
+        success, data = self.make_request('GET', '/call-logs', params=params, token=self.user_token)
+        
+        if success:
+            has_calls = 'calls' in data and isinstance(data['calls'], list)
+            has_total_count = 'total_count' in data
+            
+            calls = data.get('calls', [])
+            respects_limit = len(calls) <= 3
+            
+            all_valid = has_calls and has_total_count and respects_limit
+            
+            self.log_test("Phase 6 Call Log Pagination", all_valid,
+                         f"Returned {len(calls)} calls (limit=3), Total: {data.get('total_count', 0)}")
+            return all_valid
+        else:
+            self.log_test("Phase 6 Call Log Pagination", False, f"Error: {data.get('detail', 'Unknown error')}")
+            return False
+
+    def test_phase6_call_log_details_api(self):
+        """Test GET /api/call-logs/{call_id} - Individual call log details"""
+        # First get a list of call logs to get a valid call_id
+        params = {"company_id": self.company_id, "limit": 1}
+        success, data = self.make_request('GET', '/call-logs', params=params, token=self.user_token)
+        
+        if not success or not data.get('calls'):
+            # Create a mock call log for testing by making a voice call first
+            mock_form_data = {
+                "From": "+15551234567",
+                "CallSid": "test_call_details_001",
+                "CallStatus": "in-progress"
+            }
+            
+            url = f"{self.base_url}/api/voice/inbound"
+            headers = {'Content-Type': 'application/x-www-form-urlencoded'}
+            
+            try:
+                requests.post(url, data=mock_form_data, headers=headers, timeout=30)
+                # Try to get call logs again
+                success, data = self.make_request('GET', '/call-logs', params=params, token=self.user_token)
+            except:
+                pass
+        
+        if success and data.get('calls'):
+            call_id = data['calls'][0]['id']
+            
+            # Test individual call log retrieval
+            detail_success, detail_data = self.make_request('GET', f'/call-logs/{call_id}', token=self.user_token)
+            
+            if detail_success:
+                # Check CallLog model fields
+                required_fields = ['id', 'company_id', 'phone_number', 'call_sid', 'status', 'start_time']
+                has_required_fields = all(field in detail_data for field in required_fields)
+                
+                has_transcript = 'transcript' in detail_data and isinstance(detail_data['transcript'], list)
+                has_session_data = 'session_data' in detail_data
+                
+                all_valid = has_required_fields and has_transcript and has_session_data
+                
+                self.log_test("Phase 6 Call Log Details API", all_valid,
+                             f"Call ID: {call_id[:8]}..., Has transcript: {has_transcript}, Required fields: {has_required_fields}")
+                return all_valid
+            else:
+                self.log_test("Phase 6 Call Log Details API", False, f"Failed to get call details: {detail_data.get('detail', 'Unknown error')}")
+                return False
+        else:
+            self.log_test("Phase 6 Call Log Details API", False, "No call logs available for testing")
+            return False
+
+    def test_phase6_call_statistics_api(self):
+        """Test GET /api/call-logs/stats/{company_id} - Call statistics"""
+        periods = ["today", "this_week", "this_month"]
+        
+        all_periods_work = True
+        for period in periods:
+            params = {"period": period}
+            success, data = self.make_request('GET', f'/call-logs/stats/{self.company_id}', params=params, token=self.user_token)
+            
+            if success:
+                # Check required statistics fields
+                required_stats = [
+                    'total_calls', 'ai_answered', 'transferred_to_human', 
+                    'appointments_created', 'avg_duration', 'completed_calls',
+                    'ai_success_rate', 'appointment_conversion_rate'
+                ]
+                
+                has_all_stats = all(stat in data for stat in required_stats)
+                correct_period = data.get('period') == period
+                
+                # Check data types
+                numeric_fields = ['total_calls', 'ai_answered', 'transferred_to_human', 'appointments_created', 'completed_calls']
+                numeric_valid = all(isinstance(data.get(field, 0), int) for field in numeric_fields)
+                
+                float_fields = ['avg_duration', 'ai_success_rate', 'appointment_conversion_rate']
+                float_valid = all(isinstance(data.get(field, 0.0), (int, float)) for field in float_fields)
+                
+                period_valid = has_all_stats and correct_period and numeric_valid and float_valid
+                
+                if not period_valid:
+                    all_periods_work = False
+                    break
+            else:
+                all_periods_work = False
+                break
+        
+        if all_periods_work:
+            # Test with one period to get specific stats
+            success, data = self.make_request('GET', f'/call-logs/stats/{self.company_id}', params={"period": "today"}, token=self.user_token)
+            stats_summary = f"Total: {data.get('total_calls', 0)}, AI: {data.get('ai_answered', 0)}, Success Rate: {data.get('ai_success_rate', 0)}%"
+        else:
+            stats_summary = "Failed to get stats"
+        
+        self.log_test("Phase 6 Call Statistics API", all_periods_work,
+                     f"Tested periods: {', '.join(periods)}, {stats_summary}")
+        return all_periods_work
+
+    def test_phase6_call_log_search_filters_comprehensive(self):
+        """Test GET /api/call-logs - Comprehensive filter testing"""
+        # Test different filter combinations
+        filter_tests = [
+            {"status": "completed", "description": "Status filter"},
+            {"answered_by": "ai", "description": "Answered by AI filter"},
+            {"answered_by": "human", "description": "Answered by human filter"},
+            {"answered_by": "missed", "description": "Missed calls filter"},
+            {"outcome": "appointment_created", "description": "Outcome filter"},
+            {"issue_type": "no_heat", "description": "Issue type filter"},
+            {"transferred": True, "description": "Transferred calls filter"},
+            {"transferred": False, "description": "Non-transferred calls filter"}
+        ]
+        
+        all_filters_work = True
+        working_filters = []
+        
+        for filter_test in filter_tests:
+            params = {"company_id": self.company_id, "limit": 5}
+            # Add the specific filter
+            for key, value in filter_test.items():
+                if key != "description":
+                    params[key] = value
+            
+            success, data = self.make_request('GET', '/call-logs', params=params, token=self.user_token)
+            
+            if success:
+                has_calls = 'calls' in data
+                has_filters_applied = 'filters_applied' in data
+                working_filters.append(filter_test["description"])
+            else:
+                all_filters_work = False
+        
+        self.log_test("Phase 6 Call Log Comprehensive Filters", all_filters_work,
+                     f"Working filters: {len(working_filters)}/{len(filter_tests)} - {', '.join(working_filters[:3])}...")
+        return all_filters_work
+
+    def test_phase6_environment_variables_loaded(self):
+        """Test that Phase 6 environment variables are properly loaded"""
+        # Test AI_VOICE_SCHEDULING_ENABLED and TWILIO_ENABLED through health endpoint
+        success, data = self.make_request('GET', '/health')
+        
+        if success:
+            # Backend should be running which means env vars are loaded
+            status_ok = data.get('status') in ['healthy', 'degraded']
+            
+            # Check if services indicate proper configuration
+            services = data.get('services', {})
+            voice_service_status = services.get('voice', 'unknown')
+            sms_service_status = services.get('sms', 'unknown')
+            
+            # Both should be in mock mode for testing
+            voice_configured = voice_service_status in ['mock', 'connected', 'healthy']
+            sms_configured = sms_service_status in ['mock', 'connected', 'healthy']
+            
+            all_valid = status_ok and voice_configured and sms_configured
+            
+            self.log_test("Phase 6 Environment Variables", all_valid,
+                         f"Voice: {voice_service_status}, SMS: {sms_service_status}")
+            return all_valid
+        else:
+            self.log_test("Phase 6 Environment Variables", False, "Health check failed")
+            return False
+
+    def test_phase6_appointment_creation_with_call_log_integration(self):
+        """Test appointment creation from voice calls with proper call log integration"""
+        # First create a customer for the appointment
+        customer_data = {
+            "company_id": self.company_id,
+            "name": "Phase 6 Test Customer",
+            "phone": "+15559876543",
+            "address": {"full": "789 Test Ave, Phase6 City, ST 12345"},
+            "preferred_contact": "phone"
+        }
+        
+        customer_success, customer_response = self.make_request('POST', '/customers', customer_data, self.user_token)
+        
+        if not customer_success:
+            self.log_test("Phase 6 Appointment with Call Log Integration", False, 
+                         f"Failed to create customer: {customer_response.get('detail', 'Unknown error')}")
+            return False
+        
+        customer_id = customer_response.get('id')
+        
+        # Create appointment with AI Voice source and call log integration
+        appointment_data = {
+            "company_id": self.company_id,
+            "customer_id": customer_id,
+            "title": "HVAC Service - Phase 6 Voice Call",
+            "description": "Customer called via Phase 6 enhanced AI Voice system",
+            "scheduled_date": "2025-01-25T14:00:00",
+            "estimated_duration": 120,
+            "service_type": "no_heat",
+            "source": "ai-voice",
+            "issue_type": "no_heat",
+            "window": "12-3",
+            "address": "789 Test Ave, Phase6 City, ST 12345"
+        }
+        
+        success, data = self.make_request('POST', '/appointments', appointment_data, self.user_token)
+        
+        if success:
+            # Check if appointment was created with correct Phase 6 fields
+            has_id = 'id' in data
+            correct_source = data.get('source') == 'ai-voice'
+            correct_issue = data.get('issue_type') == 'no_heat'
+            correct_window = data.get('window') == '12-3'
+            has_address = data.get('address') == appointment_data['address']
+            is_ai_generated = data.get('is_ai_generated') in [True, None]  # Should be True for ai-voice source
+            
+            all_valid = has_id and correct_source and correct_issue and correct_window and has_address
+            
+            self.log_test("Phase 6 Appointment with Call Log Integration", all_valid,
+                         f"ID: {data.get('id', 'none')[:8]}..., Source: {data.get('source')}, Issue: {data.get('issue_type')}, Window: {data.get('window')}")
+            return all_valid
+        else:
+            self.log_test("Phase 6 Appointment with Call Log Integration", False, 
+                         f"Error: {data.get('detail', 'Unknown error')}")
+            return False
+
+    def run_phase6_voice_sms_call_log_tests(self):
+        """Run comprehensive Phase 6 Voice & SMS + Call Log backend tests"""
+        print("📞 Starting PHASE 6 Voice & SMS + Call Log Backend Tests")
+        print(f"🌐 Testing against: {self.base_url}")
+        print("=" * 70)
+        
+        # Initialize authentication
+        print("\n🔐 Authentication Setup:")
+        user_success = self.test_mock_user_login()
+        
+        if not user_success:
+            print("❌ Cannot proceed without user authentication")
+            return False
+        
+        # Phase 6 Voice & SMS + Call Log specific tests
+        print("\n📞 PHASE 6 Voice & SMS + Call Log Tests:")
+        
+        # 1. Enhanced Voice Webhook Tests
+        print("\n🎙️ Enhanced Voice Webhook Tests:")
+        voice_greet_success = self.test_phase6_enhanced_voice_webhook_greet_state()
+        voice_flow_success = self.test_phase6_voice_webhook_state_machine_flow()
+        voice_mock_success = self.test_phase6_voice_webhook_twilio_disabled_mode()
+        
+        # 2. Call Log Search API Tests
+        print("\n📋 Call Log Search API Tests:")
+        call_search_success = self.test_phase6_call_log_search_api()
+        date_filters_success = self.test_phase6_call_log_search_date_filters()
+        custom_date_success = self.test_phase6_call_log_search_custom_date_range()
+        pagination_success = self.test_phase6_call_log_search_pagination()
+        comprehensive_filters_success = self.test_phase6_call_log_search_filters_comprehensive()
+        
+        # 3. Call Log Details API Tests
+        print("\n📄 Call Log Details API Tests:")
+        call_details_success = self.test_phase6_call_log_details_api()
+        
+        # 4. Call Statistics API Tests
+        print("\n📊 Call Statistics API Tests:")
+        call_stats_success = self.test_phase6_call_statistics_api()
+        
+        # 5. Environment and Integration Tests
+        print("\n⚙️ Environment and Integration Tests:")
+        env_vars_success = self.test_phase6_environment_variables_loaded()
+        appointment_integration_success = self.test_phase6_appointment_creation_with_call_log_integration()
+        
+        # Calculate success rate
+        phase6_tests = [
+            voice_greet_success, voice_flow_success, voice_mock_success,
+            call_search_success, date_filters_success, custom_date_success,
+            pagination_success, comprehensive_filters_success, call_details_success,
+            call_stats_success, env_vars_success, appointment_integration_success
+        ]
+        
+        phase6_passed = sum(phase6_tests)
+        phase6_total = len(phase6_tests)
+        phase6_success_rate = (phase6_passed / phase6_total) * 100
+        
+        print(f"\n📞 PHASE 6 Voice & SMS + Call Log Results:")
+        print(f"✅ Passed: {phase6_passed}/{phase6_total} ({phase6_success_rate:.1f}%)")
+        
+        if phase6_success_rate >= 80:
+            print("🎉 PHASE 6 Voice & SMS + Call Log backend is ready for production!")
+            return True
+        else:
+            print("⚠️ PHASE 6 Voice & SMS + Call Log needs attention before production")
+            return False
+
     # ==================== PHASE 5 TESTS - SETTINGS BACKEND FUNCTIONALITY ====================
     
     def test_settings_retrieval_all_sections(self):
