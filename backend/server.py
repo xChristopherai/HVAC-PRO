@@ -327,7 +327,7 @@ async def get_availability(date: str = Query(..., description="Date in YYYY-MM-D
 
 @app.post("/api/voice/inbound")
 async def voice_webhook(request: Request):
-    """Twilio voice webhook handler"""
+    """Enhanced Twilio voice webhook handler with call logging"""
     if not ai_voice_enabled:
         return {"error": "AI Voice Scheduling is disabled"}
     
@@ -335,8 +335,12 @@ async def voice_webhook(request: Request):
         form_data = await request.form()
         phone_number = form_data.get("From", "").replace("+1", "")
         call_sid = form_data.get("CallSid", "")
+        call_status = form_data.get("CallStatus", "")
         
-        logger.info(f"Voice call from {phone_number}, CallSid: {call_sid}")
+        logger.info(f"Voice call from {phone_number}, CallSid: {call_sid}, Status: {call_status}")
+        
+        # Create or update call log
+        call_log = await manage_call_log(call_sid, phone_number, form_data)
         
         # Get or create session state
         session_key = f"voice_{phone_number}_{call_sid}"
@@ -350,8 +354,16 @@ async def voice_webhook(request: Request):
         session = voice_sessions[session_key]
         current_state = session["state"]
         
-        # Simple state machine
-        twiml_response = await handle_voice_state(session, form_data)
+        # Handle call status updates
+        if call_status in ["completed", "busy", "failed", "no-answer"]:
+            await finalize_call_log(call_log, call_status, session)
+            return JSONResponse(content={"status": "call_ended"})
+        
+        # Process voice state machine
+        twiml_response = await handle_enhanced_voice_state(session, form_data, call_log)
+        
+        # Log interaction in call transcript
+        await add_call_transcript(call_log.id, session, form_data.get("SpeechResult", ""))
         
         return JSONResponse(
             content=twiml_response,
