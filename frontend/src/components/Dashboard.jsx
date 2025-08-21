@@ -153,6 +153,7 @@ const Dashboard = ({ currentUser }) => {
   const [dashboardData, setDashboardData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [actionLoading, setActionLoading] = useState({});
 
   useEffect(() => {
     fetchDashboardData();
@@ -174,6 +175,31 @@ const Dashboard = ({ currentUser }) => {
       setError(err.message);
     } finally {
       setLoading(false);
+    }
+  };
+
+  // Quick Actions handlers
+  const handleQuickAction = async (actionType, actionData = {}) => {
+    setActionLoading(prev => ({ ...prev, [actionType]: true }));
+    try {
+      const response = await authService.authenticatedFetch(`/api/quick/${actionType}`, {
+        method: 'POST',
+        body: JSON.stringify(actionData)
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        // Show success toast (you could implement a proper toast system)
+        alert(`✅ ${result.message}`);
+        console.log(`Quick action ${actionType} result:`, result);
+      } else {
+        throw new Error('Quick action failed');
+      }
+    } catch (err) {
+      console.error(`Quick action ${actionType} failed:`, err);
+      alert(`❌ Quick action failed: ${err.message}`);
+    } finally {
+      setActionLoading(prev => ({ ...prev, [actionType]: false }));
     }
   };
 
