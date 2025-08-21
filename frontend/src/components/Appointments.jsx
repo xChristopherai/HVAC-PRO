@@ -475,7 +475,7 @@ const Appointments = ({ currentUser, aiVoiceEnabled }) => {
   );
 };
 
-// Calendar View Component
+// Appointment Calendar View Component
 const AppointmentCalendarView = ({ appointments, loading }) => {
   const getStatusColor = (status) => {
     switch (status) {
