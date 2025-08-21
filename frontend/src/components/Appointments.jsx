@@ -222,27 +222,56 @@ const Appointments = ({ currentUser, aiVoiceEnabled }) => {
 
   useEffect(() => {
     fetchAppointments();
-  }, [currentUser?.company_id]);
+    if (view === 'calendar') {
+      fetchCalendarData();
+    }
+  }, [currentUser?.company_id, filter, view]);
 
   const fetchAppointments = async () => {
     try {
       setLoading(true);
-      const response = await authService.authenticatedFetch(`appointments?company_id=${currentUser?.company_id || 'company-001'}`);
+      
+      let endpoint = `appointments?company_id=${currentUser?.company_id || 'company-001'}`;
+      
+      // If filtering by specific status, use filter endpoint
+      if (filter !== 'all') {
+        endpoint = `/api/appointments/filter?status=${filter}`;
+      }
+      
+      const response = await authService.authenticatedFetch(endpoint);
       
       if (response.ok) {
         const data = await response.json();
-        // Ensure data is always an array
-        setAppointments(Array.isArray(data) ? data : []);
+        // Handle both direct array and wrapped response
+        const appointmentList = data.appointments || data;
+        setAppointments(Array.isArray(appointmentList) ? appointmentList : []);
       } else {
-        // Set empty array on error
         setAppointments([]);
       }
     } catch (err) {
       console.error('Failed to fetch appointments:', err);
-      // Set empty array on exception  
       setAppointments([]);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchCalendarData = async () => {
+    try {
+      setLoadingCalendar(true);
+      const response = await authService.authenticatedFetch('/api/appointments/calendar');
+      
+      if (response.ok) {
+        const data = await response.json();
+        setCalendarData(data.appointments || []);
+      } else {
+        setCalendarData([]);
+      }
+    } catch (err) {
+      console.error('Failed to fetch calendar data:', err);
+      setCalendarData([]);
+    } finally {
+      setLoadingCalendar(false);
     }
   };
 
