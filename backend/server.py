@@ -1446,6 +1446,11 @@ async def quick_view_reports(report_data: dict, current_user: dict = Depends(get
 
 # ==================== PHASE 4 ENDPOINTS - TECHNICIANS & MESSAGING ====================
 
+@app.get("/api/test-phase4")
+async def test_phase4():
+    """Test endpoint for PHASE 4"""
+    return {"message": "PHASE 4 endpoints are working"}
+
 @app.get("/api/technicians/search")
 async def search_technicians(
     q: Optional[str] = None,
