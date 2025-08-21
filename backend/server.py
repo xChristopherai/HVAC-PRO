@@ -1456,18 +1456,19 @@ async def simple_test():
     """Simple test endpoint"""
     return {"message": "Simple test works", "customers": [{"name": "Jennifer Martinez", "phone": "+1-555-123-4567"}]}
 
-@app.get("/api/customers/search-test")
-async def search_customers_test(
+@app.get("/api/customers/search")
+async def search_customers(
     q: Optional[str] = None,
     phone: Optional[str] = None,
     email: Optional[str] = None, 
     limit: int = 20,
-    offset: int = 0
+    offset: int = 0,
+    current_user: dict = Depends(get_current_user)
 ):
     """Search customers with filters"""
     
     try:
-        company_id = "company-001"  # Default for testing
+        company_id = current_user.get("company_id", "company-001")
         
         # Mock search results - in real implementation would query database
         all_customers = [
