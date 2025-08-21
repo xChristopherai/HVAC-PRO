@@ -412,7 +412,7 @@ const Appointments = ({ currentUser, aiVoiceEnabled }) => {
 
       {/* Appointments Content - List or Calendar View */}
       {view === 'calendar' ? (
-        <CalendarView 
+        <AppointmentCalendarView 
           appointments={calendarData.length > 0 ? calendarData : appointments} 
           loading={loadingCalendar || loading}
         />
