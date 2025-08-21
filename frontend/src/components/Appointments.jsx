@@ -216,6 +216,9 @@ const Appointments = ({ currentUser, aiVoiceEnabled }) => {
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState('all');
   const [showScheduleForm, setShowScheduleForm] = useState(false);
+  const [view, setView] = useState('list'); // 'list' or 'calendar'
+  const [calendarData, setCalendarData] = useState([]);
+  const [loadingCalendar, setLoadingCalendar] = useState(false);
 
   useEffect(() => {
     fetchAppointments();
