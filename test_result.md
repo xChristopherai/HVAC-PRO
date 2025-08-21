@@ -334,12 +334,73 @@ metadata:
   test_sequence: 3
   run_ui: false
 
+  - task: "PHASE 6 Voice & SMS - POST /api/voice/inbound enhanced"
+    implemented: true
+    working: false
+    file: "backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+        - working: false
+        - agent: "main"
+        - comment: "Enhanced voice webhook with call logging, comprehensive state machine (greet → collect name/address/issue → pick window → create appointment → SMS confirm), TWILIO_ENABLED flag support for mock vs real SMS, call transcript recording, and improved error handling. Added CallLog models and helper functions for managing call sessions."
+
+  - task: "PHASE 6 Call Log Models"
+    implemented: true
+    working: false
+    file: "backend/models.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+        - working: false
+        - agent: "main"
+        - comment: "Added comprehensive CallLog model with CallStatus, CallOutcome enums, transcript storage, session data tracking, AI confidence scores, transfer tracking, and CallLogSearchResponse model for search API responses."
+
+  - task: "PHASE 6 Call Log Search API - GET /api/call-logs"
+    implemented: true
+    working: false
+    file: "backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+        - working: false
+        - agent: "main"
+        - comment: "Comprehensive call log search endpoint with filters: client name search, date filters (today/yesterday/this_week/last_week/custom), status filter, answered_by (ai/human/missed), outcome filter, issue_type filter, transferred filter, pagination support. Returns CallLogSearchResponse with total count and applied filters."
+
+  - task: "PHASE 6 Call Log Details API - GET /api/call-logs/{call_id}"
+    implemented: true
+    working: false
+    file: "backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+        - working: false
+        - agent: "main"
+        - comment: "Individual call log retrieval endpoint returning full CallLog with complete transcript, session data, and all call metadata."
+
+  - task: "PHASE 6 Call Statistics API - GET /api/call-logs/stats/{company_id}"
+    implemented: true
+    working: false
+    file: "backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+        - working: false
+        - agent: "main"
+        - comment: "Call statistics endpoint with period filters (today/this_week/this_month) returning: total_calls, ai_answered, transferred_to_human, appointments_created, avg_duration, completed_calls, ai_success_rate, appointment_conversion_rate. Uses MongoDB aggregation pipeline for efficient stats calculation."
+
 test_plan:
   current_focus:
-    - "PHASE 5 Settings - GET /api/settings/company-001"
-    - "PHASE 5 Settings - POST /api/settings/update"
-    - "PHASE 5 Settings - POST /api/calendar/create"
-    - "PHASE 5 Settings - POST /api/billing/checkout"
+    - "PHASE 6 Voice & SMS - POST /api/voice/inbound enhanced"
+    - "PHASE 6 Call Log Models"
+    - "PHASE 6 Call Log Search API - GET /api/call-logs"
+    - "PHASE 6 Call Log Details API - GET /api/call-logs/{call_id}"
+    - "PHASE 6 Call Statistics API - GET /api/call-logs/stats/{company_id}"
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
