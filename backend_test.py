@@ -646,6 +646,305 @@ class HVACAPITester:
             self.log_test("Quick View Reports", False, f"Error: {data.get('detail', 'Unknown error')}")
             return False
 
+    # ==================== PHASE 4 TESTS - TECHNICIANS & MESSAGING ====================
+    
+    def test_technicians_search_by_name(self):
+        """Test GET /api/technicians/search with name parameter (q)"""
+        params = {"q": "Mike"}
+        success, data = self.make_request('GET', '/technicians/search', params=params, token=self.user_token)
+        
+        if success:
+            has_technicians = 'technicians' in data and isinstance(data['technicians'], list)
+            has_total = 'total' in data and isinstance(data['total'], int)
+            has_pagination = 'limit' in data and 'offset' in data
+            
+            technicians = data.get('technicians', [])
+            search_works = True
+            if technicians:
+                # Check if returned technicians match search query
+                for tech in technicians:
+                    name = tech.get('name', '').lower()
+                    if 'mike' not in name:
+                        search_works = False
+                        break
+            
+            all_valid = has_technicians and has_total and has_pagination and search_works
+            tech_count = len(technicians)
+            
+            self.log_test("Technician Search by Name", all_valid,
+                         f"Found {tech_count} technicians matching 'Mike'")
+            return all_valid
+        else:
+            self.log_test("Technician Search by Name", False, f"Error: {data.get('detail', 'Unknown error')}")
+            return False
+
+    def test_technicians_search_by_email(self):
+        """Test GET /api/technicians/search with email parameter (q)"""
+        params = {"q": "sarah.d@hvactech.com"}
+        success, data = self.make_request('GET', '/technicians/search', params=params, token=self.user_token)
+        
+        if success:
+            has_technicians = 'technicians' in data and isinstance(data['technicians'], list)
+            has_total = 'total' in data and isinstance(data['total'], int)
+            
+            technicians = data.get('technicians', [])
+            email_search_works = True
+            if technicians:
+                # Check if returned technicians match email search
+                for tech in technicians:
+                    email = tech.get('email', '').lower()
+                    if 'sarah.d@hvactech.com' not in email:
+                        email_search_works = False
+                        break
+            
+            all_valid = has_technicians and has_total and email_search_works
+            tech_count = len(technicians)
+            
+            self.log_test("Technician Search by Email", all_valid,
+                         f"Found {tech_count} technicians with email 'sarah.d@hvactech.com'")
+            return all_valid
+        else:
+            self.log_test("Technician Search by Email", False, f"Error: {data.get('detail', 'Unknown error')}")
+            return False
+
+    def test_technicians_search_by_status(self):
+        """Test GET /api/technicians/search with status filter"""
+        params = {"status": "available"}
+        success, data = self.make_request('GET', '/technicians/search', params=params, token=self.user_token)
+        
+        if success:
+            has_technicians = 'technicians' in data and isinstance(data['technicians'], list)
+            has_total = 'total' in data and isinstance(data['total'], int)
+            
+            technicians = data.get('technicians', [])
+            status_filter_works = True
+            if technicians:
+                # Check if all returned technicians have 'available' status
+                for tech in technicians:
+                    if tech.get('status') != 'available':
+                        status_filter_works = False
+                        break
+            
+            all_valid = has_technicians and has_total and status_filter_works
+            tech_count = len(technicians)
+            
+            self.log_test("Technician Search by Status", all_valid,
+                         f"Found {tech_count} available technicians")
+            return all_valid
+        else:
+            self.log_test("Technician Search by Status", False, f"Error: {data.get('detail', 'Unknown error')}")
+            return False
+
+    def test_technicians_search_pagination(self):
+        """Test GET /api/technicians/search with pagination parameters"""
+        params = {"limit": 2, "offset": 0}
+        success, data = self.make_request('GET', '/technicians/search', params=params, token=self.user_token)
+        
+        if success:
+            has_technicians = 'technicians' in data and isinstance(data['technicians'], list)
+            has_pagination = 'limit' in data and 'offset' in data and 'total' in data
+            
+            technicians = data.get('technicians', [])
+            correct_limit = len(technicians) <= 2  # Should respect limit
+            correct_pagination_values = data.get('limit') == 2 and data.get('offset') == 0
+            
+            all_valid = has_technicians and has_pagination and correct_limit and correct_pagination_values
+            tech_count = len(technicians)
+            total = data.get('total', 0)
+            
+            self.log_test("Technician Search Pagination", all_valid,
+                         f"Returned {tech_count} technicians (limit=2), Total: {total}")
+            return all_valid
+        else:
+            self.log_test("Technician Search Pagination", False, f"Error: {data.get('detail', 'Unknown error')}")
+            return False
+
+    def test_add_new_technician(self):
+        """Test POST /api/technicians - Add new technician"""
+        technician_data = {
+            "name": "Alex Rodriguez",
+            "email": "alex.r@hvactech.com",
+            "phone": "+1-555-TECH-05",
+            "years_experience": 6,
+            "skills": ["hvac", "installation", "repair"],
+            "certifications": ["EPA 608", "NATE Certified"],
+            "availability": "08:00-16:00"
+        }
+        
+        success, data = self.make_request('POST', '/technicians', technician_data, self.user_token)
+        
+        if success:
+            # Check required fields
+            has_id = 'id' in data
+            correct_name = data.get('name') == technician_data['name']
+            correct_email = data.get('email') == technician_data['email']
+            correct_phone = data.get('phone') == technician_data['phone']
+            correct_experience = data.get('years_experience') == technician_data['years_experience']
+            
+            # Check optional fields
+            has_skills = 'skills' in data and isinstance(data['skills'], list)
+            has_certifications = 'certifications' in data and isinstance(data['certifications'], list)
+            has_availability = 'availability' in data
+            
+            # Check default values
+            has_status = data.get('status') == 'available'
+            has_rating = 'rating' in data
+            has_jobs_completed = data.get('jobs_completed') == 0
+            
+            all_valid = (has_id and correct_name and correct_email and correct_phone and 
+                        correct_experience and has_skills and has_certifications and 
+                        has_availability and has_status and has_rating and has_jobs_completed)
+            
+            self.log_test("Add New Technician", all_valid,
+                         f"ID: {data.get('id', 'none')}, Name: {data.get('name')}, Status: {data.get('status')}")
+            return all_valid
+        else:
+            self.log_test("Add New Technician", False, f"Error: {data.get('detail', 'Unknown error')}")
+            return False
+
+    def test_messages_search_by_customer_name(self):
+        """Test GET /api/messages/search with customer name parameter (q)"""
+        params = {"q": "Jennifer"}
+        success, data = self.make_request('GET', '/messages/search', params=params, token=self.user_token)
+        
+        if success:
+            has_messages = 'messages' in data and isinstance(data['messages'], list)
+            has_total = 'total' in data and isinstance(data['total'], int)
+            has_pagination = 'limit' in data and 'offset' in data
+            
+            messages = data.get('messages', [])
+            search_works = True
+            if messages:
+                # Check if returned messages match customer name search
+                for msg in messages:
+                    customer_name = msg.get('customer_name', '').lower()
+                    if 'jennifer' not in customer_name:
+                        search_works = False
+                        break
+            
+            all_valid = has_messages and has_total and has_pagination and search_works
+            msg_count = len(messages)
+            
+            self.log_test("Message Search by Customer Name", all_valid,
+                         f"Found {msg_count} messages from customers named 'Jennifer'")
+            return all_valid
+        else:
+            self.log_test("Message Search by Customer Name", False, f"Error: {data.get('detail', 'Unknown error')}")
+            return False
+
+    def test_messages_search_by_phone(self):
+        """Test GET /api/messages/search with phone number parameter"""
+        params = {"customer_phone": "+1-555-123-4567"}
+        success, data = self.make_request('GET', '/messages/search', params=params, token=self.user_token)
+        
+        if success:
+            has_messages = 'messages' in data and isinstance(data['messages'], list)
+            has_total = 'total' in data and isinstance(data['total'], int)
+            
+            messages = data.get('messages', [])
+            phone_search_works = True
+            if messages:
+                # Check if returned messages match phone search
+                for msg in messages:
+                    phone = msg.get('customer_phone', '')
+                    if '+1-555-123-4567' not in phone:
+                        phone_search_works = False
+                        break
+            
+            all_valid = has_messages and has_total and phone_search_works
+            msg_count = len(messages)
+            
+            self.log_test("Message Search by Phone", all_valid,
+                         f"Found {msg_count} messages from phone '+1-555-123-4567'")
+            return all_valid
+        else:
+            self.log_test("Message Search by Phone", False, f"Error: {data.get('detail', 'Unknown error')}")
+            return False
+
+    def test_messages_search_by_status(self):
+        """Test GET /api/messages/search with status filter"""
+        params = {"status": "active"}
+        success, data = self.make_request('GET', '/messages/search', params=params, token=self.user_token)
+        
+        if success:
+            has_messages = 'messages' in data and isinstance(data['messages'], list)
+            has_total = 'total' in data and isinstance(data['total'], int)
+            
+            messages = data.get('messages', [])
+            status_filter_works = True
+            if messages:
+                # Check if all returned messages have 'active' status
+                for msg in messages:
+                    if msg.get('status') != 'active':
+                        status_filter_works = False
+                        break
+            
+            all_valid = has_messages and has_total and status_filter_works
+            msg_count = len(messages)
+            
+            self.log_test("Message Search by Status", all_valid,
+                         f"Found {msg_count} active messages")
+            return all_valid
+        else:
+            self.log_test("Message Search by Status", False, f"Error: {data.get('detail', 'Unknown error')}")
+            return False
+
+    def test_messages_search_pagination(self):
+        """Test GET /api/messages/search with pagination parameters"""
+        params = {"limit": 2, "offset": 0}
+        success, data = self.make_request('GET', '/messages/search', params=params, token=self.user_token)
+        
+        if success:
+            has_messages = 'messages' in data and isinstance(data['messages'], list)
+            has_pagination = 'limit' in data and 'offset' in data and 'total' in data
+            
+            messages = data.get('messages', [])
+            correct_limit = len(messages) <= 2  # Should respect limit
+            correct_pagination_values = data.get('limit') == 2 and data.get('offset') == 0
+            
+            all_valid = has_messages and has_pagination and correct_limit and correct_pagination_values
+            msg_count = len(messages)
+            total = data.get('total', 0)
+            
+            self.log_test("Message Search Pagination", all_valid,
+                         f"Returned {msg_count} messages (limit=2), Total: {total}")
+            return all_valid
+        else:
+            self.log_test("Message Search Pagination", False, f"Error: {data.get('detail', 'Unknown error')}")
+            return False
+
+    def test_new_message_creation_feature_flag_disabled(self):
+        """Test POST /api/messages with ENABLE_NEW_MESSAGE=false (should fail with 403)"""
+        message_data = {
+            "customer_phone": "+1-555-TEST-MSG",
+            "customer_name": "Test Customer",
+            "message": "Test message for feature flag testing"
+        }
+        
+        success, data = self.make_request('POST', '/messages', message_data, self.user_token)
+        
+        # This should fail with 403 when feature flag is disabled
+        expected_failure = not success and (
+            data.get('detail') == 'Feature not enabled' or 
+            '403' in str(data) or 
+            'forbidden' in str(data).lower() or
+            'not enabled' in str(data).lower()
+        )
+        
+        if expected_failure:
+            self.log_test("New Message Creation (Feature Flag Disabled)", True,
+                         f"Correctly blocked with: {data.get('detail', 'Feature disabled')}")
+            return True
+        elif success:
+            # If it succeeds, check if it's because feature flag is actually enabled
+            self.log_test("New Message Creation (Feature Flag Disabled)", False,
+                         f"Feature flag might be enabled - request succeeded")
+            return False
+        else:
+            self.log_test("New Message Creation (Feature Flag Disabled)", False,
+                         f"Unexpected error: {data.get('detail', 'Unknown error')}")
+            return False
+
     # ==================== PHASE 3 TESTS - CUSTOMERS & APPOINTMENTS ====================
     
     def test_customers_search_by_name(self):
