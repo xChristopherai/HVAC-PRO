@@ -310,21 +310,61 @@ const Technicians = ({ currentUser }) => {
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
           <Input
-            placeholder="Search technicians..."
+            placeholder="Search technicians by name or email..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="pl-10"
           />
+          {searching && (
+            <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+              <div className="w-4 h-4 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+            </div>
+          )}
         </div>
-        <div className="flex space-x-2">
-          {statusOptions.map((option) => (
-            <Button
-              key={option.value}
-              variant={statusFilter === option.value ? "default" : "outline"}
-              size="sm"
-              onClick={() => setStatusFilter(option.value)}
-            >
-              {option.label}
+      </div>
+
+      {/* Status Tabs - PHASE 4 Enhancement */}
+      <div className="flex flex-wrap gap-2">
+        {[
+          { value: 'all', label: 'All Technicians' },
+          { value: 'available', label: 'Available' },
+          { value: 'busy', label: 'Busy' }, 
+          { value: 'off_duty', label: 'Off Duty' },
+          { value: 'unavailable', label: 'Unavailable' }
+        ].map((option) => (
+          <Button
+            key={option.value}
+            variant={statusFilter === option.value ? "default" : "outline"}
+            size="sm"
+            onClick={() => setStatusFilter(option.value)}
+            className={statusFilter === option.value ? "bg-blue-600 hover:bg-blue-700" : ""}
+          >
+            {option.label}
+            <span className="ml-2 px-2 py-0.5 text-xs rounded-full bg-gray-200 text-gray-700">
+              {option.value === 'all' 
+                ? technicians.length 
+                : technicians.filter(t => t.status === option.value).length}
+            </span>
+          </Button>
+        ))}
+      </div>
+
+      {/* Search Results Indicator */}
+      {searchTerm.trim() && (
+        <div className="flex items-center justify-between py-2 px-4 bg-blue-50 rounded-lg">
+          <span className="text-sm text-blue-700">
+            {searching ? 'Searching...' : `Found ${filteredTechnicians.length} technician${filteredTechnicians.length !== 1 ? 's' : ''} matching "${searchTerm}"`}
+          </span>
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            onClick={() => setSearchTerm('')}
+            className="text-blue-700 hover:text-blue-800"
+          >
+            Clear
+          </Button>
+        </div>
+      )}
             </Button>
           ))}
         </div>
