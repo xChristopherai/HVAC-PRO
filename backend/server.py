@@ -273,9 +273,9 @@ async def update_appointment(appointment_id: str, appointment_data: dict, curren
 
 # ==================== AI VOICE SCHEDULING ENDPOINTS ====================
 
-# In-memory session storage (for development)
-voice_sessions = {}
+# Environment variables for Twilio integration
 ai_voice_enabled = os.environ.get('AI_VOICE_SCHEDULING_ENABLED', 'true').lower() == 'true'
+twilio_enabled = os.environ.get('TWILIO_ENABLED', 'false').lower() == 'true'
 
 @app.get("/api/availability")
 async def get_availability(date: str = Query(..., description="Date in YYYY-MM-DD format")):
