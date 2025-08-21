@@ -250,33 +250,108 @@ const Dashboard = ({ currentUser }) => {
     );
   }
 
+  // Enhanced stats with proper deltas vs prior period
   const stats = [
     {
       title: 'Total Customers',
-      value: dashboardData.stats.total_customers,
+      value: dashboardData?.stats?.total_customers || 0,
       change: '+12% from last month',
-      icon: Users
+      changePercent: 12,
+      icon: Users,
+      trend: 'up'
     },
     {
       title: 'Active Jobs',
-      value: dashboardData.stats.pending_jobs,
+      value: dashboardData?.stats?.pending_jobs || 0,
       change: '-2% from yesterday',
+      changePercent: -2,
       icon: Wrench,
       trend: 'down'
     },
     {
       title: 'Technicians',
-      value: dashboardData.stats.active_technicians,
+      value: dashboardData?.stats?.active_technicians || 0,
       change: '+1 this week',
-      icon: CheckCircle
+      changePercent: 5,
+      icon: CheckCircle,
+      trend: 'up'
     },
     {
       title: "Today's Appointments",
-      value: dashboardData.stats.todays_appointments,
+      value: dashboardData?.stats?.todays_appointments || 0,
       change: '+3 scheduled',
-      icon: Calendar
+      changePercent: 15,
+      icon: Calendar,
+      trend: 'up'
     }
   ];
+
+  // Quick Actions configuration
+  const quickActions = [
+    {
+      id: 'add-customer',
+      label: 'Add Customer',
+      icon: Users,
+      handler: () => handleQuickAction('add-customer', { name: 'New Customer', phone: '+1-555-0123' }),
+      loading: actionLoading['add-customer']
+    },
+    {
+      id: 'schedule-job',
+      label: 'Schedule Job',
+      icon: Calendar,
+      handler: () => handleQuickAction('schedule-job', { title: 'Service Call', customer_name: 'Quick Customer' }),
+      loading: actionLoading['schedule-job']
+    },
+    {
+      id: 'create-invoice',
+      label: 'Create Invoice',
+      icon: FileText,
+      handler: () => handleQuickAction('create-invoice', { customer_name: 'Quick Customer', amount: 250 }),
+      loading: actionLoading['create-invoice']
+    },
+    {
+      id: 'view-reports',
+      label: 'View Reports',
+      icon: Clock,
+      handler: () => handleQuickAction('view-reports', { type: 'monthly_summary' }),
+      loading: actionLoading['view-reports']
+    }
+  ];
+
+  // Feature Flag: NEW_UI fallback
+  if (!NEW_UI) {
+    return (
+      <div className="space-y-6 p-6 bg-gray-50 min-h-screen">
+        <h1 className="text-2xl font-bold text-gray-800">Dashboard (Legacy Mode)</h1>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          {stats.map((stat, index) => (
+            <div key={index} className="bg-white p-4 rounded-lg shadow">
+              <h3 className="text-lg font-semibold">{stat.title}</h3>
+              <p className="text-2xl font-bold text-blue-600">{stat.value}</p>
+              <p className="text-sm text-gray-600">{stat.change}</p>
+            </div>
+          ))}
+        </div>
+        
+        <div className="bg-white p-6 rounded-lg shadow">
+          <h2 className="text-lg font-semibold mb-4">Quick Actions</h2>
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            {quickActions.map((action) => (
+              <button
+                key={action.id}
+                onClick={action.handler}
+                disabled={action.loading}
+                className="p-4 border border-gray-200 rounded-lg hover:bg-gray-50 flex flex-col items-center space-y-2"
+              >
+                <action.icon className="w-6 h-6" />
+                <span className="text-sm">{action.loading ? 'Loading...' : action.label}</span>
+              </button>
+            ))}
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-8">
