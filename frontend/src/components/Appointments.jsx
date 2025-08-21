@@ -445,7 +445,7 @@ const Appointments = ({ currentUser, aiVoiceEnabled }) => {
 };
 
 // Calendar View Component
-const CalendarView = ({ appointments, loading }) => {
+const AppointmentCalendarView = ({ appointments, loading }) => {
   const getStatusColor = (status) => {
     switch (status) {
       case 'confirmed': return 'border-l-green-500 bg-green-50';
