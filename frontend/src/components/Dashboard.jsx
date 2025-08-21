@@ -56,7 +56,7 @@ const StatCard = ({ title, value, change, icon: Icon, trend = 'up', changePercen
   );
 };
 
-// Appointment Item Component
+// Appointment Item Component with AI Voice badge support
 const AppointmentItem = ({ appointment }) => {
   const getStatusColor = (status) => {
     switch (status) {
@@ -67,14 +67,24 @@ const AppointmentItem = ({ appointment }) => {
     }
   };
 
+  const isAIGenerated = appointment.source === 'ai-voice' || appointment.is_ai_generated;
+
   return (
     <div className="flex items-center justify-between p-4 hover:bg-accent/50 rounded-lg transition-colors">
       <div className="flex items-center space-x-4">
         <div className="w-10 h-10 bg-primary/10 rounded-lg flex items-center justify-center">
           <Calendar className="w-5 h-5 text-primary" />
         </div>
-        <div>
-          <p className="font-medium text-sm">{appointment.title}</p>
+        <div className="flex-1">
+          <div className="flex items-center space-x-2 mb-1">
+            <p className="font-medium text-sm">{appointment.title}</p>
+            {AI_VOICE_SCHEDULING_ENABLED && isAIGenerated && (
+              <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-50 text-blue-700 border border-blue-200">
+                <span className="w-2 h-2 bg-blue-500 rounded-full mr-1"></span>
+                Created by AI Voice
+              </span>
+            )}
+          </div>
           <p className="text-xs text-muted-foreground">{appointment.description}</p>
         </div>
       </div>
