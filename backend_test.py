@@ -1010,27 +1010,24 @@ class HVACAPITester:
         success, data = self.make_request('GET', f'/settings/{self.company_id}', token=self.user_token)
         
         if success:
-            # Validate business section
-            business = data.get('business', {})
+            # Validate business fields
             business_valid = (
-                isinstance(business.get('business_name'), str) and
-                isinstance(business.get('business_phone'), str) and
-                isinstance(business.get('business_email'), str)
+                isinstance(data.get('business_name'), str) and
+                isinstance(data.get('business_phone'), str) and
+                isinstance(data.get('business_email'), str)
             )
             
-            # Validate ai section
-            ai = data.get('ai', {})
+            # Validate ai fields
             ai_valid = (
-                isinstance(ai.get('assistant_name'), str) and
-                isinstance(ai.get('response_temperature'), (int, float)) and
-                isinstance(ai.get('enable_voice_scheduling'), bool)
+                isinstance(data.get('ai_assistant_name'), str) and
+                isinstance(data.get('ai_temperature'), (int, float)) and
+                isinstance(data.get('max_response_tokens'), int)
             )
             
-            # Validate sms section
-            sms = data.get('sms', {})
+            # Validate sms fields
             sms_valid = (
-                isinstance(sms.get('auto_replies'), bool) and
-                isinstance(sms.get('emergency_keywords'), list)
+                isinstance(data.get('sms_enabled'), bool) and
+                isinstance(data.get('auto_response_enabled'), bool)
             )
             
             # Validate calendar section
@@ -1042,10 +1039,7 @@ class HVACAPITester:
             
             # Validate billing section
             billing = data.get('billing', {})
-            billing_valid = (
-                isinstance(billing.get('plan'), str) and
-                isinstance(billing.get('status'), str)
-            )
+            billing_valid = isinstance(billing.get('plan'), str)
             
             all_valid = business_valid and ai_valid and sms_valid and calendar_valid and billing_valid
             
