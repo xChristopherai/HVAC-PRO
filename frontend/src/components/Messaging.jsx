@@ -533,11 +533,28 @@ const Messaging = ({ currentUser }) => {
 
   return (
     <div className="space-y-6">
+      {/* New Message Dialog */}
+      {NEW_MESSAGE_ENABLED && (
+        <NewMessageDialog 
+          open={showNewMessage} 
+          onOpenChange={setShowNewMessage}
+          onSendMessage={handleNewMessage}
+        />
+      )}
+      
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold">Messaging</h1>
-          <p className="text-muted-foreground">SMS conversations and templates</p>
+          <p className="text-muted-foreground">SMS conversations and customer communications</p>
+        </div>
+        {NEW_MESSAGE_ENABLED && (
+          <Button onClick={() => setShowNewMessage(true)}>
+            <Plus className="w-4 h-4 mr-2" />
+            New Message
+          </Button>
+        )}
+      </div>
         </div>
         <Button>
           <Plus className="w-4 h-4 mr-2" />
