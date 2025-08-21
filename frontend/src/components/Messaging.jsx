@@ -561,25 +561,60 @@ const Messaging = ({ currentUser }) => {
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
           <Input
-            placeholder="Search conversations..."
+            placeholder="Search conversations by customer name, phone, or message..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="pl-10"
           />
-        </div>
-        <div className="flex space-x-2">
-          {filterOptions.map((option) => (
-            <Button
-              key={option.value}
-              variant={filter === option.value ? "default" : "outline"}
-              size="sm"
-              onClick={() => setFilter(option.value)}
-            >
-              {option.label}
-            </Button>
-          ))}
+          {searching && (
+            <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+              <div className="w-4 h-4 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+            </div>
+          )}
         </div>
       </div>
+
+      {/* Status Tabs - PHASE 4 Enhancement */}
+      <div className="flex flex-wrap gap-2">
+        {[
+          { value: 'all', label: 'All Conversations' },
+          { value: 'active', label: 'Active' },
+          { value: 'converted', label: 'Converted' }, 
+          { value: 'pending', label: 'Pending' }
+        ].map((option) => (
+          <Button
+            key={option.value}
+            variant={filter === option.value ? "default" : "outline"}
+            size="sm"
+            onClick={() => setFilter(option.value)}
+            className={filter === option.value ? "bg-blue-600 hover:bg-blue-700" : ""}
+          >
+            {option.label}
+            <span className="ml-2 px-2 py-0.5 text-xs rounded-full bg-gray-200 text-gray-700">
+              {option.value === 'all' 
+                ? conversations.length 
+                : conversations.filter(c => c.status === option.value).length}
+            </span>
+          </Button>
+        ))}
+      </div>
+
+      {/* Search Results Indicator */}
+      {searchTerm.trim() && (
+        <div className="flex items-center justify-between py-2 px-4 bg-blue-50 rounded-lg">
+          <span className="text-sm text-blue-700">
+            {searching ? 'Searching...' : `Found ${filteredConversations.length} conversation${filteredConversations.length !== 1 ? 's' : ''} matching "${searchTerm}"`}
+          </span>
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            onClick={() => setSearchTerm('')}
+            className="text-blue-700 hover:text-blue-800"
+          >
+            Clear
+          </Button>
+        </div>
+      )}
 
       {/* Stats Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
