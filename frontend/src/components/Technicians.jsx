@@ -286,13 +286,20 @@ const Technicians = ({ currentUser }) => {
 
   return (
     <div className="space-y-6">
+      {/* Add Technician Dialog */}
+      <AddTechnicianDialog 
+        open={showAddTechnician} 
+        onOpenChange={setShowAddTechnician}
+        onAddTechnician={handleAddTechnician}
+      />
+      
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold">Technicians</h1>
           <p className="text-muted-foreground">Manage your technician team</p>
         </div>
-        <Button>
+        <Button onClick={() => setShowAddTechnician(true)}>
           <Plus className="w-4 h-4 mr-2" />
           Add Technician
         </Button>
