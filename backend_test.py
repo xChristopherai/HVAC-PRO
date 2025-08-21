@@ -516,6 +516,136 @@ class HVACAPITester:
             self.log_test("SMS Service Integration", False, "Health check failed")
             return False
 
+    # ==================== PHASE 2 QUICK ACTIONS TESTS ====================
+    
+    def test_quick_add_customer(self):
+        """Test POST /api/quick/add-customer endpoint"""
+        customer_data = {
+            "name": "Jennifer Martinez",
+            "phone": "+1-555-QUICK-01",
+            "email": "jennifer.martinez@email.com",
+            "address": "789 Pine Street, Riverside, CA 92501"
+        }
+        
+        success, data = self.make_request('POST', '/quick/add-customer', customer_data, self.user_token)
+        
+        if success:
+            has_success = data.get('success') is True
+            has_message = 'message' in data and 'successfully' in data['message'].lower()
+            has_customer = 'customer' in data and isinstance(data['customer'], dict)
+            
+            customer = data.get('customer', {})
+            correct_name = customer.get('name') == customer_data['name']
+            correct_phone = customer.get('phone') == customer_data['phone']
+            has_id = 'id' in customer
+            
+            all_valid = has_success and has_message and has_customer and correct_name and correct_phone and has_id
+            
+            self.log_test("Quick Add Customer", all_valid,
+                         f"Success: {data.get('success')}, Customer ID: {customer.get('id', 'none')}")
+            return all_valid
+        else:
+            self.log_test("Quick Add Customer", False, f"Error: {data.get('detail', 'Unknown error')}")
+            return False
+
+    def test_quick_schedule_job(self):
+        """Test POST /api/quick/schedule-job endpoint"""
+        job_data = {
+            "title": "Emergency Heating Repair",
+            "customer_name": "Robert Thompson",
+            "service_type": "no_heat",
+            "scheduled_date": "2025-01-25T14:00:00",
+            "priority": "high"
+        }
+        
+        success, data = self.make_request('POST', '/quick/schedule-job', job_data, self.user_token)
+        
+        if success:
+            has_success = data.get('success') is True
+            has_message = 'message' in data and 'successfully' in data['message'].lower()
+            has_job = 'job' in data and isinstance(data['job'], dict)
+            
+            job = data.get('job', {})
+            correct_title = job.get('title') == job_data['title']
+            correct_customer = job.get('customer_name') == job_data['customer_name']
+            correct_service = job.get('service_type') == job_data['service_type']
+            has_id = 'id' in job
+            has_status = job.get('status') == 'scheduled'
+            
+            all_valid = has_success and has_message and has_job and correct_title and correct_customer and correct_service and has_id and has_status
+            
+            self.log_test("Quick Schedule Job", all_valid,
+                         f"Success: {data.get('success')}, Job ID: {job.get('id', 'none')}")
+            return all_valid
+        else:
+            self.log_test("Quick Schedule Job", False, f"Error: {data.get('detail', 'Unknown error')}")
+            return False
+
+    def test_quick_create_invoice(self):
+        """Test POST /api/quick/create-invoice endpoint"""
+        invoice_data = {
+            "customer_name": "Lisa Anderson",
+            "amount": 485.50,
+            "description": "HVAC System Maintenance and Filter Replacement"
+        }
+        
+        success, data = self.make_request('POST', '/quick/create-invoice', invoice_data, self.user_token)
+        
+        if success:
+            has_success = data.get('success') is True
+            has_message = 'message' in data and 'successfully' in data['message'].lower()
+            has_invoice = 'invoice' in data and isinstance(data['invoice'], dict)
+            
+            invoice = data.get('invoice', {})
+            correct_customer = invoice.get('customer_name') == invoice_data['customer_name']
+            correct_amount = invoice.get('amount') == invoice_data['amount']
+            correct_description = invoice.get('service_description') == invoice_data['description']
+            has_id = 'id' in invoice and invoice['id'].startswith('INV-')
+            has_status = invoice.get('status') == 'pending'
+            
+            all_valid = has_success and has_message and has_invoice and correct_customer and correct_amount and correct_description and has_id and has_status
+            
+            self.log_test("Quick Create Invoice", all_valid,
+                         f"Success: {data.get('success')}, Invoice ID: {invoice.get('id', 'none')}")
+            return all_valid
+        else:
+            self.log_test("Quick Create Invoice", False, f"Error: {data.get('detail', 'Unknown error')}")
+            return False
+
+    def test_quick_view_reports(self):
+        """Test POST /api/quick/view-reports endpoint"""
+        report_data = {
+            "type": "monthly_summary",
+            "period": "last_30_days"
+        }
+        
+        success, data = self.make_request('POST', '/quick/view-reports', report_data, self.user_token)
+        
+        if success:
+            has_success = data.get('success') is True
+            has_message = 'message' in data and 'successfully' in data['message'].lower()
+            has_report = 'report' in data and isinstance(data['report'], dict)
+            has_download_url = 'download_url' in data
+            
+            report = data.get('report', {})
+            correct_type = report.get('type') == report_data['type']
+            correct_period = report.get('period') == report_data['period']
+            has_id = 'id' in report
+            has_summary = 'summary' in report and isinstance(report['summary'], dict)
+            
+            summary = report.get('summary', {})
+            expected_metrics = ['total_jobs', 'total_revenue', 'avg_job_value', 'customer_satisfaction', 'technician_utilization']
+            has_metrics = all(metric in summary for metric in expected_metrics)
+            
+            all_valid = has_success and has_message and has_report and has_download_url and correct_type and correct_period and has_id and has_summary and has_metrics
+            
+            self.log_test("Quick View Reports", all_valid,
+                         f"Success: {data.get('success')}, Report ID: {report.get('id', 'none')}")
+            return all_valid
+        else:
+            self.log_test("Quick View Reports", False, f"Error: {data.get('detail', 'Unknown error')}")
+            return False
+
     def run_ai_voice_scheduling_tests(self):
         """Run comprehensive AI Voice Scheduling tests"""
         print("🎙️ Starting AI Voice Scheduling Backend Tests")
