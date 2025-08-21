@@ -336,13 +336,11 @@ metadata:
 
 test_plan:
   current_focus:
-    - "Dashboard component API integration"
-    - "Quick Actions - Add Customer endpoint"
-    - "Quick Actions - Schedule Job endpoint"
-    - "Quick Actions - Create Invoice endpoint"
-    - "Quick Actions - View Reports endpoint"
-  stuck_tasks:
-    - "Dashboard component API integration"
+    - "PHASE 5 Settings - GET /api/settings/company-001"
+    - "PHASE 5 Settings - POST /api/settings/update"
+    - "PHASE 5 Settings - POST /api/calendar/create"
+    - "PHASE 5 Settings - POST /api/billing/checkout"
+  stuck_tasks: []
   test_all: false
   test_priority: "high_first"
 
