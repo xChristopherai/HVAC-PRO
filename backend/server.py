@@ -1308,6 +1308,131 @@ async def save_integration_settings(provider: str, integration_data: dict, curre
         "status": mock_status
     }
 
+# ==================== PHASE 5 - UNIFIED SETTINGS ENDPOINT ====================
+
+@app.post("/api/settings/update")
+async def update_all_settings(settings_data: dict, current_user: dict = Depends(get_current_user)):
+    """Unified endpoint to update all settings sections"""
+    
+    try:
+        company_id = current_user.get("company_id", "company-001")
+        
+        # Structure the update based on the section
+        update_operations = {}
+        timestamp = datetime.utcnow()
+        
+        for section, data in settings_data.items():
+            if section in ['business', 'ai', 'sms', 'calendar', 'notifications', 'billing', 'service_areas', 'integrations']:
+                update_operations[f"settings.{section}"] = data
+        
+        # Add metadata
+        update_operations["updated_at"] = timestamp
+        update_operations["settings.last_updated"] = timestamp
+        update_operations["settings.updated_by"] = current_user.get("email", "unknown")
+        
+        # Perform the database update
+        result = await db.companies.update_one(
+            {"id": company_id},
+            {"$set": update_operations},
+            upsert=True
+        )
+        
+        return {
+            "success": True,
+            "message": "Settings updated successfully",
+            "updated_sections": list(settings_data.keys()),
+            "timestamp": timestamp.isoformat()
+        }
+        
+    except Exception as e:
+        logger.error(f"Failed to update settings: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Settings update failed: {str(e)}")
+
+@app.get("/api/settings/{company_id}")
+async def get_company_settings(company_id: str, current_user: dict = Depends(get_current_user)):
+    """Get all company settings (enhanced for Phase 5)"""
+    
+    try:
+        # Mock comprehensive settings data for Phase 5
+        mock_settings = {
+            "business": {
+                "business_name": "Elite HVAC Solutions",
+                "business_phone": "+1-555-HVAC-PRO",
+                "business_email": "info@hvactech.com",
+                "business_address": "123 Business Ave, Tech City, TC 12345",
+                "website": "https://elitehvac.com",
+                "license_number": "HVAC-LIC-2024-001"
+            },
+            "ai": {
+                "assistant_name": "HVAC Assistant",
+                "response_temperature": 0.7,
+                "max_tokens": 150,
+                "enable_voice_scheduling": True,
+                "auto_responses": True,
+                "business_hours_only": True
+            },
+            "sms": {
+                "twilio_connected": False,
+                "auto_replies": True,
+                "business_hours_sms": True,
+                "emergency_keywords": ["emergency", "urgent", "no heat", "no ac"],
+                "response_templates": {
+                    "greeting": "Hello! Thanks for contacting Elite HVAC. How can we help you today?",
+                    "after_hours": "We've received your message. Our office hours are Mon-Fri 8AM-6PM. We'll respond first thing tomorrow!",
+                    "emergency": "This appears to be an emergency. We're contacting our on-call technician right now."
+                }
+            },
+            "calendar": {
+                "google_connected": True,
+                "default_calendar": "primary",
+                "default_event_duration": 90,
+                "auto_create_events": True,
+                "timezone": "America/New_York",
+                "buffer_time": 15
+            },
+            "notifications": {
+                "job_reminder_sms": True,
+                "missed_call_alert": True,
+                "daily_summary": False,
+                "emergency_escalations": True,
+                "owner_email": "owner@hvactech.com",
+                "owner_phone": "+1-555-OWNER",
+                "notification_hours": "08:00-20:00"
+            },
+            "billing": {
+                "plan": "professional",
+                "status": "active",
+                "next_billing": "2025-02-20",
+                "payment_methods": [
+                    {"type": "card", "last4": "4242", "brand": "visa", "primary": True},
+                    {"type": "paypal", "email": "billing@hvactech.com", "primary": False}
+                ],
+                "auto_billing": True,
+                "billing_email": "billing@hvactech.com"
+            },
+            "service_areas": {
+                "areas": ["12345", "12346", "Springfield", "Shelbyville", "Capital City"],
+                "default_radius": 25,
+                "emergency_radius": 50,
+                "travel_fee_distance": 20
+            },
+            "integrations": {
+                "twilio": {"status": "connected", "phone": "+1-555-HVAC-PRO"},
+                "google_calendar": {"status": "connected", "calendar": "primary"},
+                "stripe": {"status": "not_connected"},
+                "quickbooks": {"status": "not_connected"},
+                "paypal": {"status": "not_connected"},
+                "apple_pay": {"status": "not_connected"},
+                "venmo": {"status": "not_connected"}
+            }
+        }
+        
+        return mock_settings
+        
+    except Exception as e:
+        logger.error(f"Failed to get settings: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
 # ==================== QUICK ACTIONS ENDPOINTS (PHASE 2) ====================
 
 @app.post("/api/quick/add-customer")
