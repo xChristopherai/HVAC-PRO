@@ -359,14 +359,14 @@ async def voice_webhook(request: Request):
         
         # Handle call status updates
         if call_status in ["completed", "busy", "failed", "no-answer"]:
-            await finalize_call_log(call_log, call_status, session)
+            await finalize_call_log(call_log, call_status, voice_sessions[session_key])
             return JSONResponse(content={"status": "call_ended"})
         
         # Process voice state machine
-        twiml_response = await handle_enhanced_voice_state(session, form_data, call_log)
+        twiml_response = await handle_enhanced_voice_state(voice_sessions[session_key], form_data, call_log)
         
         # Log interaction in call transcript
-        await add_call_transcript(call_log.id, session, form_data.get("SpeechResult", ""))
+        await add_call_transcript(call_log.id, voice_sessions[session_key], form_data.get("SpeechResult", ""))
         
         return JSONResponse(
             content=twiml_response,
