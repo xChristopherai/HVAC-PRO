@@ -410,57 +410,67 @@ const Appointments = ({ currentUser, aiVoiceEnabled }) => {
         ))}
       </div>
 
-      {/* Stats Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        {[
-          { label: 'Today', count: appointments.filter(a => new Date(a.scheduled_date).toDateString() === new Date().toDateString()).length, color: 'text-blue-600' },
-          { label: 'This Week', count: appointments.length, color: 'text-green-600' },
-          { label: 'Confirmed', count: appointments.filter(a => a.status === 'confirmed').length, color: 'text-emerald-600' },
-          { label: 'In Progress', count: appointments.filter(a => a.status === 'in_progress').length, color: 'text-amber-600' },
-        ].map((stat, index) => (
-          <Card key={index}>
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-muted-foreground">{stat.label}</p>
-                  <p className={cn("text-2xl font-bold", stat.color)}>{stat.count}</p>
-                </div>
-                <CalendarIcon className={cn("w-8 h-8", stat.color)} />
-              </div>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
-
-      {/* Appointments Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
-        {filteredAppointments.length > 0 ? (
-          filteredAppointments.map((appointment) => (
-            <AppointmentCard key={appointment.id} appointment={appointment} />
-          ))
-        ) : (
-          <div className="col-span-full">
-            <Card>
-              <CardContent className="p-12 text-center">
-                <CalendarIcon className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
-                <h3 className="text-lg font-medium mb-2">No appointments found</h3>
-                <p className="text-muted-foreground mb-4">
-                  {filter !== 'all' 
-                    ? `No appointments with status "${filter}".` 
-                    : "You haven't scheduled any appointments yet."
-                  }
-                </p>
-                {filter === 'all' && !aiVoiceEnabled && (
-                  <Button onClick={() => setShowScheduleForm(true)}>
-                    <Plus className="w-4 h-4 mr-2" />
-                    Schedule Your First Appointment
-                  </Button>
-                )}
-              </CardContent>
-            </Card>
+      {/* Appointments Content - List or Calendar View */}
+      {view === 'calendar' ? (
+        <AppointmentCalendarView 
+          appointments={calendarData.length > 0 ? calendarData : appointments} 
+          loading={loadingCalendar || loading}
+        />
+      ) : (
+        <>
+          {/* Stats Cards */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            {[
+              { label: 'Today', count: appointments.filter(a => new Date(a.scheduled_date).toDateString() === new Date().toDateString()).length, color: 'text-blue-600' },
+              { label: 'This Week', count: appointments.length, color: 'text-green-600' },
+              { label: 'Confirmed', count: appointments.filter(a => a.status === 'confirmed').length, color: 'text-emerald-600' },
+              { label: 'In Progress', count: appointments.filter(a => a.status === 'in_progress').length, color: 'text-amber-600' },
+            ].map((stat, index) => (
+              <Card key={index}>
+                <CardContent className="p-4">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm font-medium text-muted-foreground">{stat.label}</p>
+                      <p className={cn("text-2xl font-bold", stat.color)}>{stat.count}</p>
+                    </div>
+                    <CalendarIcon className={cn("w-8 h-8", stat.color)} />
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
           </div>
-        )}
-      </div>
+
+          {/* Appointments Grid */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
+            {filteredAppointments.length > 0 ? (
+              filteredAppointments.map((appointment) => (
+                <AppointmentCard key={appointment.id} appointment={appointment} />
+              ))
+            ) : (
+              <div className="col-span-full">
+                <Card>
+                  <CardContent className="p-12 text-center">
+                    <CalendarIcon className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
+                    <h3 className="text-lg font-medium mb-2">No appointments found</h3>
+                    <p className="text-muted-foreground mb-4">
+                      {filter !== 'all' 
+                        ? `No appointments with status "${filter}".` 
+                        : "You haven't scheduled any appointments yet."
+                      }
+                    </p>
+                    {filter === 'all' && !aiVoiceEnabled && (
+                      <Button onClick={() => setShowScheduleForm(true)}>
+                        <Plus className="w-4 h-4 mr-2" />
+                        Schedule Your First Appointment
+                      </Button>
+                    )}
+                  </CardContent>
+                </Card>
+              </div>
+            )}
+          </div>
+        </>
+      )}
     </div>
   );
 };
