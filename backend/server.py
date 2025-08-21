@@ -1451,8 +1451,8 @@ async def test_phase3_endpoint():
     """Test endpoint to verify PHASE 3 code is loaded"""
     return {"message": "PHASE 3 endpoints are loaded", "timestamp": datetime.utcnow().isoformat()}
 
-@app.get("/api/customers/search")
-async def search_customers(
+@app.get("/api/customers/search-test")
+async def search_customers_test(
     q: Optional[str] = None,
     phone: Optional[str] = None,
     email: Optional[str] = None, 
