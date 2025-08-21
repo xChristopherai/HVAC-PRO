@@ -918,14 +918,16 @@ class HVACAPITester:
         message_data = {
             "customer_phone": "+1-555-TEST-MSG",
             "customer_name": "Test Customer",
-            "message": "Test message for feature flag testing"
+            "message": "Test message for feature flag testing",
+            "priority": "normal",
+            "tags": ["test"]
         }
         
         success, data = self.make_request('POST', '/messages', message_data, self.user_token)
         
         # This should fail with 403 when feature flag is disabled
         expected_failure = not success and (
-            data.get('detail') == 'Feature not enabled' or 
+            data.get('detail') == 'New message feature not enabled' or 
             '403' in str(data) or 
             'forbidden' in str(data).lower() or
             'not enabled' in str(data).lower()
