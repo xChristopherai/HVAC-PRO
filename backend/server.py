@@ -1072,21 +1072,45 @@ async def get_call_stats(
         logger.error(f"Error getting call stats: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
 
-# Update existing voice appointment creation to include call log reference
-    """Send SMS confirmation after appointment creation"""
+async def send_appointment_sms(phone_number: str, session_data: dict, window: str):
+    """Send SMS confirmation after appointment creation with enhanced tracking"""
     try:
         sms_service = get_sms_service()
         window_text = window.replace("-", " to ")
-        message = f"Thanks, {session_data.get('name', '')}. You're booked for {session_data['date']} {window_text}. For help reply HELP. To stop, reply STOP."
         
-        await sms_service.send_message(
-            to_number=phone_number,
-            message=message
-        )
-        logger.info(f"Sent SMS confirmation to {phone_number}")
+        # Enhanced SMS template with more professional tone
+        message = f"""Confirmed! {session_data.get('name', '')}, your HVAC service is scheduled for {session_data['date']} between {window_text}.
+        
+📍 Address: {session_data.get('address', 'As provided')}
+🔧 Issue: {session_data.get('issue_type', 'Service').replace('_', ' ').title()}
+        
+We'll call 30 minutes before arrival. Please ensure pets are secured and HVAC system is accessible.
+
+For changes, call (555) HVAC-PRO. Reply STOP to opt out."""
+        
+        # Check if TWILIO_ENABLED, otherwise log mock SMS
+        if twilio_enabled:
+            await sms_service.send_message(
+                to_number=phone_number,
+                message=message
+            )
+            logger.info(f"Real SMS confirmation sent to {phone_number}")
+        else:
+            # Mock SMS - just log it
+            logger.info(f"MOCK SMS (TWILIO_ENABLED=false) to {phone_number}: {message}")
+            
+            # Also add to mock sent messages for testing
+            if hasattr(sms_service, 'sent_messages'):
+                sms_service.sent_messages.append({
+                    "to": phone_number,
+                    "body": message,
+                    "status": "mock_sent",
+                    "timestamp": datetime.utcnow().isoformat()
+                })
         
     except Exception as e:
         logger.error(f"Error sending SMS confirmation: {str(e)}")
+        # Don't fail the whole appointment creation if SMS fails
 
 # ==================== JOB MANAGEMENT ENDPOINTS ====================
 
