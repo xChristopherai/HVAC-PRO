@@ -132,25 +132,103 @@ const Technicians = ({ currentUser }) => {
 
   useEffect(() => {
     fetchTechnicians();
-  }, [currentUser?.company_id]);
+  }, [currentUser?.company_id, statusFilter]);
+
+  useEffect(() => {
+    if (searchTerm.trim()) {
+      handleSearch();
+    } else {
+      setSearchResults([]);
+    }
+  }, [searchTerm]);
 
   const fetchTechnicians = async () => {
     try {
       setLoading(true);
-      const response = await authService.authenticatedFetch(`technicians?company_id=${currentUser?.company_id || 'company-001'}`);
+      
+      let endpoint = `technicians?company_id=${currentUser?.company_id || 'company-001'}`;
+      
+      // If filtering by specific status, use search endpoint
+      if (statusFilter !== 'all') {
+        endpoint = `/api/technicians/search?status=${statusFilter}`;
+      }
+      
+      const response = await authService.authenticatedFetch(endpoint);
       
       if (response.ok) {
         const data = await response.json();
-        // Ensure data is always an array
-        setTechnicians(Array.isArray(data) ? data : []);
+        // Handle both direct array and wrapped response
+        const technicianList = data.technicians || data;
+        setTechnicians(Array.isArray(technicianList) ? technicianList : []);
       } else {
-        // Set empty array on error
         setTechnicians([]);
       }
     } catch (err) {
       console.error('Failed to fetch technicians:', err);
-      // Set empty array on exception
       setTechnicians([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSearch = async () => {
+    if (!searchTerm.trim()) return;
+    
+    try {
+      setSearching(true);
+      let endpoint = `/api/technicians/search?q=${encodeURIComponent(searchTerm)}`;
+      if (statusFilter !== 'all') {
+        endpoint += `&status=${statusFilter}`;
+      }
+      
+      const response = await authService.authenticatedFetch(endpoint);
+      
+      if (response.ok) {
+        const data = await response.json();
+        setSearchResults(data.technicians || []);
+      } else {
+        console.error('Failed to search technicians');
+        setSearchResults([]);
+      }
+    } catch (err) {
+      console.error('Error searching technicians:', err);
+      setSearchResults([]);
+    } finally {
+      setSearching(false);
+    }
+  };
+
+  const handleAddTechnician = async (technicianData) => {
+    try {
+      const response = await authService.authenticatedFetch('/api/technicians', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          company_id: currentUser?.company_id || 'company-001',
+          ...technicianData
+        })
+      });
+      
+      if (response.ok) {
+        const newTechnician = await response.json();
+        
+        // Update technicians list
+        setTechnicians(prev => [newTechnician, ...prev]);
+        
+        // If there's a search term, refresh search results
+        if (searchTerm.trim()) {
+          await handleSearch();
+        }
+        
+        setShowAddTechnician(false);
+        console.log('Technician added successfully:', newTechnician);
+      } else {
+        console.error('Failed to add technician');
+      }
+    } catch (err) {
+      console.error('Error adding technician:', err);
+    }
+  };
     } finally {
       setLoading(false);
     }
