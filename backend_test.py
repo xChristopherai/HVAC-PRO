@@ -1560,6 +1560,100 @@ class HVACAPITester:
             print("❌ PHASE 3 has critical issues that need attention")
             return False
 
+    def run_phase4_technicians_messaging_tests(self):
+        """Run PHASE 4 Technicians & Messaging tests"""
+        print("🔧 Starting PHASE 4 Technicians & Messaging Backend Tests")
+        print(f"🌐 Testing against: {self.base_url}")
+        print("=" * 60)
+        
+        # Initialize tokens
+        print("\n🔐 Authentication Setup:")
+        admin_success = self.test_admin_login()
+        user_success = self.test_mock_user_login()
+        
+        if not user_success:
+            print("❌ Cannot proceed without user authentication")
+            return False
+        
+        # PHASE 4 specific tests
+        print("\n🔧 Technician Search & Management Tests:")
+        
+        # Technician Search Tests
+        tech_search_name_success = self.test_technicians_search_by_name()
+        tech_search_email_success = self.test_technicians_search_by_email()
+        tech_search_status_success = self.test_technicians_search_by_status()
+        tech_search_pagination_success = self.test_technicians_search_pagination()
+        
+        # Technician Management Tests
+        tech_add_success = self.test_add_new_technician()
+        
+        print("\n💬 Message Search & Management Tests:")
+        
+        # Message Search Tests
+        msg_search_name_success = self.test_messages_search_by_customer_name()
+        msg_search_phone_success = self.test_messages_search_by_phone()
+        msg_search_status_success = self.test_messages_search_by_status()
+        msg_search_pagination_success = self.test_messages_search_pagination()
+        
+        # Message Creation Test (Feature Flag)
+        msg_creation_flag_success = self.test_new_message_creation_feature_flag_disabled()
+        
+        # Summary
+        print("\n" + "=" * 60)
+        print(f"📊 Test Results: {self.tests_passed}/{self.tests_run} tests passed")
+        
+        success_rate = (self.tests_passed / self.tests_run) * 100 if self.tests_run > 0 else 0
+        print(f"✨ Success Rate: {success_rate:.1f}%")
+        
+        # PHASE 4 Analysis
+        print("\n🔧 PHASE 4 Analysis:")
+        
+        technician_tests = [
+            ("Search by Name", tech_search_name_success),
+            ("Search by Email", tech_search_email_success),
+            ("Search by Status", tech_search_status_success),
+            ("Search Pagination", tech_search_pagination_success),
+            ("Add New Technician", tech_add_success)
+        ]
+        
+        messaging_tests = [
+            ("Search by Customer Name", msg_search_name_success),
+            ("Search by Phone", msg_search_phone_success),
+            ("Search by Status", msg_search_status_success),
+            ("Search Pagination", msg_search_pagination_success),
+            ("Feature Flag Protection", msg_creation_flag_success)
+        ]
+        
+        print("\n🔧 Technician Management:")
+        passed_technicians = sum(1 for _, success in technician_tests if success)
+        for test_name, success in technician_tests:
+            status = "✅" if success else "❌"
+            print(f"   {status} {test_name}")
+        
+        print("\n💬 Messaging System:")
+        passed_messaging = sum(1 for _, success in messaging_tests if success)
+        for test_name, success in messaging_tests:
+            status = "✅" if success else "❌"
+            print(f"   {status} {test_name}")
+        
+        total_critical = len(technician_tests) + len(messaging_tests)
+        total_passed = passed_technicians + passed_messaging
+        
+        print(f"\n🎯 PHASE 4 Critical Tests: {total_passed}/{total_critical} passed")
+        print(f"   Technician Management: {passed_technicians}/{len(technician_tests)} passed")
+        print(f"   Messaging System: {passed_messaging}/{len(messaging_tests)} passed")
+        
+        # Overall assessment
+        if total_passed >= 9:  # Allow 1 failure
+            print("🎉 PHASE 4 Technicians & Messaging functionality is working excellently!")
+            return True
+        elif total_passed >= 7:
+            print("⚠️ PHASE 4 has minor issues but core functionality works")
+            return True
+        else:
+            print("❌ PHASE 4 has critical issues that need attention")
+            return False
+
 def main():
     """Main test execution"""
     tester = HVACAPITester()
