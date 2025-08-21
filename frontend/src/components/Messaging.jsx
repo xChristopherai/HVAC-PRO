@@ -233,6 +233,12 @@ const Messaging = ({ currentUser }) => {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [filter, setFilter] = useState('all');
+  const [searchResults, setSearchResults] = useState([]);
+  const [searching, setSearching] = useState(false);
+  const [showNewMessage, setShowNewMessage] = useState(false);
+
+  // Feature flag for New Message functionality (default hidden)
+  const NEW_MESSAGE_ENABLED = process.env.REACT_APP_ENABLE_NEW_MESSAGE === 'true';
 
   useEffect(() => {
     fetchConversations();
