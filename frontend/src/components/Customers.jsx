@@ -184,8 +184,17 @@ const Customers = ({ currentUser, aiVoiceEnabled }) => {
       
       if (response.ok) {
         const newCustomer = await response.json();
+        
+        // Update customers list
         setCustomers(prev => [newCustomer, ...prev]);
+        
+        // If there's a search term, refresh search results to include new customer
+        if (searchTerm.trim()) {
+          await handleSearch();
+        }
+        
         setShowAddCustomer(false);
+        console.log('Customer added successfully:', newCustomer);
       } else {
         console.error('Failed to add customer');
       }
@@ -194,7 +203,7 @@ const Customers = ({ currentUser, aiVoiceEnabled }) => {
     }
   };
 
-  const filteredCustomers = (customers || []).filter(customer => 
+  const filteredCustomers = searchTerm.trim() ? searchResults : (customers || []).filter(customer => 
     customer.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
     customer.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
     customer.phone?.includes(searchTerm)
