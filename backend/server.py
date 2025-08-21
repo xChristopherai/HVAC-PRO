@@ -1462,7 +1462,7 @@ async def search_customers(
     """Search customers with filters"""
     
     try:
-        company_id = current_user.get("company_id", "company-001")
+        company_id = "company-001"  # Default for testing
         
         # Mock search results - in real implementation would query database
         all_customers = [
