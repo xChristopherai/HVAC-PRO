@@ -1444,6 +1444,287 @@ async def quick_view_reports(report_data: dict, current_user: dict = Depends(get
             "message": "Failed to generate report"
         }
 
+# ==================== PHASE 4 ENDPOINTS - TECHNICIANS & MESSAGING ====================
+
+@app.get("/api/technicians/search")
+async def search_technicians(
+    q: Optional[str] = None,
+    status: Optional[str] = None,
+    skill: Optional[str] = None,
+    limit: int = 20,
+    offset: int = 0,
+    current_user: dict = Depends(get_current_user)
+):
+    """Search technicians with filters"""
+    
+    try:
+        company_id = current_user.get("company_id", "company-001")
+        
+        # Mock technicians data
+        all_technicians = [
+            {
+                "id": "tech-001",
+                "name": "Mike Johnson",
+                "email": "mike.j@hvactech.com",
+                "phone": "+1-555-TECH-01",
+                "status": "available",
+                "company_id": company_id,
+                "skills": ["hvac", "installation", "repair"],
+                "rating": 4.8,
+                "jobs_completed": 147,
+                "years_experience": 8,
+                "certifications": ["EPA 608", "NATE Certified"],
+                "current_job": None,
+                "availability": "09:00-17:00",
+                "created_at": "2024-01-15T08:00:00Z"
+            },
+            {
+                "id": "tech-002", 
+                "name": "Sarah Davis",
+                "email": "sarah.d@hvactech.com",
+                "phone": "+1-555-TECH-02",
+                "status": "busy",
+                "company_id": company_id,
+                "skills": ["hvac", "maintenance", "diagnostics"],
+                "rating": 4.9,
+                "jobs_completed": 203,
+                "years_experience": 12,
+                "certifications": ["EPA 608", "NATE Certified", "R-410A"],
+                "current_job": "appt-002",
+                "availability": "08:00-16:00", 
+                "created_at": "2024-01-10T09:30:00Z"
+            },
+            {
+                "id": "tech-003",
+                "name": "David Wilson",
+                "email": "david.w@hvactech.com", 
+                "phone": "+1-555-TECH-03",
+                "status": "off_duty",
+                "company_id": company_id,
+                "skills": ["hvac", "electrical", "plumbing"],
+                "rating": 4.7,
+                "jobs_completed": 89,
+                "years_experience": 5,
+                "certifications": ["EPA 608", "Electrical License"],
+                "current_job": None,
+                "availability": "10:00-18:00",
+                "created_at": "2024-01-20T10:15:00Z"
+            },
+            {
+                "id": "tech-004",
+                "name": "Jennifer Brown",
+                "email": "jennifer.b@hvactech.com",
+                "phone": "+1-555-TECH-04", 
+                "status": "unavailable",
+                "company_id": company_id,
+                "skills": ["hvac", "commercial", "industrial"],
+                "rating": 4.6,
+                "jobs_completed": 156,
+                "years_experience": 10,
+                "certifications": ["EPA 608", "NATE Certified", "Commercial HVAC"],
+                "current_job": None,
+                "availability": "07:00-15:00",
+                "created_at": "2024-01-05T11:45:00Z"
+            }
+        ]
+        
+        # Apply filters
+        filtered_technicians = all_technicians
+        
+        if q:
+            filtered_technicians = [t for t in filtered_technicians 
+                                  if q.lower() in t["name"].lower() or q.lower() in t["email"].lower()]
+        if status:
+            filtered_technicians = [t for t in filtered_technicians if t["status"] == status]
+        if skill:
+            filtered_technicians = [t for t in filtered_technicians if skill.lower() in [s.lower() for s in t["skills"]]]
+            
+        # Apply pagination
+        paginated_technicians = filtered_technicians[offset:offset + limit]
+        
+        return {
+            "technicians": paginated_technicians,
+            "total": len(filtered_technicians),
+            "limit": limit,
+            "offset": offset
+        }
+        
+    except Exception as e:
+        logger.error(f"Failed to search technicians: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/api/technicians")
+async def add_technician(technician_data: dict, current_user: dict = Depends(get_current_user)):
+    """Add a new technician"""
+    
+    try:
+        company_id = current_user.get("company_id", "company-001")
+        
+        new_technician = {
+            "id": f"tech-{datetime.utcnow().timestamp()}",
+            "name": technician_data.get("name"),
+            "email": technician_data.get("email"),
+            "phone": technician_data.get("phone"),
+            "status": "available",
+            "company_id": company_id,
+            "skills": technician_data.get("skills", ["hvac"]),
+            "rating": 5.0,
+            "jobs_completed": 0,
+            "years_experience": technician_data.get("years_experience", 1),
+            "certifications": technician_data.get("certifications", []),
+            "current_job": None,
+            "availability": technician_data.get("availability", "09:00-17:00"),
+            "created_at": datetime.utcnow().isoformat()
+        }
+        
+        # In real implementation, would save to database
+        # await db.technicians.insert_one(new_technician)
+        
+        return new_technician
+        
+    except Exception as e:
+        logger.error(f"Failed to add technician: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/api/messages/search")
+async def search_messages(
+    q: Optional[str] = None,
+    status: Optional[str] = None,
+    customer_phone: Optional[str] = None,
+    limit: int = 20,
+    offset: int = 0,
+    current_user: dict = Depends(get_current_user)
+):
+    """Search messages with filters"""
+    
+    try:
+        company_id = current_user.get("company_id", "company-001")
+        
+        # Mock messages data
+        all_messages = [
+            {
+                "id": "msg-001",
+                "customer_phone": "+1-555-123-4567",
+                "customer_name": "Jennifer Martinez",
+                "status": "active",
+                "company_id": company_id,
+                "last_message": "Hi, I need help with my heating system. It's not working properly.",
+                "last_message_time": "2025-01-24T14:30:00Z",
+                "created_at": "2025-01-24T14:30:00Z",
+                "message_count": 3,
+                "assigned_to": "mike.j@hvactech.com",
+                "priority": "normal",
+                "tags": ["heating", "repair"]
+            },
+            {
+                "id": "msg-002",
+                "customer_phone": "+1-555-987-6543", 
+                "customer_name": "Robert Thompson",
+                "status": "converted",
+                "company_id": company_id,
+                "last_message": "Thank you! The technician fixed the issue perfectly.",
+                "last_message_time": "2025-01-23T16:45:00Z",
+                "created_at": "2025-01-22T10:15:00Z",
+                "message_count": 8,
+                "assigned_to": "sarah.d@hvactech.com",
+                "priority": "high",
+                "tags": ["ac", "installation", "completed"]
+            },
+            {
+                "id": "msg-003",
+                "customer_phone": "+1-555-456-7890",
+                "customer_name": "Lisa Anderson", 
+                "status": "pending",
+                "company_id": company_id,
+                "last_message": "I sent you photos of the unit. Can you take a look?",
+                "last_message_time": "2025-01-24T09:20:00Z",
+                "created_at": "2025-01-24T09:20:00Z",
+                "message_count": 1,
+                "assigned_to": None,
+                "priority": "normal",
+                "tags": ["maintenance", "photos"]
+            },
+            {
+                "id": "msg-004",
+                "customer_phone": "+1-555-321-0987",
+                "customer_name": "Michael Davis",
+                "status": "active",
+                "company_id": company_id,
+                "last_message": "When can you schedule the maintenance check?",
+                "last_message_time": "2025-01-23T11:30:00Z",
+                "created_at": "2025-01-23T11:30:00Z",
+                "message_count": 5,
+                "assigned_to": "david.w@hvactech.com",
+                "priority": "low",
+                "tags": ["maintenance", "scheduling"]
+            }
+        ]
+        
+        # Apply filters
+        filtered_messages = all_messages
+        
+        if q:
+            filtered_messages = [m for m in filtered_messages 
+                               if q.lower() in m["customer_name"].lower() or 
+                                  q.lower() in m["last_message"].lower() or
+                                  q.lower() in m["customer_phone"]]
+        if status:
+            filtered_messages = [m for m in filtered_messages if m["status"] == status]
+        if customer_phone:
+            filtered_messages = [m for m in filtered_messages if customer_phone in m["customer_phone"]]
+            
+        # Apply pagination
+        paginated_messages = filtered_messages[offset:offset + limit]
+        
+        return {
+            "messages": paginated_messages,
+            "total": len(filtered_messages),
+            "limit": limit,
+            "offset": offset
+        }
+        
+    except Exception as e:
+        logger.error(f"Failed to search messages: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/api/messages")
+async def send_new_message(message_data: dict, current_user: dict = Depends(get_current_user)):
+    """Send a new message (behind feature flag)"""
+    
+    try:
+        new_message_enabled = os.getenv("ENABLE_NEW_MESSAGE", "false").lower() == "true"
+        if not new_message_enabled:
+            raise HTTPException(status_code=403, detail="New message feature not enabled")
+            
+        company_id = current_user.get("company_id", "company-001")
+        
+        new_message = {
+            "id": f"msg-{datetime.utcnow().timestamp()}",
+            "customer_phone": message_data.get("customer_phone"),
+            "customer_name": message_data.get("customer_name", "Unknown Customer"),
+            "status": "active",
+            "company_id": company_id,
+            "last_message": message_data.get("message"),
+            "last_message_time": datetime.utcnow().isoformat(),
+            "created_at": datetime.utcnow().isoformat(),
+            "message_count": 1,
+            "assigned_to": current_user.get("email"),
+            "priority": message_data.get("priority", "normal"),
+            "tags": message_data.get("tags", [])
+        }
+        
+        # In real implementation, would save to database and send via SMS
+        # await db.messages.insert_one(new_message)
+        # await sms_service.send_message(customer_phone, message)
+        
+        return new_message
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Failed to send new message: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
 # ==================== PHASE 3 ENDPOINTS - CUSTOMERS & APPOINTMENTS ====================
 
 @app.get("/api/test-phase3")
