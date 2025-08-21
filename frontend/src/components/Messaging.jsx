@@ -242,23 +242,42 @@ const Messaging = ({ currentUser }) => {
 
   useEffect(() => {
     fetchConversations();
-  }, [currentUser?.company_id]);
+  }, [currentUser?.company_id, filter]);
+
+  useEffect(() => {
+    if (searchTerm.trim()) {
+      handleSearch();
+    } else {
+      setSearchResults([]);
+    }
+  }, [searchTerm]);
 
   const fetchConversations = async () => {
     try {
       setLoading(true);
-      const response = await authService.authenticatedFetch(`conversations?company_id=${currentUser?.company_id || 'company-001'}`);
+      
+      let endpoint = `conversations?company_id=${currentUser?.company_id || 'company-001'}`;
+      
+      // If filtering by specific status, use search endpoint  
+      if (filter !== 'all') {
+        endpoint = `/api/messages/search?status=${filter}`;
+      }
+      
+      const response = await authService.authenticatedFetch(endpoint);
       
       if (response.ok) {
         const data = await response.json();
+        // Handle both direct array and wrapped response
+        const messageList = data.messages || data;
+        
         // Ensure conversations have message history
-        const conversationsWithMessages = (data || []).map(conv => ({
+        const conversationsWithMessages = (messageList || []).map(conv => ({
           ...conv,
           messages: conv.conversation_history || [
             {
               sender: 'customer',
-              message: conv.initial_message,
-              timestamp: conv.created_at
+              message: conv.last_message || conv.initial_message,
+              timestamp: conv.last_message_time || conv.created_at
             }
           ]
         }));
@@ -269,6 +288,78 @@ const Messaging = ({ currentUser }) => {
       setConversations([]);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleSearch = async () => {
+    if (!searchTerm.trim()) return;
+    
+    try {
+      setSearching(true);
+      let endpoint = `/api/messages/search?q=${encodeURIComponent(searchTerm)}`;
+      if (filter !== 'all') {
+        endpoint += `&status=${filter}`;
+      }
+      
+      const response = await authService.authenticatedFetch(endpoint);
+      
+      if (response.ok) {
+        const data = await response.json();
+        const searchMessages = (data.messages || []).map(conv => ({
+          ...conv,
+          messages: [{
+            sender: 'customer', 
+            message: conv.last_message,
+            timestamp: conv.last_message_time
+          }]
+        }));
+        setSearchResults(searchMessages);
+      } else {
+        console.error('Failed to search messages');
+        setSearchResults([]);
+      }
+    } catch (err) {
+      console.error('Error searching messages:', err);
+      setSearchResults([]);
+    } finally {
+      setSearching(false);
+    }
+  };
+
+  const handleNewMessage = async (messageData) => {
+    if (!NEW_MESSAGE_ENABLED) return;
+    
+    try {
+      const response = await authService.authenticatedFetch('/api/messages', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          company_id: currentUser?.company_id || 'company-001',
+          ...messageData
+        })
+      });
+      
+      if (response.ok) {
+        const newMessage = await response.json();
+        
+        // Add to conversations list
+        const newConversation = {
+          ...newMessage,
+          messages: [{
+            sender: 'technician',
+            message: newMessage.last_message,
+            timestamp: newMessage.last_message_time
+          }]
+        };
+        
+        setConversations(prev => [newConversation, ...prev]);
+        setShowNewMessage(false);
+        console.log('New message sent successfully:', newMessage);
+      } else {
+        console.error('Failed to send new message');
+      }
+    } catch (err) {
+      console.error('Error sending new message:', err);
     }
   };
 
