@@ -126,6 +126,9 @@ const Technicians = ({ currentUser }) => {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
+  const [showAddTechnician, setShowAddTechnician] = useState(false);
+  const [searchResults, setSearchResults] = useState([]);
+  const [searching, setSearching] = useState(false);
 
   useEffect(() => {
     fetchTechnicians();
