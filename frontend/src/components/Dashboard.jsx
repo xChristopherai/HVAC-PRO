@@ -437,32 +437,30 @@ const Dashboard = ({ currentUser }) => {
         </Card>
       </div>
 
-      {/* Quick Actions - PayPal style */}
+      {/* Quick Actions - PayPal style with functional buttons */}
       <Card className="bg-white border border-[#E5E7EB] rounded-xl shadow-sm">
         <CardHeader className="pb-4">
           <CardTitle className="text-[#0B0F19]">Quick Actions</CardTitle>
-          <CardDescription>
+          <CardDescription className="text-[#64748B]">
             Common tasks and shortcuts
           </CardDescription>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            <Button variant="outline" className="h-16 flex flex-col space-y-2">
-              <Users className="w-5 h-5" />
-              <span className="text-sm">Add Customer</span>
-            </Button>
-            <Button variant="outline" className="h-16 flex flex-col space-y-2">
-              <Calendar className="w-5 h-5" />
-              <span className="text-sm">Schedule Job</span>
-            </Button>
-            <Button variant="outline" className="h-16 flex flex-col space-y-2">
-              <Wrench className="w-5 h-5" />
-              <span className="text-sm">Create Invoice</span>
-            </Button>
-            <Button variant="outline" className="h-16 flex flex-col space-y-2">
-              <Clock className="w-5 h-5" />
-              <span className="text-sm">View Reports</span>
-            </Button>
+            {quickActions.map((action) => (
+              <Button 
+                key={action.id}
+                variant="outline" 
+                className="h-16 flex flex-col space-y-2 hover:bg-[#F0F8FF] hover:border-[#0070E0] transition-colors"
+                onClick={action.handler}
+                disabled={action.loading}
+              >
+                <action.icon className="w-5 h-5" />
+                <span className="text-sm">
+                  {action.loading ? 'Loading...' : action.label}
+                </span>
+              </Button>
+            ))}
           </div>
         </CardContent>
       </Card>
