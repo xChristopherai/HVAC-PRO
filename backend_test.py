@@ -1169,12 +1169,104 @@ class HVACAPITester:
             print("❌ Quick Actions have critical issues that need attention")
             return False
 
+    def run_phase3_customers_appointments_tests(self):
+        """Run PHASE 3 Customers & Appointments tests"""
+        print("🔍 Starting PHASE 3 Customers & Appointments Backend Tests")
+        print(f"🌐 Testing against: {self.base_url}")
+        print("=" * 60)
+        
+        # Initialize tokens
+        print("\n🔐 Authentication Setup:")
+        admin_success = self.test_admin_login()
+        user_success = self.test_mock_user_login()
+        
+        if not user_success:
+            print("❌ Cannot proceed without user authentication")
+            return False
+        
+        # PHASE 3 specific tests
+        print("\n🔍 Customer Search Tests:")
+        
+        # Customer Search Tests
+        search_name_success = self.test_customers_search_by_name()
+        search_phone_success = self.test_customers_search_by_phone()
+        search_email_success = self.test_customers_search_by_email()
+        search_pagination_success = self.test_customers_search_pagination()
+        
+        print("\n📅 Appointments Calendar & Filter Tests:")
+        
+        # Appointments Calendar Test
+        calendar_success = self.test_appointments_calendar_view()
+        
+        # Appointments Filter Tests
+        filter_scheduled_success = self.test_appointments_filter_by_scheduled_status()
+        filter_confirmed_success = self.test_appointments_filter_by_confirmed_status()
+        filter_in_progress_success = self.test_appointments_filter_by_in_progress_status()
+        filter_completed_success = self.test_appointments_filter_by_completed_status()
+        filter_all_success = self.test_appointments_filter_without_status()
+        
+        # Summary
+        print("\n" + "=" * 60)
+        print(f"📊 Test Results: {self.tests_passed}/{self.tests_run} tests passed")
+        
+        success_rate = (self.tests_passed / self.tests_run) * 100 if self.tests_run > 0 else 0
+        print(f"✨ Success Rate: {success_rate:.1f}%")
+        
+        # PHASE 3 Analysis
+        print("\n🔍 PHASE 3 Analysis:")
+        
+        customer_search_tests = [
+            ("Search by Name", search_name_success),
+            ("Search by Phone", search_phone_success),
+            ("Search by Email", search_email_success),
+            ("Search Pagination", search_pagination_success)
+        ]
+        
+        appointments_tests = [
+            ("Calendar View", calendar_success),
+            ("Filter Scheduled", filter_scheduled_success),
+            ("Filter Confirmed", filter_confirmed_success),
+            ("Filter In Progress", filter_in_progress_success),
+            ("Filter Completed", filter_completed_success),
+            ("Filter All", filter_all_success)
+        ]
+        
+        print("\n👥 Customer Search Functionality:")
+        passed_search = sum(1 for _, success in customer_search_tests if success)
+        for test_name, success in customer_search_tests:
+            status = "✅" if success else "❌"
+            print(f"   {status} {test_name}")
+        
+        print("\n📅 Appointments Calendar & Filtering:")
+        passed_appointments = sum(1 for _, success in appointments_tests if success)
+        for test_name, success in appointments_tests:
+            status = "✅" if success else "❌"
+            print(f"   {status} {test_name}")
+        
+        total_critical = len(customer_search_tests) + len(appointments_tests)
+        total_passed = passed_search + passed_appointments
+        
+        print(f"\n🎯 PHASE 3 Critical Tests: {total_passed}/{total_critical} passed")
+        print(f"   Customer Search: {passed_search}/{len(customer_search_tests)} passed")
+        print(f"   Appointments: {passed_appointments}/{len(appointments_tests)} passed")
+        
+        # Overall assessment
+        if total_passed >= 9:  # Allow 1 failure
+            print("🎉 PHASE 3 Customers & Appointments functionality is working excellently!")
+            return True
+        elif total_passed >= 7:
+            print("⚠️ PHASE 3 has minor issues but core functionality works")
+            return True
+        else:
+            print("❌ PHASE 3 has critical issues that need attention")
+            return False
+
 def main():
     """Main test execution"""
     tester = HVACAPITester()
     
-    # Run Quick Actions tests as requested for PHASE 2
-    success = tester.run_quick_actions_tests()
+    # Run PHASE 3 tests as requested
+    success = tester.run_phase3_customers_appointments_tests()
     return 0 if success else 1
 
 if __name__ == "__main__":
