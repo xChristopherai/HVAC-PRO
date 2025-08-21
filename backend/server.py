@@ -325,6 +325,9 @@ async def get_availability(date: str = Query(..., description="Date in YYYY-MM-D
         logger.error(f"Error getting availability: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
 
+# In-memory session storage (for development)
+voice_sessions = {}
+
 @app.post("/api/voice/inbound")
 async def voice_webhook(request: Request):
     """Enhanced Twilio voice webhook handler with call logging"""
