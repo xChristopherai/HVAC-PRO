@@ -119,6 +119,14 @@ const Customers = ({ currentUser, aiVoiceEnabled }) => {
     fetchCustomers();
   }, [currentUser?.company_id]);
 
+  useEffect(() => {
+    if (searchTerm.trim()) {
+      handleSearch();
+    } else {
+      setSearchResults([]);
+    }
+  }, [searchTerm]);
+
   const fetchCustomers = async () => {
     try {
       setLoading(true);
@@ -138,6 +146,28 @@ const Customers = ({ currentUser, aiVoiceEnabled }) => {
       setCustomers([]);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleSearch = async () => {
+    if (!searchTerm.trim()) return;
+    
+    try {
+      setSearching(true);
+      const response = await authService.authenticatedFetch(`/api/customers/search?q=${encodeURIComponent(searchTerm)}`);
+      
+      if (response.ok) {
+        const data = await response.json();
+        setSearchResults(data.customers || []);
+      } else {
+        console.error('Failed to search customers');
+        setSearchResults([]);
+      }
+    } catch (err) {
+      console.error('Error searching customers:', err);
+      setSearchResults([]);
+    } finally {
+      setSearching(false);
     }
   };
 
