@@ -21,6 +21,8 @@ import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { Badge } from './ui/badge';
 import { Textarea } from './ui/textarea';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from './ui/dialog';
+import { Label } from './ui/label';
 import { cn, formatTime } from '../lib/utils';
 import authService from '../utils/auth';
 
