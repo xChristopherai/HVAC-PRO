@@ -885,8 +885,8 @@ def main():
     """Main test execution"""
     tester = HVACAPITester()
     
-    # Run AI Voice Scheduling tests as requested
-    success = tester.run_ai_voice_scheduling_tests()
+    # Run Quick Actions tests as requested for PHASE 2
+    success = tester.run_quick_actions_tests()
     return 0 if success else 1
 
 if __name__ == "__main__":
