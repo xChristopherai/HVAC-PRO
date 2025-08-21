@@ -362,10 +362,25 @@ const Appointments = ({ currentUser, aiVoiceEnabled }) => {
           <p className="text-muted-foreground">Manage and schedule customer appointments</p>
         </div>
         <div className="flex space-x-3">
-          <Button variant="outline">
-            <CalendarView className="w-4 h-4 mr-2" />
-            Calendar View
-          </Button>
+          <div className="flex rounded-lg border border-gray-200 p-1">
+            <Button
+              variant={view === 'list' ? "default" : "ghost"}
+              size="sm"
+              onClick={() => setView('list')}
+              className="h-8"
+            >
+              List
+            </Button>
+            <Button
+              variant={view === 'calendar' ? "default" : "ghost"}
+              size="sm"
+              onClick={() => setView('calendar')}
+              className="h-8"
+            >
+              <CalendarView className="w-4 h-4 mr-1" />
+              Calendar
+            </Button>
+          </div>
           {!aiVoiceEnabled && (
             <Button onClick={() => setShowScheduleForm(true)}>
               <Plus className="w-4 h-4 mr-2" />
@@ -375,7 +390,7 @@ const Appointments = ({ currentUser, aiVoiceEnabled }) => {
         </div>
       </div>
 
-      {/* Filters */}
+      {/* Status Tabs - Enhanced for PHASE 3 */}
       <div className="flex flex-wrap gap-2">
         {filterOptions.map((option) => (
           <Button
@@ -383,8 +398,14 @@ const Appointments = ({ currentUser, aiVoiceEnabled }) => {
             variant={filter === option.value ? "default" : "outline"}
             size="sm"
             onClick={() => setFilter(option.value)}
+            className={filter === option.value ? "bg-blue-600 hover:bg-blue-700" : ""}
           >
             {option.label}
+            <span className="ml-2 px-2 py-0.5 text-xs rounded-full bg-gray-200 text-gray-700">
+              {option.value === 'all' 
+                ? appointments.length 
+                : appointments.filter(a => a.status === option.value).length}
+            </span>
           </Button>
         ))}
       </div>
