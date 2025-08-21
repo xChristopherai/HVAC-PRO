@@ -229,6 +229,93 @@ const ConversationThread = ({ conversation, onBack, onSendMessage }) => {
   );
 };
 
+// New Message Dialog Component (behind feature flag)
+const NewMessageDialog = ({ open, onOpenChange, onSendMessage }) => {
+  const [formData, setFormData] = useState({
+    customer_phone: '',
+    customer_name: '',
+    message: '',
+    priority: 'normal'
+  });
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    onSendMessage(formData);
+    setFormData({ customer_phone: '', customer_name: '', message: '', priority: 'normal' });
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="sm:max-w-[500px]">
+        <DialogHeader>
+          <DialogTitle>Send New Message</DialogTitle>
+          <DialogDescription>
+            Start a new conversation with a customer.
+          </DialogDescription>
+        </DialogHeader>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="grid grid-cols-1 gap-4">
+            <div>
+              <Label htmlFor="customer_phone">Customer Phone *</Label>
+              <Input
+                id="customer_phone"
+                type="tel"
+                value={formData.customer_phone}
+                onChange={(e) => setFormData(prev => ({ ...prev, customer_phone: e.target.value }))}
+                placeholder="+1 (555) 123-4567"
+                required
+              />
+            </div>
+            
+            <div>
+              <Label htmlFor="customer_name">Customer Name</Label>
+              <Input
+                id="customer_name"
+                value={formData.customer_name}
+                onChange={(e) => setFormData(prev => ({ ...prev, customer_name: e.target.value }))}
+                placeholder="Customer name (optional)"
+              />
+            </div>
+            
+            <div>
+              <Label htmlFor="priority">Priority</Label>
+              <select
+                id="priority"
+                value={formData.priority}
+                onChange={(e) => setFormData(prev => ({ ...prev, priority: e.target.value }))}
+                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+              >
+                <option value="low">Low</option>
+                <option value="normal">Normal</option>
+                <option value="high">High</option>
+              </select>
+            </div>
+            
+            <div>
+              <Label htmlFor="message">Message *</Label>
+              <Textarea
+                id="message"
+                value={formData.message}
+                onChange={(e) => setFormData(prev => ({ ...prev, message: e.target.value }))}
+                placeholder="Type your message here..."
+                className="min-h-[100px]"
+                required
+              />
+            </div>
+          </div>
+          
+          <div className="flex justify-end space-x-2 pt-4">
+            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+              Cancel
+            </Button>
+            <Button type="submit">Send Message</Button>
+          </div>
+        </form>
+      </DialogContent>
+    </Dialog>
+  );
+};
+
 const Messaging = ({ currentUser }) => {
   const [conversations, setConversations] = useState([]);
   const [selectedConversation, setSelectedConversation] = useState(null);
