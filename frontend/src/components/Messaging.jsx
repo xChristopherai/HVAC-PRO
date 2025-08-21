@@ -363,7 +363,7 @@ const Messaging = ({ currentUser }) => {
     }
   };
 
-  const filteredConversations = (conversations || []).filter(conversation => {
+  const filteredConversations = searchTerm.trim() ? searchResults : (conversations || []).filter(conversation => {
     const matchesSearch = conversation.customer_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          conversation.customer_phone?.includes(searchTerm) ||
                          conversation.last_message?.toLowerCase().includes(searchTerm.toLowerCase());
