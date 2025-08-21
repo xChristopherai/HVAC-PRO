@@ -1444,6 +1444,260 @@ async def quick_view_reports(report_data: dict, current_user: dict = Depends(get
             "message": "Failed to generate report"
         }
 
+# ==================== PHASE 3 ENDPOINTS - CUSTOMERS & APPOINTMENTS ====================
+
+@app.get("/api/customers/search")
+async def search_customers(
+    q: Optional[str] = None,
+    phone: Optional[str] = None,
+    email: Optional[str] = None, 
+    limit: int = 20,
+    offset: int = 0,
+    current_user: dict = Depends(get_current_user)
+):
+    """Search customers with filters"""
+    
+    try:
+        company_id = current_user.get("company_id", "company-001")
+        
+        # Mock search results - in real implementation would query database
+        all_customers = [
+            {
+                "id": "customer-001",
+                "name": "Jennifer Martinez",
+                "phone": "+1-555-123-4567",
+                "email": "jennifer@email.com",
+                "address": {"full": "123 Main St, Anytown, ST 12345"},
+                "company_id": company_id,
+                "created_at": "2025-01-20T10:00:00Z",
+                "last_service": "2025-01-15T14:30:00Z",
+                "total_jobs": 3,
+                "status": "active"
+            },
+            {
+                "id": "customer-002", 
+                "name": "Robert Thompson",
+                "phone": "+1-555-987-6543",
+                "email": "robert.t@email.com",
+                "address": {"full": "456 Oak Ave, Somewhere, ST 67890"},
+                "company_id": company_id,
+                "created_at": "2025-01-18T09:15:00Z",
+                "last_service": "2025-01-10T16:00:00Z",
+                "total_jobs": 5,
+                "status": "active"
+            },
+            {
+                "id": "customer-003",
+                "name": "Lisa Anderson",
+                "phone": "+1-555-456-7890",
+                "email": "lisa.anderson@email.com", 
+                "address": {"full": "789 Pine Dr, Elsewhere, ST 11111"},
+                "company_id": company_id,
+                "created_at": "2025-01-16T11:30:00Z",
+                "last_service": "2025-01-05T13:45:00Z",
+                "total_jobs": 2,
+                "status": "active"
+            }
+        ]
+        
+        # Apply search filters
+        filtered_customers = all_customers
+        if q:
+            filtered_customers = [c for c in filtered_customers 
+                                if q.lower() in c["name"].lower() or q.lower() in c["phone"]]
+        if phone:
+            filtered_customers = [c for c in filtered_customers if phone in c["phone"]]
+        if email:
+            filtered_customers = [c for c in filtered_customers if email.lower() in c["email"].lower()]
+        
+        # Apply pagination
+        paginated_customers = filtered_customers[offset:offset + limit]
+        
+        return {
+            "customers": paginated_customers,
+            "total": len(filtered_customers),
+            "limit": limit,
+            "offset": offset
+        }
+        
+    except Exception as e:
+        logger.error(f"Failed to search customers: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/api/appointments/calendar")
+async def get_appointments_calendar(
+    start_date: Optional[str] = None,
+    end_date: Optional[str] = None,
+    view: Optional[str] = "month",
+    current_user: dict = Depends(get_current_user)
+):
+    """Get appointments in calendar format"""
+    
+    try:
+        company_id = current_user.get("company_id", "company-001")
+        
+        # Mock calendar appointments data
+        calendar_appointments = [
+            {
+                "id": "appt-001",
+                "title": "HVAC Maintenance - Martinez",
+                "customer_name": "Jennifer Martinez",
+                "customer_id": "customer-001",
+                "start": "2025-01-24T09:00:00",
+                "end": "2025-01-24T11:00:00", 
+                "status": "scheduled",
+                "service_type": "maintenance",
+                "technician": "Mike Johnson",
+                "address": "123 Main St, Anytown, ST 12345",
+                "source": "manual"
+            },
+            {
+                "id": "appt-002", 
+                "title": "No Heat Service - Thompson",
+                "customer_name": "Robert Thompson",
+                "customer_id": "customer-002",
+                "start": "2025-01-24T14:00:00",
+                "end": "2025-01-24T16:00:00",
+                "status": "confirmed", 
+                "service_type": "no_heat",
+                "technician": "Sarah Davis",
+                "address": "456 Oak Ave, Somewhere, ST 67890",
+                "source": "ai-voice",
+                "is_ai_generated": True
+            },
+            {
+                "id": "appt-003",
+                "title": "AC Installation - Anderson", 
+                "customer_name": "Lisa Anderson",
+                "customer_id": "customer-003",
+                "start": "2025-01-25T08:00:00",
+                "end": "2025-01-25T12:00:00",
+                "status": "in_progress",
+                "service_type": "installation",
+                "technician": "Mike Johnson",
+                "address": "789 Pine Dr, Elsewhere, ST 11111",
+                "source": "manual"
+            },
+            {
+                "id": "appt-004",
+                "title": "System Check - Davis",
+                "customer_name": "Michael Davis", 
+                "customer_id": "customer-004",
+                "start": "2025-01-25T15:00:00",
+                "end": "2025-01-25T17:00:00",
+                "status": "completed",
+                "service_type": "maintenance",
+                "technician": "Sarah Davis",
+                "address": "321 Elm St, Newtown, ST 22222",
+                "source": "manual"
+            }
+        ]
+        
+        return {
+            "appointments": calendar_appointments,
+            "view": view,
+            "start_date": start_date,
+            "end_date": end_date
+        }
+        
+    except Exception as e:
+        logger.error(f"Failed to get calendar appointments: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/api/appointments/filter")
+async def filter_appointments(
+    status: Optional[str] = None,
+    date_from: Optional[str] = None,
+    date_to: Optional[str] = None,
+    technician: Optional[str] = None,
+    current_user: dict = Depends(get_current_user)
+):
+    """Filter appointments by status and other criteria"""
+    
+    try:
+        company_id = current_user.get("company_id", "company-001")
+        
+        # Get all appointments (same as calendar data)
+        all_appointments = [
+            {
+                "id": "appt-001",
+                "title": "HVAC Maintenance - Martinez",
+                "customer_name": "Jennifer Martinez", 
+                "customer_id": "customer-001",
+                "scheduled_date": "2025-01-24T09:00:00",
+                "status": "scheduled",
+                "service_type": "maintenance",
+                "technician": "Mike Johnson",
+                "address": "123 Main St, Anytown, ST 12345",
+                "source": "manual",
+                "description": "Regular HVAC system maintenance"
+            },
+            {
+                "id": "appt-002",
+                "title": "No Heat Service - Thompson", 
+                "customer_name": "Robert Thompson",
+                "customer_id": "customer-002", 
+                "scheduled_date": "2025-01-24T14:00:00",
+                "status": "confirmed",
+                "service_type": "no_heat", 
+                "technician": "Sarah Davis",
+                "address": "456 Oak Ave, Somewhere, ST 67890",
+                "source": "ai-voice",
+                "is_ai_generated": True,
+                "description": "Customer called via AI Voice system reporting no heat issue"
+            },
+            {
+                "id": "appt-003",
+                "title": "AC Installation - Anderson",
+                "customer_name": "Lisa Anderson",
+                "customer_id": "customer-003",
+                "scheduled_date": "2025-01-25T08:00:00", 
+                "status": "in_progress",
+                "service_type": "installation",
+                "technician": "Mike Johnson",
+                "address": "789 Pine Dr, Elsewhere, ST 11111",
+                "source": "manual",
+                "description": "New AC unit installation"
+            },
+            {
+                "id": "appt-004",
+                "title": "System Check - Davis",
+                "customer_name": "Michael Davis",
+                "customer_id": "customer-004",
+                "scheduled_date": "2025-01-23T15:00:00",
+                "status": "completed", 
+                "service_type": "maintenance",
+                "technician": "Sarah Davis",
+                "address": "321 Elm St, Newtown, ST 22222",
+                "source": "manual",
+                "description": "Completed system maintenance check"
+            }
+        ]
+        
+        # Apply status filter
+        filtered_appointments = all_appointments
+        if status:
+            filtered_appointments = [a for a in filtered_appointments if a["status"] == status]
+        
+        # Apply technician filter
+        if technician:
+            filtered_appointments = [a for a in filtered_appointments if technician.lower() in a["technician"].lower()]
+            
+        return {
+            "appointments": filtered_appointments,
+            "total": len(filtered_appointments),
+            "filters": {
+                "status": status,
+                "date_from": date_from,
+                "date_to": date_to,
+                "technician": technician
+            }
+        }
+        
+    except Exception as e:
+        logger.error(f"Failed to filter appointments: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
 @app.post("/api/settings/test-sms")
 async def test_sms_settings(
     test_data: dict,
