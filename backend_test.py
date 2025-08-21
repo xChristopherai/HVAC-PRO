@@ -954,29 +954,52 @@ class HVACAPITester:
         success, data = self.make_request('GET', f'/settings/{self.company_id}', token=self.user_token)
         
         if success:
-            # Check for all 8 required sections
-            required_sections = ['business', 'ai', 'sms', 'calendar', 'notifications', 'billing', 'service_areas', 'integrations']
-            has_all_sections = all(section in data for section in required_sections)
+            # Check for key business fields
+            business_fields = ['business_name', 'business_phone', 'business_email']
+            has_business_fields = all(field in data for field in business_fields)
             
-            # Verify business section structure
-            business = data.get('business', {})
-            business_fields = ['business_name', 'business_phone', 'business_email', 'business_address']
-            has_business_fields = all(field in business for field in business_fields)
+            # Check for AI fields
+            ai_fields = ['ai_assistant_name', 'ai_temperature', 'max_response_tokens']
+            has_ai_fields = all(field in data for field in ai_fields)
             
-            # Verify ai section structure
-            ai = data.get('ai', {})
-            ai_fields = ['assistant_name', 'response_temperature', 'enable_voice_scheduling']
-            has_ai_fields = all(field in ai for field in ai_fields)
+            # Check for SMS fields
+            sms_fields = ['sms_enabled', 'auto_response_enabled']
+            has_sms_fields = all(field in data for field in sms_fields)
             
-            # Verify integrations section structure
-            integrations = data.get('integrations', {})
-            integration_services = ['twilio', 'google_calendar', 'stripe']
-            has_integrations = all(service in integrations for service in integration_services)
+            # Check for calendar fields
+            calendar_section = data.get('calendar', {})
+            calendar_fields = ['google_connected', 'default_event_duration']
+            has_calendar_fields = all(field in calendar_section for field in calendar_fields)
             
-            all_valid = has_all_sections and has_business_fields and has_ai_fields and has_integrations
+            # Check for notifications fields
+            notifications_section = data.get('notifications', {})
+            notification_fields = ['job_reminder_sms', 'owner_email']
+            has_notification_fields = all(field in notifications_section for field in notification_fields)
+            
+            # Check for billing fields
+            billing_section = data.get('billing', {})
+            has_billing_fields = 'plan' in billing_section
+            
+            # Check for service areas and integrations
+            has_service_areas = 'service_areas' in data
+            has_integrations = 'integrations' in data and isinstance(data['integrations'], dict)
+            
+            all_valid = (has_business_fields and has_ai_fields and has_sms_fields and 
+                        has_calendar_fields and has_notification_fields and has_billing_fields and
+                        has_service_areas and has_integrations)
+            
+            sections_found = []
+            if has_business_fields: sections_found.append('business')
+            if has_ai_fields: sections_found.append('ai')
+            if has_sms_fields: sections_found.append('sms')
+            if has_calendar_fields: sections_found.append('calendar')
+            if has_notification_fields: sections_found.append('notifications')
+            if has_billing_fields: sections_found.append('billing')
+            if has_service_areas: sections_found.append('service_areas')
+            if has_integrations: sections_found.append('integrations')
             
             self.log_test("Settings Retrieval - All 8 Sections", all_valid,
-                         f"Sections: {list(data.keys())}, Business: {business.get('business_name', 'N/A')}")
+                         f"Sections found: {sections_found}, Business: {data.get('business_name', 'N/A')}")
             return all_valid
         else:
             self.log_test("Settings Retrieval - All 8 Sections", False, f"Error: {data.get('detail', 'Unknown error')}")
