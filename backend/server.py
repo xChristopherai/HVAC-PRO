@@ -1457,8 +1457,7 @@ async def search_customers(
     phone: Optional[str] = None,
     email: Optional[str] = None, 
     limit: int = 20,
-    offset: int = 0,
-    current_user: dict = Depends(get_current_user)
+    offset: int = 0
 ):
     """Search customers with filters"""
     
