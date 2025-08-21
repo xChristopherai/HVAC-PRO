@@ -2689,8 +2689,8 @@ def main():
     """Main test execution"""
     tester = HVACAPITester()
     
-    # Run PHASE 5 Settings tests as requested
-    success = tester.run_phase5_settings_tests()
+    # Run PHASE 6 Voice & SMS + Call Log tests as requested
+    success = tester.run_phase6_voice_sms_call_log_tests()
     return 0 if success else 1
 
 if __name__ == "__main__":
