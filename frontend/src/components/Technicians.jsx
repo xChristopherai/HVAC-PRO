@@ -378,4 +378,107 @@ const Technicians = ({ currentUser }) => {
   );
 };
 
+// Add Technician Dialog Component
+const AddTechnicianDialog = ({ open, onOpenChange, onAddTechnician }) => {
+  const [formData, setFormData] = useState({
+    name: '',
+    email: '',
+    phone: '',
+    years_experience: '',
+    availability: '09:00-17:00'
+  });
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    onAddTechnician({
+      ...formData,
+      years_experience: parseInt(formData.years_experience) || 1,
+      skills: ['hvac'], // Default skill
+      certifications: []
+    });
+    setFormData({ name: '', email: '', phone: '', years_experience: '', availability: '09:00-17:00' });
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="sm:max-w-[425px]">
+        <DialogHeader>
+          <DialogTitle>Add New Technician</DialogTitle>
+          <DialogDescription>
+            Add a new technician to your team.
+          </DialogDescription>
+        </DialogHeader>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="grid grid-cols-1 gap-4">
+            <div>
+              <Label htmlFor="name">Name *</Label>
+              <Input
+                id="name"
+                value={formData.name}
+                onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
+                placeholder="Technician name"
+                required
+              />
+            </div>
+            
+            <div>
+              <Label htmlFor="email">Email *</Label>
+              <Input
+                id="email"
+                type="email"
+                value={formData.email}
+                onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
+                placeholder="technician@hvactech.com"
+                required
+              />
+            </div>
+            
+            <div>
+              <Label htmlFor="phone">Phone *</Label>
+              <Input
+                id="phone"
+                type="tel"
+                value={formData.phone}
+                onChange={(e) => setFormData(prev => ({ ...prev, phone: e.target.value }))}
+                placeholder="+1 (555) 123-4567"
+                required
+              />
+            </div>
+            
+            <div>
+              <Label htmlFor="years_experience">Years of Experience</Label>
+              <Input
+                id="years_experience"
+                type="number"
+                min="1"
+                max="50"
+                value={formData.years_experience}
+                onChange={(e) => setFormData(prev => ({ ...prev, years_experience: e.target.value }))}
+                placeholder="5"
+              />
+            </div>
+            
+            <div>
+              <Label htmlFor="availability">Availability</Label>
+              <Input
+                id="availability"
+                value={formData.availability}
+                onChange={(e) => setFormData(prev => ({ ...prev, availability: e.target.value }))}
+                placeholder="09:00-17:00"
+              />
+            </div>
+          </div>
+          
+          <div className="flex justify-end space-x-2 pt-4">
+            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+              Cancel
+            </Button>
+            <Button type="submit">Add Technician</Button>
+          </div>
+        </form>
+      </DialogContent>
+    </Dialog>
+  );
+};
+
 export default Technicians;
