@@ -444,4 +444,94 @@ const Appointments = ({ currentUser, aiVoiceEnabled }) => {
   );
 };
 
+// Calendar View Component
+const CalendarView = ({ appointments, loading }) => {
+  const getStatusColor = (status) => {
+    switch (status) {
+      case 'confirmed': return 'border-l-green-500 bg-green-50';
+      case 'scheduled': return 'border-l-blue-500 bg-blue-50';
+      case 'in_progress': return 'border-l-yellow-500 bg-yellow-50';
+      case 'completed': return 'border-l-gray-500 bg-gray-50';
+      default: return 'border-l-gray-300 bg-gray-50';
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="space-y-4">
+        {[...Array(5)].map((_, i) => (
+          <div key={i} className="animate-pulse">
+            <div className="h-20 bg-gray-200 rounded-lg"></div>
+          </div>
+        ))}
+      </div>
+    );
+  }
+
+  // Group appointments by date
+  const appointmentsByDate = appointments.reduce((acc, appointment) => {
+    const date = new Date(appointment.start || appointment.scheduled_date).toDateString();
+    if (!acc[date]) acc[date] = [];
+    acc[date].push(appointment);
+    return acc;
+  }, {});
+
+  const sortedDates = Object.keys(appointmentsByDate).sort((a, b) => new Date(a) - new Date(b));
+
+  return (
+    <div className="space-y-6">
+      {sortedDates.length > 0 ? (
+        sortedDates.map((date) => (
+          <div key={date}>
+            <h3 className="text-lg font-semibold text-gray-800 mb-3">
+              {new Date(date).toLocaleDateString('en-US', { 
+                weekday: 'long',
+                year: 'numeric',
+                month: 'long', 
+                day: 'numeric'
+              })}
+            </h3>
+            <div className="space-y-2">
+              {appointmentsByDate[date].map((appointment) => (
+                <Card key={appointment.id} className={`border-l-4 ${getStatusColor(appointment.status)}`}>
+                  <CardContent className="p-4">
+                    <div className="flex items-center justify-between">
+                      <div className="flex-1">
+                        <div className="flex items-center space-x-3">
+                          <div>
+                            <h4 className="font-medium text-gray-800">{appointment.title}</h4>
+                            <p className="text-sm text-gray-600">{appointment.customer_name}</p>
+                          </div>
+                          {appointment.source === 'ai-voice' && (
+                            <Badge variant="secondary" className="bg-blue-50 text-blue-700 border-blue-200">
+                              AI Voice
+                            </Badge>
+                          )}
+                        </div>
+                        <div className="flex items-center space-x-4 mt-2 text-sm text-gray-500">
+                          <span>{formatTime(appointment.start || appointment.scheduled_date)}</span>
+                          {appointment.technician && (
+                            <span>• {appointment.technician}</span>
+                          )}
+                          <span>• {appointment.status}</span>
+                        </div>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          </div>
+        ))
+      ) : (
+        <div className="text-center py-12">
+          <CalendarIcon className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+          <h3 className="text-lg font-medium text-gray-800 mb-2">No appointments scheduled</h3>
+          <p className="text-gray-600">Your calendar is empty. Schedule some appointments to get started.</p>
+        </div>
+      )}
+    </div>
+  );
+};
+
 export default Appointments;
