@@ -5,16 +5,24 @@ import {
   Wrench, 
   DollarSign,
   TrendingUp,
+  TrendingDown,
   Clock,
   AlertCircle,
   ArrowUpRight,
   Phone,
-  CheckCircle
+  CheckCircle,
+  Badge,
+  Plus,
+  FileText
 } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
 import { Button } from './ui/button';
 import { cn, formatCurrency, formatTime } from '../lib/utils';
 import authService from '../utils/auth';
+
+// Feature Flags
+const NEW_UI = process.env.REACT_APP_NEW_UI !== 'false';
+const AI_VOICE_SCHEDULING_ENABLED = process.env.REACT_APP_AI_VOICE_SCHEDULING_ENABLED === 'true';
 
 // Stat Card Component - PayPal style
 const StatCard = ({ title, value, change, icon: Icon, trend = 'up' }) => {
