@@ -300,6 +300,60 @@ class InquiryCreate(BaseModel):
     customer_phone: str
     initial_message: str
 
+# Call Log Models (Phase 6)
+class CallStatus(str, Enum):
+    INCOMING = "incoming"
+    OUTGOING = "outgoing"
+    MISSED = "missed"
+    COMPLETED = "completed"
+    FAILED = "failed"
+
+class CallOutcome(str, Enum):
+    APPOINTMENT_CREATED = "appointment_created"
+    QUOTE_REQUESTED = "quote_requested"
+    FOLLOW_UP_NEEDED = "follow_up_needed"
+    TRANSFERRED_TO_HUMAN = "transferred_to_human"
+    CUSTOMER_HANGUP = "customer_hangup"
+    TECHNICAL_ISSUE = "technical_issue"
+    INFORMATION_PROVIDED = "information_provided"
+
+class CallLog(BaseDocument):
+    company_id: str
+    phone_number: str
+    customer_id: Optional[str] = None
+    customer_name: Optional[str] = None
+    call_sid: str  # Twilio Call SID
+    direction: str = "inbound"  # inbound/outbound
+    status: CallStatus = CallStatus.INCOMING
+    duration: Optional[int] = None  # seconds
+    start_time: datetime = Field(default_factory=datetime.utcnow)
+    end_time: Optional[datetime] = None
+    answered_by_ai: bool = True
+    transferred_to_tech: bool = False
+    tech_id: Optional[str] = None
+    tech_name: Optional[str] = None
+    outcome: Optional[CallOutcome] = None
+    appointment_id: Optional[str] = None
+    transcript: List[Dict[str, Any]] = Field(default_factory=list)
+    session_data: Dict[str, Any] = Field(default_factory=dict)
+    issue_type: Optional[IssueType] = None
+    urgency_level: str = "normal"  # low, normal, high, emergency
+    notes: str = ""
+    ai_confidence: Optional[float] = None  # 0.0-1.0
+    
+class CallLogCreate(BaseModel):
+    company_id: str
+    phone_number: str
+    call_sid: str
+    direction: str = "inbound"
+    customer_name: Optional[str] = None
+    issue_type: Optional[IssueType] = None
+
+class CallLogSearchResponse(BaseModel):
+    calls: List[CallLog]
+    total_count: int
+    filters_applied: Dict[str, Any]
+
 # Settings Models
 class CompanySettings(BaseModel):
     # Business Information
