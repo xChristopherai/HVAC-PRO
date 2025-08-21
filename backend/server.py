@@ -1308,6 +1308,142 @@ async def save_integration_settings(provider: str, integration_data: dict, curre
         "status": mock_status
     }
 
+# ==================== QUICK ACTIONS ENDPOINTS (PHASE 2) ====================
+
+@app.post("/api/quick/add-customer")
+async def quick_add_customer(customer_data: dict, current_user: dict = Depends(get_current_user)):
+    """Quick action: Add a new customer"""
+    
+    try:
+        # Mock customer creation with realistic data
+        new_customer = {
+            "id": f"quick-customer-{datetime.utcnow().timestamp()}",
+            "name": customer_data.get("name", "Quick Customer"),
+            "phone": customer_data.get("phone", "+1-555-QUICK"),
+            "email": customer_data.get("email", "quick@customer.com"),
+            "company_id": current_user.get("company_id", "company-001"),
+            "created_at": datetime.utcnow(),
+            "source": "quick_action"
+        }
+        
+        # In real implementation, would save to database
+        # await db.customers.insert_one(new_customer)
+        
+        return {
+            "success": True,
+            "message": "Customer added successfully!",
+            "customer": new_customer
+        }
+    except Exception as e:
+        return {
+            "success": False,
+            "error": str(e),
+            "message": "Failed to add customer"
+        }
+
+@app.post("/api/quick/schedule-job")
+async def quick_schedule_job(job_data: dict, current_user: dict = Depends(get_current_user)):
+    """Quick action: Schedule a new job"""
+    
+    try:
+        # Mock job scheduling with realistic data
+        new_job = {
+            "id": f"quick-job-{datetime.utcnow().timestamp()}",
+            "title": job_data.get("title", "Quick Service Call"),
+            "customer_name": job_data.get("customer_name", "Quick Customer"),
+            "service_type": job_data.get("service_type", "maintenance"),
+            "scheduled_date": job_data.get("scheduled_date", (datetime.utcnow() + timedelta(days=1)).isoformat()),
+            "company_id": current_user.get("company_id", "company-001"),
+            "created_at": datetime.utcnow(),
+            "status": "scheduled",
+            "source": "quick_action"
+        }
+        
+        # In real implementation, would save to database
+        # await db.appointments.insert_one(new_job)
+        
+        return {
+            "success": True,
+            "message": "Job scheduled successfully!",
+            "job": new_job
+        }
+    except Exception as e:
+        return {
+            "success": False,
+            "error": str(e),
+            "message": "Failed to schedule job"
+        }
+
+@app.post("/api/quick/create-invoice")
+async def quick_create_invoice(invoice_data: dict, current_user: dict = Depends(get_current_user)):
+    """Quick action: Create a new invoice"""
+    
+    try:
+        # Mock invoice creation with realistic data
+        new_invoice = {
+            "id": f"INV-{datetime.utcnow().strftime('%Y%m%d')}-{int(datetime.utcnow().timestamp() % 10000)}",
+            "customer_name": invoice_data.get("customer_name", "Quick Customer"),
+            "amount": invoice_data.get("amount", 250.00),
+            "service_description": invoice_data.get("description", "HVAC Service Call"),
+            "company_id": current_user.get("company_id", "company-001"),
+            "created_at": datetime.utcnow(),
+            "due_date": (datetime.utcnow() + timedelta(days=30)).isoformat(),
+            "status": "pending",
+            "source": "quick_action"
+        }
+        
+        # In real implementation, would save to database and integrate with billing
+        # await db.invoices.insert_one(new_invoice)
+        
+        return {
+            "success": True,
+            "message": f"Invoice {new_invoice['id']} created successfully!",
+            "invoice": new_invoice
+        }
+    except Exception as e:
+        return {
+            "success": False,
+            "error": str(e),
+            "message": "Failed to create invoice"
+        }
+
+@app.post("/api/quick/view-reports")
+async def quick_view_reports(report_data: dict, current_user: dict = Depends(get_current_user)):
+    """Quick action: Generate quick reports"""
+    
+    try:
+        # Mock report generation with realistic data
+        report = {
+            "id": f"report-{datetime.utcnow().timestamp()}",
+            "type": report_data.get("type", "monthly_summary"),
+            "period": report_data.get("period", "last_30_days"),
+            "company_id": current_user.get("company_id", "company-001"),
+            "generated_at": datetime.utcnow(),
+            "summary": {
+                "total_jobs": 47,
+                "total_revenue": 12750.00,
+                "avg_job_value": 271.28,
+                "customer_satisfaction": 4.8,
+                "technician_utilization": 85
+            }
+        }
+        
+        # In real implementation, would generate actual reports from data
+        # report_data = await generate_report(report_type, company_id)
+        
+        return {
+            "success": True,
+            "message": "Report generated successfully!",
+            "report": report,
+            "download_url": f"/reports/{report['id']}.pdf"
+        }
+    except Exception as e:
+        return {
+            "success": False,
+            "error": str(e),
+            "message": "Failed to generate report"
+        }
+
 @app.post("/api/settings/test-sms")
 async def test_sms_settings(
     test_data: dict,
