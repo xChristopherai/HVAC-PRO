@@ -815,6 +815,72 @@ class HVACAPITester:
         
         return frontend_success or api_success
 
+    def run_quick_actions_tests(self):
+        """Run PHASE 2 Quick Actions tests"""
+        print("⚡ Starting PHASE 2 Quick Actions Backend Tests")
+        print(f"🌐 Testing against: {self.base_url}")
+        print("=" * 60)
+        
+        # Initialize tokens
+        print("\n🔐 Authentication Setup:")
+        admin_success = self.test_admin_login()
+        user_success = self.test_mock_user_login()
+        
+        if not user_success:
+            print("❌ Cannot proceed without user authentication")
+            return False
+        
+        # Quick Actions specific tests
+        print("\n⚡ Quick Actions Tests:")
+        
+        # 1. Quick Add Customer Test
+        add_customer_success = self.test_quick_add_customer()
+        
+        # 2. Quick Schedule Job Test
+        schedule_job_success = self.test_quick_schedule_job()
+        
+        # 3. Quick Create Invoice Test
+        create_invoice_success = self.test_quick_create_invoice()
+        
+        # 4. Quick View Reports Test
+        view_reports_success = self.test_quick_view_reports()
+        
+        # Summary
+        print("\n" + "=" * 60)
+        print(f"📊 Test Results: {self.tests_passed}/{self.tests_run} tests passed")
+        
+        success_rate = (self.tests_passed / self.tests_run) * 100 if self.tests_run > 0 else 0
+        print(f"✨ Success Rate: {success_rate:.1f}%")
+        
+        # Quick Actions Analysis
+        print("\n⚡ Quick Actions Analysis:")
+        
+        critical_tests = [
+            ("Quick Add Customer", add_customer_success),
+            ("Quick Schedule Job", schedule_job_success),
+            ("Quick Create Invoice", create_invoice_success),
+            ("Quick View Reports", view_reports_success)
+        ]
+        
+        passed_critical = sum(1 for _, success in critical_tests if success)
+        
+        for test_name, success in critical_tests:
+            status = "✅" if success else "❌"
+            print(f"   {status} {test_name}")
+        
+        print(f"\n🎯 Critical Quick Actions Tests: {passed_critical}/{len(critical_tests)} passed")
+        
+        # Overall assessment
+        if passed_critical == 4:
+            print("🎉 All Quick Actions endpoints are working perfectly!")
+            return True
+        elif passed_critical >= 3:
+            print("⚠️ Most Quick Actions are working, minor issues detected")
+            return True
+        else:
+            print("❌ Quick Actions have critical issues that need attention")
+            return False
+
 def main():
     """Main test execution"""
     tester = HVACAPITester()
