@@ -280,6 +280,23 @@ const Customers = ({ currentUser, aiVoiceEnabled }) => {
         </Button>
       </div>
 
+      {/* Search Results Indicator */}
+      {searchTerm.trim() && (
+        <div className="flex items-center justify-between py-2 px-4 bg-blue-50 rounded-lg">
+          <span className="text-sm text-blue-700">
+            {searching ? 'Searching...' : `Found ${filteredCustomers.length} customer${filteredCustomers.length !== 1 ? 's' : ''} matching "${searchTerm}"`}
+          </span>
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            onClick={() => setSearchTerm('')}
+            className="text-blue-700 hover:text-blue-800"
+          >
+            Clear
+          </Button>
+        </div>
+      )}
+
       {/* Customers Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {filteredCustomers.length > 0 ? (
