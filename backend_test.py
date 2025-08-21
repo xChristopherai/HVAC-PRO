@@ -646,6 +646,294 @@ class HVACAPITester:
             self.log_test("Quick View Reports", False, f"Error: {data.get('detail', 'Unknown error')}")
             return False
 
+    # ==================== PHASE 3 TESTS - CUSTOMERS & APPOINTMENTS ====================
+    
+    def test_customers_search_by_name(self):
+        """Test GET /api/customers/search with name parameter"""
+        params = {"q": "Jennifer"}
+        success, data = self.make_request('GET', '/customers/search', params=params, token=self.user_token)
+        
+        if success:
+            has_customers = 'customers' in data and isinstance(data['customers'], list)
+            has_total = 'total' in data and isinstance(data['total'], int)
+            has_pagination = 'limit' in data and 'offset' in data
+            
+            customers = data.get('customers', [])
+            search_works = True
+            if customers:
+                # Check if returned customers match search query
+                for customer in customers:
+                    name = customer.get('name', '').lower()
+                    if 'jennifer' not in name:
+                        search_works = False
+                        break
+            
+            all_valid = has_customers and has_total and has_pagination and search_works
+            customer_count = len(customers)
+            
+            self.log_test("Customer Search by Name", all_valid,
+                         f"Found {customer_count} customers matching 'Jennifer'")
+            return all_valid
+        else:
+            self.log_test("Customer Search by Name", False, f"Error: {data.get('detail', 'Unknown error')}")
+            return False
+
+    def test_customers_search_by_phone(self):
+        """Test GET /api/customers/search with phone parameter"""
+        params = {"phone": "555-123"}
+        success, data = self.make_request('GET', '/customers/search', params=params, token=self.user_token)
+        
+        if success:
+            has_customers = 'customers' in data and isinstance(data['customers'], list)
+            has_total = 'total' in data and isinstance(data['total'], int)
+            
+            customers = data.get('customers', [])
+            phone_search_works = True
+            if customers:
+                # Check if returned customers match phone search
+                for customer in customers:
+                    phone = customer.get('phone', '')
+                    if '555-123' not in phone:
+                        phone_search_works = False
+                        break
+            
+            all_valid = has_customers and has_total and phone_search_works
+            customer_count = len(customers)
+            
+            self.log_test("Customer Search by Phone", all_valid,
+                         f"Found {customer_count} customers with phone '555-123'")
+            return all_valid
+        else:
+            self.log_test("Customer Search by Phone", False, f"Error: {data.get('detail', 'Unknown error')}")
+            return False
+
+    def test_customers_search_by_email(self):
+        """Test GET /api/customers/search with email parameter"""
+        params = {"email": "email.com"}
+        success, data = self.make_request('GET', '/customers/search', params=params, token=self.user_token)
+        
+        if success:
+            has_customers = 'customers' in data and isinstance(data['customers'], list)
+            has_total = 'total' in data and isinstance(data['total'], int)
+            
+            customers = data.get('customers', [])
+            email_search_works = True
+            if customers:
+                # Check if returned customers match email search
+                for customer in customers:
+                    email = customer.get('email', '').lower()
+                    if 'email.com' not in email:
+                        email_search_works = False
+                        break
+            
+            all_valid = has_customers and has_total and email_search_works
+            customer_count = len(customers)
+            
+            self.log_test("Customer Search by Email", all_valid,
+                         f"Found {customer_count} customers with email containing 'email.com'")
+            return all_valid
+        else:
+            self.log_test("Customer Search by Email", False, f"Error: {data.get('detail', 'Unknown error')}")
+            return False
+
+    def test_customers_search_pagination(self):
+        """Test GET /api/customers/search with pagination parameters"""
+        params = {"limit": 2, "offset": 0}
+        success, data = self.make_request('GET', '/customers/search', params=params, token=self.user_token)
+        
+        if success:
+            has_customers = 'customers' in data and isinstance(data['customers'], list)
+            has_pagination = 'limit' in data and 'offset' in data and 'total' in data
+            
+            customers = data.get('customers', [])
+            correct_limit = len(customers) <= 2  # Should respect limit
+            correct_pagination_values = data.get('limit') == 2 and data.get('offset') == 0
+            
+            all_valid = has_customers and has_pagination and correct_limit and correct_pagination_values
+            customer_count = len(customers)
+            total = data.get('total', 0)
+            
+            self.log_test("Customer Search Pagination", all_valid,
+                         f"Returned {customer_count} customers (limit=2), Total: {total}")
+            return all_valid
+        else:
+            self.log_test("Customer Search Pagination", False, f"Error: {data.get('detail', 'Unknown error')}")
+            return False
+
+    def test_appointments_calendar_view(self):
+        """Test GET /api/appointments/calendar endpoint"""
+        params = {"view": "month"}
+        success, data = self.make_request('GET', '/appointments/calendar', params=params, token=self.user_token)
+        
+        if success:
+            has_appointments = 'appointments' in data and isinstance(data['appointments'], list)
+            has_view = 'view' in data and data['view'] == 'month'
+            
+            appointments = data.get('appointments', [])
+            calendar_format_valid = True
+            
+            if appointments:
+                # Check calendar format - appointments should have start/end times
+                for appt in appointments:
+                    required_fields = ['id', 'title', 'start', 'customer_name', 'status']
+                    if not all(field in appt for field in required_fields):
+                        calendar_format_valid = False
+                        break
+                    
+                    # Check datetime format
+                    start_time = appt.get('start', '')
+                    if 'T' not in start_time or ':' not in start_time:
+                        calendar_format_valid = False
+                        break
+            
+            all_valid = has_appointments and has_view and calendar_format_valid
+            appointment_count = len(appointments)
+            
+            self.log_test("Appointments Calendar View", all_valid,
+                         f"Found {appointment_count} appointments in calendar format")
+            return all_valid
+        else:
+            self.log_test("Appointments Calendar View", False, f"Error: {data.get('detail', 'Unknown error')}")
+            return False
+
+    def test_appointments_filter_by_scheduled_status(self):
+        """Test GET /api/appointments/filter with status=scheduled"""
+        params = {"status": "scheduled"}
+        success, data = self.make_request('GET', '/appointments/filter', params=params, token=self.user_token)
+        
+        if success:
+            has_appointments = 'appointments' in data and isinstance(data['appointments'], list)
+            
+            appointments = data.get('appointments', [])
+            status_filter_works = True
+            
+            if appointments:
+                # Check if all returned appointments have 'scheduled' status
+                for appt in appointments:
+                    if appt.get('status') != 'scheduled':
+                        status_filter_works = False
+                        break
+            
+            all_valid = has_appointments and status_filter_works
+            appointment_count = len(appointments)
+            
+            self.log_test("Appointments Filter - Scheduled", all_valid,
+                         f"Found {appointment_count} scheduled appointments")
+            return all_valid
+        else:
+            self.log_test("Appointments Filter - Scheduled", False, f"Error: {data.get('detail', 'Unknown error')}")
+            return False
+
+    def test_appointments_filter_by_confirmed_status(self):
+        """Test GET /api/appointments/filter with status=confirmed"""
+        params = {"status": "confirmed"}
+        success, data = self.make_request('GET', '/appointments/filter', params=params, token=self.user_token)
+        
+        if success:
+            has_appointments = 'appointments' in data and isinstance(data['appointments'], list)
+            
+            appointments = data.get('appointments', [])
+            status_filter_works = True
+            
+            if appointments:
+                # Check if all returned appointments have 'confirmed' status
+                for appt in appointments:
+                    if appt.get('status') != 'confirmed':
+                        status_filter_works = False
+                        break
+            
+            all_valid = has_appointments and status_filter_works
+            appointment_count = len(appointments)
+            
+            self.log_test("Appointments Filter - Confirmed", all_valid,
+                         f"Found {appointment_count} confirmed appointments")
+            return all_valid
+        else:
+            self.log_test("Appointments Filter - Confirmed", False, f"Error: {data.get('detail', 'Unknown error')}")
+            return False
+
+    def test_appointments_filter_by_in_progress_status(self):
+        """Test GET /api/appointments/filter with status=in_progress"""
+        params = {"status": "in_progress"}
+        success, data = self.make_request('GET', '/appointments/filter', params=params, token=self.user_token)
+        
+        if success:
+            has_appointments = 'appointments' in data and isinstance(data['appointments'], list)
+            
+            appointments = data.get('appointments', [])
+            status_filter_works = True
+            
+            if appointments:
+                # Check if all returned appointments have 'in_progress' status
+                for appt in appointments:
+                    if appt.get('status') != 'in_progress':
+                        status_filter_works = False
+                        break
+            
+            all_valid = has_appointments and status_filter_works
+            appointment_count = len(appointments)
+            
+            self.log_test("Appointments Filter - In Progress", all_valid,
+                         f"Found {appointment_count} in-progress appointments")
+            return all_valid
+        else:
+            self.log_test("Appointments Filter - In Progress", False, f"Error: {data.get('detail', 'Unknown error')}")
+            return False
+
+    def test_appointments_filter_by_completed_status(self):
+        """Test GET /api/appointments/filter with status=completed"""
+        params = {"status": "completed"}
+        success, data = self.make_request('GET', '/appointments/filter', params=params, token=self.user_token)
+        
+        if success:
+            has_appointments = 'appointments' in data and isinstance(data['appointments'], list)
+            
+            appointments = data.get('appointments', [])
+            status_filter_works = True
+            
+            if appointments:
+                # Check if all returned appointments have 'completed' status
+                for appt in appointments:
+                    if appt.get('status') != 'completed':
+                        status_filter_works = False
+                        break
+            
+            all_valid = has_appointments and status_filter_works
+            appointment_count = len(appointments)
+            
+            self.log_test("Appointments Filter - Completed", all_valid,
+                         f"Found {appointment_count} completed appointments")
+            return all_valid
+        else:
+            self.log_test("Appointments Filter - Completed", False, f"Error: {data.get('detail', 'Unknown error')}")
+            return False
+
+    def test_appointments_filter_without_status(self):
+        """Test GET /api/appointments/filter without status filter (all appointments)"""
+        params = {}
+        success, data = self.make_request('GET', '/appointments/filter', params=params, token=self.user_token)
+        
+        if success:
+            has_appointments = 'appointments' in data and isinstance(data['appointments'], list)
+            
+            appointments = data.get('appointments', [])
+            has_mixed_statuses = False
+            
+            if len(appointments) > 1:
+                # Check if we have appointments with different statuses
+                statuses = set(appt.get('status') for appt in appointments)
+                has_mixed_statuses = len(statuses) > 1
+            
+            all_valid = has_appointments
+            appointment_count = len(appointments)
+            
+            self.log_test("Appointments Filter - All", all_valid,
+                         f"Found {appointment_count} total appointments")
+            return all_valid
+        else:
+            self.log_test("Appointments Filter - All", False, f"Error: {data.get('detail', 'Unknown error')}")
+            return False
+
     def run_ai_voice_scheduling_tests(self):
         """Run comprehensive AI Voice Scheduling tests"""
         print("🎙️ Starting AI Voice Scheduling Backend Tests")
