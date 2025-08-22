@@ -2685,12 +2685,494 @@ class HVACAPITester:
             print("❌ PHASE 4 has critical issues that need attention")
             return False
 
+    # ==================== PHASE 7 TESTS - QA GATES & SUBCONTRACTOR HOLDBACK ====================
+    
+    def test_phase7_hard_block_job_closure_microns_fail(self):
+        """Test Hard Block Job Closure - Microns Test (MUST FAIL)"""
+        job_id = "test-job-001"
+        technician_id = "tech-001"
+        
+        # Step 1: Create QA Gate
+        qa_params = {"technician_id": technician_id, "company_id": self.company_id}
+        success, data = self.make_request('POST', f'/jobs/{job_id}/qa-gate', params=qa_params, token=self.user_token)
+        
+        if not success:
+            self.log_test("Phase 7 Hard Block - Create QA Gate", False, f"Failed to create QA gate: {data.get('detail', 'Unknown error')}")
+            return False
+        
+        # Step 2: Submit startup metrics with microns=501 (exceeds 500 limit)
+        startup_metrics = {
+            "microns": 501,  # This should fail (> 500)
+            "temperature_differential": 20.5,
+            "airflow_cfm": 1200.0,
+            "refrigerant_charge": 8.5,
+            "electrical_readings": {"voltage": 240, "amperage": 15.2},
+            "technician_notes": "System startup completed with high micron reading"
+        }
+        
+        success, data = self.make_request('PUT', f'/jobs/{job_id}/qa-gate/startup-metrics', startup_metrics, self.user_token)
+        
+        if not success:
+            self.log_test("Phase 7 Hard Block - Submit High Microns", False, f"Failed to submit metrics: {data.get('detail', 'Unknown error')}")
+            return False
+        
+        # Verify microns_pass is False
+        microns_pass = data.get('microns_pass', True)  # Should be False
+        overall_pass = data.get('overall_pass', True)  # Should be False
+        
+        if microns_pass or overall_pass:
+            self.log_test("Phase 7 Hard Block - Microns Validation", False, f"Microns validation failed: microns_pass={microns_pass}, overall_pass={overall_pass}")
+            return False
+        
+        # Step 3: Attempt to close job - should be BLOCKED
+        success, data = self.make_request('POST', f'/jobs/{job_id}/close', token=self.user_token)
+        
+        # This should FAIL with specific error about microns
+        expected_failure = not success and (
+            'microns' in str(data).lower() or 
+            'qa requirements not met' in str(data).lower() or
+            'blocked' in str(data).lower()
+        )
+        
+        if expected_failure:
+            error_detail = data.get('detail', 'Unknown error')
+            self.log_test("Phase 7 Hard Block Job Closure - Microns Test", True, 
+                         f"✅ CORRECTLY BLOCKED: {error_detail}")
+            return True
+        else:
+            self.log_test("Phase 7 Hard Block Job Closure - Microns Test", False, 
+                         f"❌ SHOULD HAVE BEEN BLOCKED: {data.get('detail', 'Job closure succeeded when it should have failed')}")
+            return False
+    
+    def test_phase7_hard_block_payout_no_inspection_fail(self):
+        """Test Hard Block Payout - No Inspection Pass (MUST FAIL)"""
+        job_id = "test-job-002"
+        technician_id = "tech-002"
+        
+        # Step 1: Create QA Gate with passing metrics
+        qa_params = {"technician_id": technician_id, "company_id": self.company_id}
+        success, data = self.make_request('POST', f'/jobs/{job_id}/qa-gate', params=qa_params, token=self.user_token)
+        
+        if not success:
+            self.log_test("Phase 7 Hard Block Payout - Create QA Gate", False, f"Failed to create QA gate: {data.get('detail', 'Unknown error')}")
+            return False
+        
+        # Step 2: Submit passing startup metrics (microns < 500)
+        startup_metrics = {
+            "microns": 450,  # This should pass (< 500)
+            "temperature_differential": 18.5,
+            "airflow_cfm": 1150.0,
+            "refrigerant_charge": 8.2,
+            "electrical_readings": {"voltage": 240, "amperage": 14.8},
+            "technician_notes": "System startup completed successfully"
+        }
+        
+        success, data = self.make_request('PUT', f'/jobs/{job_id}/qa-gate/startup-metrics', startup_metrics, self.user_token)
+        
+        if not success:
+            self.log_test("Phase 7 Hard Block Payout - Submit Passing Metrics", False, f"Failed to submit metrics: {data.get('detail', 'Unknown error')}")
+            return False
+        
+        # Step 3: Add required photos
+        required_photos = ["before", "after", "equipment", "startup_readings"]
+        for photo_type in required_photos:
+            photo_params = {
+                "photo_type": photo_type,
+                "photo_url": f"https://example.com/photos/{photo_type}_{job_id}.jpg",
+                "description": f"{photo_type.title()} photo for job {job_id}"
+            }
+            success, data = self.make_request('POST', f'/jobs/{job_id}/qa-gate/photos', params=photo_params, token=self.user_token)
+            
+            if not success:
+                self.log_test("Phase 7 Hard Block Payout - Add Photos", False, f"Failed to add {photo_type} photo: {data.get('detail', 'Unknown error')}")
+                return False
+        
+        # Step 4: Register warranty
+        warranty_data = {
+            "company_id": self.company_id,
+            "customer_id": "customer-002",
+            "equipment_type": "Heat Pump",
+            "manufacturer": "Carrier",
+            "model_number": "25HCB636A003",
+            "serial_number": "1234567890",
+            "installation_date": "2025-01-24T10:00:00",
+            "warranty_start_date": "2025-01-24T10:00:00",
+            "warranty_end_date": "2030-01-24T10:00:00",
+            "warranty_type": "full",
+            "warranty_terms": "5 year full warranty on parts and labor"
+        }
+        
+        success, data = self.make_request('POST', f'/jobs/{job_id}/warranty', warranty_data, self.user_token)
+        
+        if not success:
+            self.log_test("Phase 7 Hard Block Payout - Register Warranty", False, f"Failed to register warranty: {data.get('detail', 'Unknown error')}")
+            return False
+        
+        # Step 5: Schedule inspection but DO NOT complete it with pass=true
+        inspection_data = {
+            "company_id": self.company_id,
+            "inspection_type": "startup",
+            "scheduled_date": "2025-01-25T14:00:00",
+            "required": True
+        }
+        
+        success, data = self.make_request('POST', f'/jobs/{job_id}/inspection', inspection_data, self.user_token)
+        
+        if not success:
+            self.log_test("Phase 7 Hard Block Payout - Schedule Inspection", False, f"Failed to schedule inspection: {data.get('detail', 'Unknown error')}")
+            return False
+        
+        inspection_id = data.get('inspection_id')
+        
+        # Complete inspection with inspection_pass=FALSE
+        completion_data = {
+            "inspection_pass": False,  # This should block payout
+            "notes": "Inspection failed due to improper installation",
+            "deficiencies": ["Improper refrigerant line insulation", "Missing electrical disconnect"]
+        }
+        
+        success, data = self.make_request('PUT', f'/inspections/{inspection_id}/complete', completion_data, self.user_token)
+        
+        if not success:
+            self.log_test("Phase 7 Hard Block Payout - Complete Inspection (Fail)", False, f"Failed to complete inspection: {data.get('detail', 'Unknown error')}")
+            return False
+        
+        # Step 6: Create subcontractor payment with $1000 base amount
+        payment_data = {
+            "company_id": self.company_id,
+            "subcontractor_id": "subcontractor-002",
+            "amount": 1000.0,
+            "holdback_percentage": 10.0,
+            "inspection_required": True
+        }
+        
+        success, data = self.make_request('POST', f'/jobs/{job_id}/subcontractor-payment', payment_data, self.user_token)
+        
+        if not success:
+            self.log_test("Phase 7 Hard Block Payout - Create Payment", False, f"Failed to create payment: {data.get('detail', 'Unknown error')}")
+            return False
+        
+        payment_id = data.get('payment_id')
+        expected_holdback = 100.0  # 10% of $1000
+        actual_holdback = data.get('holdback_amount', 0)
+        
+        if abs(actual_holdback - expected_holdback) > 0.01:
+            self.log_test("Phase 7 Hard Block Payout - Holdback Calculation", False, f"Incorrect holdback: expected ${expected_holdback}, got ${actual_holdback}")
+            return False
+        
+        # Step 7: Attempt holdback release - should be BLOCKED due to failed inspection
+        success, data = self.make_request('POST', f'/subcontractor-payments/{payment_id}/release-holdback', token=self.user_token)
+        
+        # This should FAIL with specific error about inspection
+        expected_failure = not success and (
+            'inspection' in str(data).lower() or 
+            'not passed' in str(data).lower() or
+            'blocked' in str(data).lower() or
+            'requirements not met' in str(data).lower()
+        )
+        
+        if expected_failure:
+            error_detail = data.get('detail', 'Unknown error')
+            self.log_test("Phase 7 Hard Block Payout - No Inspection Pass", True, 
+                         f"✅ CORRECTLY BLOCKED: {error_detail}")
+            return True
+        else:
+            self.log_test("Phase 7 Hard Block Payout - No Inspection Pass", False, 
+                         f"❌ SHOULD HAVE BEEN BLOCKED: {data.get('detail', 'Payout succeeded when it should have failed')}")
+            return False
+    
+    def test_phase7_happy_path_successful_payout_release(self):
+        """Test Happy Path - Successful Payout Release (MUST SUCCEED)"""
+        job_id = "test-job-003"
+        technician_id = "tech-003"
+        
+        # Step 1: Create QA Gate
+        qa_params = {"technician_id": technician_id, "company_id": self.company_id}
+        success, data = self.make_request('POST', f'/jobs/{job_id}/qa-gate', params=qa_params, token=self.user_token)
+        
+        if not success:
+            self.log_test("Phase 7 Happy Path - Create QA Gate", False, f"Failed to create QA gate: {data.get('detail', 'Unknown error')}")
+            return False
+        
+        # Step 2: Submit passing startup metrics (microns < 500)
+        startup_metrics = {
+            "microns": 450,  # This should pass (< 500)
+            "temperature_differential": 19.2,
+            "airflow_cfm": 1180.0,
+            "refrigerant_charge": 8.3,
+            "electrical_readings": {"voltage": 240, "amperage": 15.1},
+            "technician_notes": "System startup completed successfully with excellent readings"
+        }
+        
+        success, data = self.make_request('PUT', f'/jobs/{job_id}/qa-gate/startup-metrics', startup_metrics, self.user_token)
+        
+        if not success:
+            self.log_test("Phase 7 Happy Path - Submit Passing Metrics", False, f"Failed to submit metrics: {data.get('detail', 'Unknown error')}")
+            return False
+        
+        # Verify metrics pass
+        microns_pass = data.get('microns_pass', False)
+        overall_pass = data.get('overall_pass', False)
+        
+        if not microns_pass:
+            self.log_test("Phase 7 Happy Path - Microns Validation", False, f"Microns should pass: microns_pass={microns_pass}")
+            return False
+        
+        # Step 3: Add all required photos
+        required_photos = ["before", "after", "equipment", "startup_readings"]
+        for photo_type in required_photos:
+            photo_params = {
+                "photo_type": photo_type,
+                "photo_url": f"https://example.com/photos/{photo_type}_{job_id}.jpg",
+                "description": f"{photo_type.title()} photo for job {job_id} - high quality documentation"
+            }
+            success, data = self.make_request('POST', f'/jobs/{job_id}/qa-gate/photos', params=photo_params, token=self.user_token)
+            
+            if not success:
+                self.log_test("Phase 7 Happy Path - Add Photos", False, f"Failed to add {photo_type} photo: {data.get('detail', 'Unknown error')}")
+                return False
+        
+        # Step 4: Register warranty
+        warranty_data = {
+            "company_id": self.company_id,
+            "customer_id": "customer-003",
+            "equipment_type": "Central Air Conditioning",
+            "manufacturer": "Trane",
+            "model_number": "XR16",
+            "serial_number": "9876543210",
+            "installation_date": "2025-01-24T10:00:00",
+            "warranty_start_date": "2025-01-24T10:00:00",
+            "warranty_end_date": "2035-01-24T10:00:00",
+            "warranty_type": "full",
+            "warranty_terms": "10 year full warranty on parts and labor"
+        }
+        
+        success, data = self.make_request('POST', f'/jobs/{job_id}/warranty', warranty_data, self.user_token)
+        
+        if not success:
+            self.log_test("Phase 7 Happy Path - Register Warranty", False, f"Failed to register warranty: {data.get('detail', 'Unknown error')}")
+            return False
+        
+        # Step 5: Schedule and complete inspection with pass=true
+        inspection_data = {
+            "company_id": self.company_id,
+            "inspection_type": "startup",
+            "scheduled_date": "2025-01-25T14:00:00",
+            "required": True
+        }
+        
+        success, data = self.make_request('POST', f'/jobs/{job_id}/inspection', inspection_data, self.user_token)
+        
+        if not success:
+            self.log_test("Phase 7 Happy Path - Schedule Inspection", False, f"Failed to schedule inspection: {data.get('detail', 'Unknown error')}")
+            return False
+        
+        inspection_id = data.get('inspection_id')
+        
+        # Complete inspection with inspection_pass=TRUE
+        completion_data = {
+            "inspection_pass": True,  # This should allow payout
+            "notes": "Inspection passed - excellent installation quality",
+            "deficiencies": []  # No deficiencies
+        }
+        
+        success, data = self.make_request('PUT', f'/inspections/{inspection_id}/complete', completion_data, self.user_token)
+        
+        if not success:
+            self.log_test("Phase 7 Happy Path - Complete Inspection (Pass)", False, f"Failed to complete inspection: {data.get('detail', 'Unknown error')}")
+            return False
+        
+        # Step 6: Create subcontractor payment with 10% holdback
+        payment_data = {
+            "company_id": self.company_id,
+            "subcontractor_id": "subcontractor-003",
+            "amount": 1500.0,
+            "holdback_percentage": 10.0,
+            "inspection_required": True
+        }
+        
+        success, data = self.make_request('POST', f'/jobs/{job_id}/subcontractor-payment', payment_data, self.user_token)
+        
+        if not success:
+            self.log_test("Phase 7 Happy Path - Create Payment", False, f"Failed to create payment: {data.get('detail', 'Unknown error')}")
+            return False
+        
+        payment_id = data.get('payment_id')
+        expected_holdback = 150.0  # 10% of $1500
+        actual_holdback = data.get('holdback_amount', 0)
+        expected_releasable = 1350.0  # $1500 - $150
+        actual_releasable = data.get('releasable_amount', 0)
+        
+        if abs(actual_holdback - expected_holdback) > 0.01:
+            self.log_test("Phase 7 Happy Path - Holdback Calculation", False, f"Incorrect holdback: expected ${expected_holdback}, got ${actual_holdback}")
+            return False
+        
+        if abs(actual_releasable - expected_releasable) > 0.01:
+            self.log_test("Phase 7 Happy Path - Releasable Calculation", False, f"Incorrect releasable: expected ${expected_releasable}, got ${actual_releasable}")
+            return False
+        
+        # Step 7: Attempt holdback release - should SUCCEED
+        success, data = self.make_request('POST', f'/subcontractor-payments/{payment_id}/release-holdback', token=self.user_token)
+        
+        if success:
+            released_amount = data.get('released_amount', 0)
+            total_paid = data.get('total_paid', 0)
+            
+            if abs(released_amount - expected_holdback) > 0.01:
+                self.log_test("Phase 7 Happy Path - Released Amount", False, f"Incorrect released amount: expected ${expected_holdback}, got ${released_amount}")
+                return False
+            
+            if abs(total_paid - 1500.0) > 0.01:  # Should be full amount now
+                self.log_test("Phase 7 Happy Path - Total Paid", False, f"Incorrect total paid: expected $1500.00, got ${total_paid}")
+                return False
+            
+            self.log_test("Phase 7 Happy Path - Successful Payout Release", True, 
+                         f"✅ SUCCESS: Released ${released_amount}, Total paid ${total_paid}")
+            return True
+        else:
+            error_detail = data.get('detail', 'Unknown error')
+            self.log_test("Phase 7 Happy Path - Successful Payout Release", False, 
+                         f"❌ SHOULD HAVE SUCCEEDED: {error_detail}")
+            return False
+    
+    def test_phase7_qa_status_comprehensive(self):
+        """Test GET /api/jobs/{job_id}/qa-status - Comprehensive QA status"""
+        job_id = "test-job-003"  # Use the happy path job
+        
+        success, data = self.make_request('GET', f'/jobs/{job_id}/qa-status')
+        
+        if success:
+            # Check response structure
+            has_job_id = data.get('job_id') == job_id
+            has_can_close = 'can_close' in data
+            has_qa_gate = 'qa_gate' in data and isinstance(data['qa_gate'], dict)
+            has_warranty = 'warranty' in data and isinstance(data['warranty'], dict)
+            has_inspection = 'inspection' in data and isinstance(data['inspection'], dict)
+            
+            # Check QA gate details
+            qa_gate = data.get('qa_gate', {})
+            qa_overall_pass = qa_gate.get('overall_pass', False)
+            qa_microns_pass = qa_gate.get('microns_pass', False)
+            qa_photos_pass = qa_gate.get('photos_pass', False)
+            
+            # Check warranty details
+            warranty = data.get('warranty', {})
+            warranty_registered = warranty.get('registered', False)
+            
+            # Check inspection details
+            inspection = data.get('inspection', {})
+            inspection_passed = inspection.get('passed', False)
+            
+            # Overall validation
+            can_close = data.get('can_close', False)
+            expected_can_close = qa_overall_pass and warranty_registered and inspection_passed
+            
+            all_valid = (has_job_id and has_can_close and has_qa_gate and has_warranty and 
+                        has_inspection and qa_overall_pass and qa_microns_pass and qa_photos_pass and 
+                        warranty_registered and inspection_passed and can_close == expected_can_close)
+            
+            self.log_test("Phase 7 QA Status Comprehensive", all_valid,
+                         f"Can close: {can_close}, QA pass: {qa_overall_pass}, Warranty: {warranty_registered}, Inspection: {inspection_passed}")
+            return all_valid
+        else:
+            self.log_test("Phase 7 QA Status Comprehensive", False, f"Error: {data.get('detail', 'Unknown error')}")
+            return False
+
+    def run_phase7_qa_gates_subcontractor_tests(self):
+        """Run comprehensive Phase 7 QA Gates & Subcontractor Holdback tests"""
+        print("🔍 Starting PHASE 7 QA Gates & Subcontractor Holdback Tests")
+        print(f"🌐 Testing against: {self.base_url}")
+        print("=" * 70)
+        
+        # Initialize authentication
+        print("\n🔐 Authentication Setup:")
+        user_success = self.test_mock_user_login()
+        
+        if not user_success:
+            print("❌ Cannot proceed without user authentication")
+            return False
+        
+        # Phase 7 QA Gates & Subcontractor Holdback specific tests
+        print("\n🔍 PHASE 7 QA Gates & Subcontractor Holdback Tests:")
+        
+        # 1. Hard Block Job Closure - Microns Test (MUST FAIL)
+        print("\n❌ Hard Block Tests (MUST FAIL):")
+        microns_block_success = self.test_phase7_hard_block_job_closure_microns_fail()
+        
+        # 2. Hard Block Payout - No Inspection Pass (MUST FAIL)
+        inspection_block_success = self.test_phase7_hard_block_payout_no_inspection_fail()
+        
+        # 3. Happy Path - Successful Payout Release (MUST SUCCEED)
+        print("\n✅ Happy Path Tests (MUST SUCCEED):")
+        happy_path_success = self.test_phase7_happy_path_successful_payout_release()
+        
+        # 4. QA Status Comprehensive
+        print("\n📊 QA Status Tests:")
+        qa_status_success = self.test_phase7_qa_status_comprehensive()
+        
+        # Calculate success rate
+        phase7_tests = [
+            microns_block_success, inspection_block_success, 
+            happy_path_success, qa_status_success
+        ]
+        
+        phase7_passed = sum(phase7_tests)
+        phase7_total = len(phase7_tests)
+        phase7_success_rate = (phase7_passed / phase7_total) * 100
+        
+        print(f"\n🔍 PHASE 7 QA Gates & Subcontractor Holdback Results:")
+        print(f"✅ Passed: {phase7_passed}/{phase7_total} ({phase7_success_rate:.1f}%)")
+        
+        # Detailed analysis
+        print("\n📋 PHASE 7 Test Analysis:")
+        test_results = [
+            ("Hard Block Job Closure - Microns Test", microns_block_success, "MUST FAIL"),
+            ("Hard Block Payout - No Inspection Pass", inspection_block_success, "MUST FAIL"),
+            ("Happy Path - Successful Payout Release", happy_path_success, "MUST SUCCEED"),
+            ("QA Status Comprehensive", qa_status_success, "VALIDATION")
+        ]
+        
+        for test_name, success, requirement in test_results:
+            status = "✅" if success else "❌"
+            print(f"   {status} {test_name} ({requirement})")
+        
+        # Critical acceptance criteria assessment
+        critical_tests_passed = microns_block_success and inspection_block_success and happy_path_success
+        
+        print(f"\n🎯 Critical PHASE 7 Acceptance Criteria:")
+        print(f"   {'✅' if microns_block_success else '❌'} Microns > 500 blocks job closure")
+        print(f"   {'✅' if inspection_block_success else '❌'} Failed inspection blocks payout")
+        print(f"   {'✅' if happy_path_success else '❌'} Complete workflow allows payout")
+        print(f"   {'✅' if qa_status_success else '❌'} QA status endpoint working")
+        
+        if phase7_success_rate >= 100:
+            print("🎉 PHASE 7 QA Gates & Subcontractor Holdback is PERFECT!")
+            print("✅ All acceptance criteria met")
+            print("✅ Hard blocks working correctly")
+            print("✅ Happy path working correctly")
+            print("✅ Ready for production deployment")
+            return True
+        elif phase7_success_rate >= 75 and critical_tests_passed:
+            print("🎉 PHASE 7 QA Gates & Subcontractor Holdback is working well!")
+            print("✅ All critical acceptance criteria met")
+            print("✅ Ready for production deployment")
+            return True
+        else:
+            print("⚠️ PHASE 7 QA Gates & Subcontractor Holdback needs attention")
+            if not microns_block_success:
+                print("❌ Microns blocking not working correctly")
+            if not inspection_block_success:
+                print("❌ Inspection blocking not working correctly")
+            if not happy_path_success:
+                print("❌ Happy path payout not working correctly")
+            return False
+
 def main():
     """Main test execution"""
     tester = HVACAPITester()
     
-    # Run PHASE 6 Voice & SMS + Call Log tests as requested
-    success = tester.run_phase6_voice_sms_call_log_tests()
+    # Run PHASE 7 QA Gates & Subcontractor Holdback tests as requested
+    success = tester.run_phase7_qa_gates_subcontractor_tests()
     return 0 if success else 1
 
 if __name__ == "__main__":
