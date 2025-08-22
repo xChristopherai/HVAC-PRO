@@ -2889,6 +2889,9 @@ class HVACAPITester:
         job_id = f"test-job-003-{int(time.time())}"  # Unique job ID
         technician_id = "tech-003"
         
+        # Store job_id for QA status test
+        self._happy_path_job_id = job_id
+        
         # Step 1: Create QA Gate
         qa_params = {"technician_id": technician_id, "company_id": self.company_id}
         success, data = self.make_request('POST', f'/jobs/{job_id}/qa-gate', params=qa_params, token=self.user_token)
