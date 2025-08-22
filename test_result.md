@@ -328,6 +328,18 @@ frontend:
         - agent: "main"
         - comment: "Need to implement: Hide Schedule Appointment button when AI_VOICE_SCHEDULING_ENABLED=true, show Created by AI Voice badge for AI appointments, wire Add Customer button"
 
+  - task: "Horizontal Stripe-style Navigation Layout"
+    implemented: true
+    working: false
+    file: "frontend/src/App.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+        - working: false
+        - agent: "testing"
+        - comment: "HORIZONTAL NAVIGATION COMPREHENSIVE TESTING COMPLETED: ✅ FUNCTIONAL ASPECTS WORKING: All 9 navigation items present with icons/labels, mobile drawer functionality works, accessibility features implemented (aria-labels, aria-current), navigation routing works, active state updates, search input functional, mobile drawer closes after navigation. ❌ CRITICAL VISUAL/RESPONSIVE ISSUES: 1) Navigation background shows transparent instead of white, 2) Hamburger menu visible on desktop (should be hidden), 3) Navigation items not properly hidden on mobile <1024px, 4) Blue underline missing on active items, 5) Navigation position 'static' instead of 'sticky', 6) Missing navigation shadow, 7) 1024px responsive breakpoint not working correctly. Core functionality works but visual design and responsive behavior need fixes."
+
 metadata:
   created_by: "main_agent"
   version: "1.3"
