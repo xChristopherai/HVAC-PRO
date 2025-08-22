@@ -535,102 +535,238 @@ const Calls = () => {
         )}
       </div>
 
-      {/* Right Drawer */}
-      {drawerOpen && selectedCall && (
+      {/* Enhanced Drawer with Full Transcript */}
+      {drawerOpen && (
         <>
           {/* Overlay */}
           <div 
             className="fixed inset-0 bg-black bg-opacity-50 z-40"
-            onClick={() => setDrawerOpen(false)}
+            onClick={closeDrawer}
           />
           
           {/* Drawer */}
-          <div className="fixed right-0 top-0 h-full w-96 bg-white shadow-xl z-50 overflow-y-auto">
-            <div className="p-4 border-b">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h3 className="font-semibold text-gray-900">{selectedCall.customer_name || 'Unknown Client'}</h3>
-                  <p className="text-sm text-gray-600">{formatPhoneNumber(selectedCall.phone_number)}</p>
-                </div>
-                <button
-                  onClick={() => setDrawerOpen(false)}
-                  className="text-gray-400 hover:text-gray-600"
-                >
-                  <X className="h-5 w-5" />
-                </button>
-              </div>
-              
-              {/* Tags */}
-              <div className="flex gap-2 mt-3">
-                {selectedCall.answered_by_ai && !selectedCall.transferred_to_tech && (
-                  <span className="px-2 py-1 text-xs bg-green-100 text-green-800 rounded-full">
-                    AI Answered
-                  </span>
-                )}
-                {selectedCall.transferred_to_tech && (
-                  <span className="px-2 py-1 text-xs bg-blue-100 text-blue-800 rounded-full">
-                    Transferred to {selectedCall.tech_name || 'Tech'}
-                  </span>
-                )}
-              </div>
-            </div>
-            
-            {/* Call Details */}
-            <div className="p-4 border-b">
-              <div className="grid grid-cols-2 gap-4 text-sm">
-                <div>
-                  <span className="text-gray-600">Duration:</span>
-                  <div className="font-medium">{formatDuration(selectedCall.duration)}</div>
-                </div>
-                <div>
-                  <span className="text-gray-600">Status:</span>
-                  <div className="font-medium capitalize">{selectedCall.status}</div>
-                </div>
-              </div>
-            </div>
-
-            {/* Audio Player */}
-            {selectedCall.recording_url && (
-              <div className="p-4 border-b">
-                <div className="flex items-center gap-3">
-                  <button className="flex items-center justify-center w-10 h-10 bg-blue-600 text-white rounded-full hover:bg-blue-700">
-                    <Play className="h-4 w-4 ml-0.5" />
-                  </button>
-                  <div className="flex-1">
-                    <div className="text-sm font-medium">Call Recording</div>
-                    <div className="text-xs text-gray-600">Click to play</div>
+          <div 
+            className="fixed right-0 top-0 h-full w-96 bg-white shadow-xl z-50 overflow-y-auto"
+            role="dialog"
+            aria-labelledby="drawer-title"
+            aria-modal="true"
+          >
+            {callDetailsLoading ? (
+              // Loading skeleton
+              <div className="p-4">
+                <div className="animate-pulse">
+                  <div className="flex items-center justify-between mb-4">
+                    <div>
+                      <div className="h-4 bg-gray-200 rounded w-32 mb-2"></div>
+                      <div className="h-3 bg-gray-200 rounded w-24"></div>
+                    </div>
+                    <div className="h-6 w-6 bg-gray-200 rounded"></div>
+                  </div>
+                  <div className="space-y-3">
+                    {[...Array(3)].map((_, i) => (
+                      <div key={i} className="h-16 bg-gray-200 rounded"></div>
+                    ))}
                   </div>
                 </div>
               </div>
-            )}
-            
-            {/* Transcript */}
-            <div className="p-4">
-              <h4 className="font-medium text-gray-900 mb-3">Transcript</h4>
-              {selectedCall.transcript && selectedCall.transcript.length > 0 ? (
-                <div className="space-y-3">
-                  {selectedCall.transcript.map((entry, index) => (
-                    <div key={index} className={`flex ${entry.speaker === 'ai' ? 'justify-start' : 'justify-end'}`}>
-                      <div className={`max-w-xs px-3 py-2 rounded-lg text-sm ${
-                        entry.speaker === 'ai' 
-                          ? 'bg-blue-100 text-blue-900' 
-                          : 'bg-gray-100 text-gray-900'
-                      }`}>
-                        <div className="font-medium text-xs mb-1">
-                          {entry.speaker === 'ai' ? '🤖 AI' : '👤 Customer'}
-                        </div>
-                        <div>{entry.content}</div>
+            ) : selectedCall ? (
+              <>
+                {/* Header */}
+                <div className="p-4 border-b bg-gray-50">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h3 id="drawer-title" className="font-semibold text-gray-900">
+                        {getCustomerInfo(selectedCall).name}
+                      </h3>
+                      <p className="text-sm text-gray-600">
+                        {formatPhoneNumber(getCustomerInfo(selectedCall).phone)}
+                      </p>
+                    </div>
+                    <button
+                      onClick={closeDrawer}
+                      className="text-gray-400 hover:text-gray-600"
+                      aria-label="Close call details"
+                    >
+                      <X className="h-5 w-5" />
+                    </button>
+                  </div>
+                  
+                  {/* Enhanced Tags */}
+                  <div className="flex flex-wrap gap-2 mt-3">
+                    {selectedCall.tags?.map(tag => {
+                      const tagConfig = {
+                        'ai_answered': { bg: 'bg-green-100', text: 'text-green-800', label: 'AI Answered' },
+                        'transferred_to_tech': { bg: 'bg-blue-100', text: 'text-blue-800', label: 'Transferred to Tech' },
+                        'estimate_requested': { bg: 'bg-purple-100', text: 'text-purple-800', label: 'Estimate Requested' },
+                        'diagnostic_scheduled': { bg: 'bg-orange-100', text: 'text-orange-800', label: 'Diagnostic Scheduled' },
+                        'voicemail_left': { bg: 'bg-yellow-100', text: 'text-yellow-800', label: 'Voicemail Left' },
+                        'appointment_rescheduled': { bg: 'bg-indigo-100', text: 'text-indigo-800', label: 'Appointment Rescheduled' }
+                      };
+                      
+                      const config = tagConfig[tag] || { bg: 'bg-gray-100', text: 'text-gray-800', label: tag };
+                      
+                      return (
+                        <span key={tag} className={`px-2 py-1 text-xs rounded-full ${config.bg} ${config.text}`}>
+                          {config.label}
+                        </span>
+                      );
+                    })}
+                    
+                    {/* Disposition badge */}
+                    {selectedCall.disposition && (
+                      <span className="px-2 py-1 text-xs rounded-full bg-slate-100 text-slate-800 capitalize">
+                        {selectedCall.disposition}
+                      </span>
+                    )}
+                  </div>
+
+                  {/* Meta Information */}
+                  <div className="grid grid-cols-3 gap-4 mt-4 text-sm">
+                    <div>
+                      <span className="text-gray-500 block">Duration</span>
+                      <div className="font-medium text-gray-900">
+                        {formatDuration(selectedCall.duration_sec || selectedCall.duration)}
                       </div>
                     </div>
-                  ))}
+                    <div>
+                      <span className="text-gray-500 block">Status</span>
+                      <div className="font-medium text-gray-900 capitalize">
+                        {selectedCall.status}
+                      </div>
+                    </div>
+                    <div>
+                      <span className="text-gray-500 block">Sentiment</span>
+                      <div className="font-medium text-gray-900 capitalize">
+                        {selectedCall.sentiment || 'neutral'}
+                      </div>
+                    </div>
+                  </div>
                 </div>
-              ) : (
-                <div className="text-sm text-gray-500 text-center py-8">
-                  <Phone className="h-6 w-6 mx-auto mb-2 text-gray-300" />
-                  No transcript available
+
+                {/* Audio Player */}
+                {selectedCall.recording_url && (
+                  <div className="p-4 border-b">
+                    <div className="flex items-center gap-3">
+                      <button 
+                        onClick={toggleAudioPlayback}
+                        className="flex items-center justify-center w-10 h-10 bg-blue-600 text-white rounded-full hover:bg-blue-700"
+                        aria-label={audioPlaying ? 'Pause recording' : 'Play recording'}
+                      >
+                        {audioPlaying ? (
+                          <Pause className="h-4 w-4" />
+                        ) : (
+                          <Play className="h-4 w-4 ml-0.5" />
+                        )}
+                      </button>
+                      <div className="flex-1">
+                        <div className="text-sm font-medium text-gray-900">Call Recording</div>
+                        <div className="text-xs text-gray-600">
+                          {audioPlaying ? 'Playing...' : 'Click to play'}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+                
+                {/* Action Buttons */}
+                <div className="p-4 border-b bg-gray-50">
+                  <div className="flex gap-2 flex-wrap">
+                    <button
+                      onClick={copyTranscript}
+                      className="flex items-center gap-1 px-3 py-1.5 text-sm bg-white border border-gray-300 rounded-lg hover:bg-gray-50 text-gray-700"
+                      aria-label="Copy transcript to clipboard"
+                    >
+                      <Copy className="h-3 w-3" />
+                      Copy Transcript
+                    </button>
+                    <button
+                      onClick={downloadTranscript}
+                      className="flex items-center gap-1 px-3 py-1.5 text-sm bg-white border border-gray-300 rounded-lg hover:bg-gray-50 text-gray-700"
+                      aria-label="Download transcript as text file"
+                    >
+                      <Download className="h-3 w-3" />
+                      Download .txt
+                    </button>
+                    {selectedCall.customer_id && (
+                      <button
+                        className="flex items-center gap-1 px-3 py-1.5 text-sm bg-white border border-gray-300 rounded-lg hover:bg-gray-50 text-gray-700"
+                        aria-label="View customer details"
+                      >
+                        <ExternalLink className="h-3 w-3" />
+                        View Customer
+                      </button>
+                    )}
+                    {selectedCall.appointment_id && (
+                      <button
+                        className="flex items-center gap-1 px-3 py-1.5 text-sm bg-white border border-gray-300 rounded-lg hover:bg-gray-50 text-gray-700"
+                        aria-label="View appointment"
+                      >
+                        <Calendar className="h-3 w-3" />
+                        View Appointment
+                      </button>
+                    )}
+                  </div>
                 </div>
-              )}
-            </div>
+                
+                {/* Enhanced Transcript */}
+                <div className="p-4">
+                  <h4 className="font-medium text-gray-900 mb-4">Call Transcript</h4>
+                  {selectedCall.transcript && selectedCall.transcript.length > 0 ? (
+                    <div className="space-y-3 max-h-96 overflow-y-auto">
+                      {selectedCall.transcript.map((entry, index) => {
+                        // Handle system events
+                        if (entry.event) {
+                          return (
+                            <div key={index} className="flex justify-center my-4">
+                              <div className="text-xs text-gray-500 bg-gray-100 px-3 py-1 rounded-full">
+                                — {entry.event.replace('_', ' ')} —
+                              </div>
+                            </div>
+                          );
+                        }
+
+                        // Handle conversation entries
+                        const isAI = entry.role === 'ai';
+                        const isCustomer = entry.role === 'customer';
+                        const isTech = entry.role === 'tech';
+                        
+                        return (
+                          <div 
+                            key={index} 
+                            className={`flex ${isCustomer ? 'justify-end' : 'justify-start'}`}
+                            title={`${new Date(entry.ts).toLocaleTimeString()}`}
+                          >
+                            <div className={`max-w-xs px-3 py-2 rounded-lg text-sm ${
+                              isAI ? 'bg-blue-100 text-blue-900' :
+                              isCustomer ? 'bg-gray-200 text-gray-900' :
+                              isTech ? 'bg-green-100 text-green-900' :
+                              'bg-gray-100 text-gray-900'
+                            }`}>
+                              <div className="font-medium text-xs mb-1 flex items-center gap-1">
+                                {isAI && '🤖 AI'}
+                                {isCustomer && '👤 Customer'}
+                                {isTech && '🔧 Tech'}
+                                {!isAI && !isCustomer && !isTech && `${entry.role}`}
+                              </div>
+                              <div className="leading-relaxed">{entry.text}</div>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  ) : (
+                    <div className="text-center py-8">
+                      <Phone className="h-8 w-8 mx-auto mb-3 text-gray-300" />
+                      <p className="text-sm text-gray-500">No transcript available for this call.</p>
+                    </div>
+                  )}
+                </div>
+              </>
+            ) : (
+              <div className="p-4">
+                <p className="text-gray-500">No call selected</p>
+              </div>
+            )}
           </div>
         </>
       )}
