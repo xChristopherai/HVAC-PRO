@@ -12,12 +12,23 @@
   --border-default: #E5E7EB;    /* border-gray-200 */
   --border-strong: #D1D5DB;     /* border-gray-300 */
   
-  /* Interactive Colors */
+  /* Interactive Colors - CSS Variables for Shadcn UI */
   --primary: #2563EB;           /* bg-blue-600 */
   --primary-hover: #1D4ED8;     /* hover:bg-blue-700 */
   --primary-light: #DBEAFE;     /* bg-blue-50 */
+  --primary-foreground: #FFFFFF; /* white text on primary */
   --secondary: #F3F4F6;         /* bg-gray-100 */
   --secondary-hover: #E5E7EB;   /* hover:bg-gray-200 */
+  --secondary-foreground: #374151; /* text-gray-700 */
+  --background: #F9FAFB;        /* bg-gray-50 */
+  --foreground: #111827;        /* text-gray-900 */
+  --accent: #F3F4F6;           /* bg-gray-100 */
+  --accent-foreground: #111827; /* text-gray-900 */
+  --muted: #F9FAFB;            /* bg-gray-50 */
+  --muted-foreground: #6B7280;  /* text-gray-500 */
+  --border: #E5E7EB;           /* border-gray-200 */
+  --input: #E5E7EB;            /* border-gray-200 */
+  --ring: #2563EB;             /* blue-600 for focus rings */
   
   /* Status Colors - Professional */
   --success: #059669;           /* text-emerald-600 */
