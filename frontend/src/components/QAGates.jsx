@@ -286,7 +286,7 @@ const QAGates = () => {
 
             <div 
               className={`bg-white rounded-lg shadow-sm border p-6 cursor-pointer hover:shadow-md transition-shadow ${
-                statusFilter === 'pending' ? 'ring-2 ring-yellow-500' : ''
+                statusFilter === 'pending' ? 'ring-2 ring-amber-500' : ''
               }`}
               onClick={() => setStatusFilter(statusFilter === 'pending' ? '' : 'pending')}
             >
