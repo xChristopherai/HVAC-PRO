@@ -516,15 +516,19 @@ button[data-variant="outline"] {
 }
 
 /* ===============================
-   CUSTOMERS PAGE SPECIFIC STYLES
+   CUSTOMERS PAGE SPECIFIC STYLES - MAXIMUM SPECIFICITY
    =============================== */
 
-/* Customers page ONLY - High Specificity Overrides */
+/* Customers page ONLY - Nuclear Override for Yellow Elements */
 #customers-page input[type="search"],
 #customers-page .search-bar,
 #customers-page input,
-#customers-page .flex.relative input {
+#customers-page .flex.relative input,
+#customers-page input.flex,
+#customers-page input[class*="rounded-md"],
+#customers-page input[class*="border-input"] {
   background: #ffffff !important;
+  background-color: #ffffff !important;
   border: 1px solid #e5e7eb !important;  /* gray-200 */
   color: #111827 !important;             /* gray-900 */
 }
@@ -535,8 +539,11 @@ button[data-variant="outline"] {
 #customers-page .placeholder-panel,
 #customers-page .col-span-full .card,
 #customers-page .col-span-full > div,
-#customers-page div[class*="rounded-2xl border bg-card"] {
+#customers-page div[class*="rounded-2xl border bg-card"],
+#customers-page div[class*="bg-card"],
+#customers-page .card {
   background: #ffffff !important;        /* white for cards */
+  background-color: #ffffff !important;
   border: 1px solid #e5e7eb !important;
   color: #111827 !important;
 }
@@ -554,8 +561,10 @@ button[data-variant="outline"] {
 #customers-page button.add-customer,
 #customers-page .empty-state .btn,
 #customers-page button:not([data-variant]):not([class*="variant"]),
-#customers-page .text-center button {
+#customers-page .text-center button,
+#customers-page button[class*="inline-flex"]:not([data-variant="outline"]):not([class*="ghost"]) {
   background: #4f46e5 !important;        /* indigo-600 */
+  background-color: #4f46e5 !important;
   color: #ffffff !important;
   border: none !important;
 }
@@ -566,24 +575,62 @@ button[data-variant="outline"] {
 #customers-page button:not([data-variant]):hover,
 #customers-page .text-center button:hover {
   background: #4338ca !important;        /* indigo-700 */
+  background-color: #4338ca !important;
 }
 
 #customers-page .filter-btn,
 #customers-page .btn-secondary,
-#customers-page button[data-variant="outline"] {
+#customers-page button[data-variant="outline"],
+#customers-page button[class*="border-input"],
+#customers-page button[class*="bg-background"] {
   background: #ffffff !important;
+  background-color: #ffffff !important;
   color: #374151 !important;              /* gray-700 */
   border: 1px solid #e5e7eb !important;
 }
 
-/* Force override any remaining bright elements */
-#customers-page *[style*="background: rgb(255, 255, 0)"],
-#customers-page *[style*="background-color: rgb(255, 255, 0)"] {
+/* NUCLEAR OPTION - Force override ANY yellow on customers page */
+#customers-page *,
+#customers-page *::before,
+#customers-page *::after {
+  /* Remove any yellow backgrounds */
+}
+
+#customers-page *[style*="background: rgb(255, 255, 0)"] *,
+#customers-page *[style*="background-color: rgb(255, 255, 0)"] *,
+#customers-page .bg-yellow-500,
+#customers-page .bg-yellow-400,
+#customers-page .bg-yellow-300,
+#customers-page .bg-yellow-200,
+#customers-page .bg-yellow-100,
+#customers-page .bg-yellow-50 {
   background: #ffffff !important;
   background-color: #ffffff !important;
 }
 
-#customers-page button[style*="background: rgb(255, 255, 0)"] {
+/* Target specific classes that might be causing yellow */
+#customers-page .bg-background {
+  background: #ffffff !important;
+  background-color: #ffffff !important;
+}
+
+#customers-page .bg-card {
+  background: #ffffff !important;
+  background-color: #ffffff !important;
+}
+
+/* Force every element on customers page to have proper background */
+#customers-page input {
+  background: #ffffff !important;
+  background-color: #ffffff !important;
+}
+
+#customers-page button {
   background: #4f46e5 !important;
   background-color: #4f46e5 !important;
+}
+
+#customers-page button[data-variant="outline"] {
+  background: #ffffff !important;
+  background-color: #ffffff !important;
 }
