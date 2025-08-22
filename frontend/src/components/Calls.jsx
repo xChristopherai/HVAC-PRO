@@ -312,8 +312,17 @@ const Calls = () => {
   };
 
   const loadMore = () => {
-    setCurrentPage(prev => prev + 1);
     fetchCalls(false);
+  };
+
+  // Helper to extract customer info from call
+  const getCustomerInfo = (call) => {
+    // Try to extract customer name from phone number or use Unknown
+    const phone = call.from || call.phone_number || '';
+    return {
+      name: call.customer_name || 'Unknown',
+      phone: phone
+    };
   };
 
   return (
