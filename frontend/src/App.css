@@ -142,17 +142,16 @@ label {
   display: block !important;
 }
 
-/* ===============================
-   CARDS - CLEAN DESIGN
-   =============================== */
+/* Cards - Forced Clean Design */
+.bg-card, 
+[class*="bg-card"],
+div[class*="rounded-2xl border bg-card"] {
+  background: #FFFFFF !important;
+  background-color: #FFFFFF !important;
+}
 
-.card, [class*="card"] {
-  background: var(--bg-surface) !important;
-  border: 1px solid var(--border-default) !important;
-  border-radius: var(--border-radius) !important;
-  box-shadow: var(--shadow-sm) !important;
-  padding: 1.5rem !important;
-  margin-bottom: 1.5rem !important;
+.text-card-foreground {
+  color: #111827 !important;
 }
 
 /* Empty States */
