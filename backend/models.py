@@ -354,6 +354,196 @@ class CallLogSearchResponse(BaseModel):
     total_count: int
     filters_applied: Dict[str, Any]
 
+# QA Gates & Subcontractor Models (Phase 7)
+class QAStatus(str, Enum):
+    PENDING = "pending"
+    IN_PROGRESS = "in_progress"
+    PASSED = "passed"
+    FAILED = "failed"
+    BLOCKED = "blocked"
+
+class InspectionType(str, Enum):
+    STARTUP = "startup"
+    WARRANTY = "warranty" 
+    COMPLIANCE = "compliance"
+    CUSTOMER_REQUEST = "customer_request"
+
+class PaymentStatus(str, Enum):
+    PENDING = "pending"
+    HOLDBACK = "holdback"
+    RELEASED = "released"
+    BLOCKED = "blocked"
+
+class StartupMetrics(BaseModel):
+    microns: float  # Must be < 500 for pass
+    temperature_differential: Optional[float] = None
+    pressure_readings: Optional[Dict[str, float]] = Field(default_factory=dict)
+    airflow_cfm: Optional[float] = None
+    refrigerant_charge: Optional[float] = None
+    electrical_readings: Optional[Dict[str, float]] = Field(default_factory=dict)
+    startup_time: Optional[datetime] = None
+    technician_notes: str = ""
+
+class QAGate(BaseDocument):
+    job_id: str
+    company_id: str
+    technician_id: str
+    qa_status: QAStatus = QAStatus.PENDING
+    
+    # QA Requirements
+    startup_metrics: Optional[StartupMetrics] = None
+    photos: List[Dict[str, str]] = Field(default_factory=list)  # [{"type": "before", "url": "...", "description": "..."}, ...]
+    required_photos: List[str] = Field(default_factory=lambda: ["before", "after", "equipment"])
+    
+    # Validation Results
+    microns_pass: bool = False
+    photos_pass: bool = False
+    metrics_pass: bool = False
+    overall_pass: bool = False
+    
+    # Failure Reasons
+    failure_reasons: List[str] = Field(default_factory=list)
+    
+    # QA Completion
+    completed_at: Optional[datetime] = None
+    completed_by: Optional[str] = None
+    
+    def calculate_qa_status(self):
+        """Calculate overall QA status based on requirements"""
+        if not self.startup_metrics:
+            self.qa_status = QAStatus.PENDING
+            self.overall_pass = False
+            return
+        
+        # Check microns requirement (< 500)
+        self.microns_pass = self.startup_metrics.microns < 500
+        
+        # Check photos requirement
+        photo_types_present = {photo["type"] for photo in self.photos}
+        self.photos_pass = all(req_type in photo_types_present for req_type in self.required_photos)
+        
+        # Check metrics completeness
+        self.metrics_pass = (
+            self.startup_metrics.temperature_differential is not None and
+            self.startup_metrics.airflow_cfm is not None and
+            len(self.startup_metrics.electrical_readings) > 0
+        )
+        
+        # Update failure reasons
+        self.failure_reasons = []
+        if not self.microns_pass:
+            self.failure_reasons.append(f"Microns reading {self.startup_metrics.microns} exceeds limit (500)")
+        if not self.photos_pass:
+            missing = set(self.required_photos) - {photo["type"] for photo in self.photos}
+            self.failure_reasons.append(f"Missing required photos: {', '.join(missing)}")
+        if not self.metrics_pass:
+            self.failure_reasons.append("Incomplete startup metrics")
+        
+        # Overall pass status
+        self.overall_pass = self.microns_pass and self.photos_pass and self.metrics_pass
+        
+        if self.overall_pass:
+            self.qa_status = QAStatus.PASSED
+            self.completed_at = datetime.utcnow()
+        else:
+            self.qa_status = QAStatus.FAILED
+
+class WarrantyRegistration(BaseDocument):
+    job_id: str
+    company_id: str
+    customer_id: str
+    
+    # Equipment Details
+    equipment_type: str
+    manufacturer: str
+    model_number: str
+    serial_number: str
+    installation_date: datetime
+    
+    # Warranty Info
+    warranty_start_date: datetime
+    warranty_end_date: datetime
+    warranty_type: str  # "parts", "labor", "full"
+    warranty_terms: str = ""
+    
+    # Registration Status
+    registered: bool = False
+    registration_number: Optional[str] = None
+    registered_at: Optional[datetime] = None
+    registered_by: Optional[str] = None
+
+class Inspection(BaseDocument):
+    job_id: str
+    company_id: str
+    inspection_type: InspectionType
+    
+    # Scheduling
+    scheduled_date: Optional[datetime] = None
+    scheduled_by: Optional[str] = None
+    
+    # Completion
+    completed: bool = False
+    completed_date: Optional[datetime] = None
+    inspector_id: Optional[str] = None
+    
+    # Results
+    inspection_pass: bool = False
+    inspection_notes: str = ""
+    deficiencies: List[str] = Field(default_factory=list)
+    
+    # Requirements
+    required: bool = True  # Some jobs may not require inspection
+
+class SubcontractorPayment(BaseDocument):
+    job_id: str
+    company_id: str
+    subcontractor_id: str
+    
+    # Payment Details
+    base_amount: float
+    holdback_percentage: float = 10.0  # Default 10% holdback
+    holdback_amount: float
+    releasable_amount: float
+    
+    # Payment Status
+    payment_status: PaymentStatus = PaymentStatus.HOLDBACK
+    
+    # Release Conditions
+    qa_gate_passed: bool = False
+    warranty_registered: bool = False
+    inspection_passed: bool = False  # Only if inspection required
+    inspection_required: bool = True
+    
+    # Payment History
+    payments_made: List[Dict[str, Any]] = Field(default_factory=list)
+    total_paid: float = 0.0
+    
+    # Release Tracking
+    holdback_released: bool = False
+    holdback_released_at: Optional[datetime] = None
+    
+    def calculate_amounts(self):
+        """Calculate holdback and releasable amounts"""
+        self.holdback_amount = self.base_amount * (self.holdback_percentage / 100)
+        self.releasable_amount = self.base_amount - self.holdback_amount
+    
+    def check_release_conditions(self):
+        """Check if holdback can be released"""
+        conditions_met = (
+            self.qa_gate_passed and
+            self.warranty_registered and
+            (not self.inspection_required or self.inspection_passed)
+        )
+        
+        if conditions_met and not self.holdback_released:
+            self.payment_status = PaymentStatus.RELEASED
+            return True
+        elif not conditions_met:
+            self.payment_status = PaymentStatus.HOLDBACK
+            return False
+        
+        return self.holdback_released
+
 # Settings Models
 class CompanySettings(BaseModel):
     # Business Information
