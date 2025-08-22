@@ -544,7 +544,10 @@ metadata:
 
 test_plan:
   current_focus:
-    - "Horizontal Stripe-style Navigation Layout"
+    - "Call Transcript Data Model"
+    - "Call Transcript APIs - GET /api/calls"
+    - "Call Transcript APIs - GET /api/calls/{id}"
+    - "Call Transcript APIs - POST /api/calls/simulate"
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
