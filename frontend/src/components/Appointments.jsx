@@ -390,7 +390,7 @@ const Appointments = ({ currentUser, aiVoiceEnabled }) => {
         </div>
       </div>
 
-      {/* Status Tabs - Enhanced for PHASE 3 */}
+      {/* Status Tabs - Clean Professional Design */}
       <div className="flex flex-wrap gap-2">
         {filterOptions.map((option) => (
           <Button
@@ -398,7 +398,21 @@ const Appointments = ({ currentUser, aiVoiceEnabled }) => {
             variant={filter === option.value ? "default" : "outline"}
             size="sm"
             onClick={() => setFilter(option.value)}
-            className={filter === option.value ? "bg-blue-600 hover:bg-blue-700" : ""}
+            className={cn(
+              "transition-colors",
+              filter === option.value 
+                ? "bg-blue-600 hover:bg-blue-700 text-white border-blue-600" 
+                : "bg-white hover:bg-gray-50 text-gray-700 border-gray-300"
+            )}
+            style={filter === option.value ? {
+              backgroundColor: '#2563EB',
+              color: '#FFFFFF',
+              borderColor: '#2563EB'
+            } : {
+              backgroundColor: '#FFFFFF',
+              color: '#374151',
+              borderColor: '#D1D5DB'
+            }}
           >
             {option.label}
             <span className="ml-2 px-2 py-0.5 text-xs rounded-full bg-gray-200 text-gray-700">
