@@ -968,16 +968,31 @@ def compose_weekly_sms(summary_data):
 
 @app.get("/api/reports/weekly-summary/preview")
 async def preview_weekly_summary():
-    """Preview weekly summary data (for debugging)"""
+    """Preview weekly summary data with proper holdback calculations"""
     try:
         summary_data = await generate_weekly_summary()
         sms_body = compose_weekly_sms(summary_data)
         
+        # Format response for frontend compatibility
+        preview_response = {
+            "brand": "HVAC Pro",
+            "start": summary_data["start_date"],
+            "end": summary_data["end_date"],
+            "calls": summary_data["total_calls"],
+            "ai_pct": (summary_data["ai_answered"] / summary_data["total_calls"] * 100) if summary_data["total_calls"] > 0 else 0,
+            "qa_passed": summary_data["qa_passed"],
+            "jobs_billed_cents": summary_data["jobs_billed_cents"],
+            "money_on_hold_cents": summary_data["money_on_hold_cents"],
+            "sms": sms_body
+        }
+        
         return {
-            "summary_data": summary_data,
+            "summary_data": summary_data,  # Keep original for backward compatibility
             "sms_body": sms_body,
             "sms_length": len(sms_body),
-            "delivery_method": "real_sms" if twilio_enabled else "logged_only"
+            "delivery_method": "real_sms" if twilio_enabled else "logged_only",
+            # Add new format for frontend
+            **preview_response
         }
         
     except Exception as e:
