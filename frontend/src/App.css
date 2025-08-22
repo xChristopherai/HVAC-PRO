@@ -317,12 +317,12 @@ select:focus {
 }
 
 /* ===============================
-   REMOVE ALL YELLOW BACKGROUNDS
+   REMOVE ALL YELLOW BACKGROUNDS - FORCED OVERRIDES
    =============================== */
 
 /* Override any yellow backgrounds with professional alternatives */
-.bg-yellow-50, .bg-yellow-100, .bg-yellow-200 {
-  background: var(--warning-bg) !important; /* Subtle amber instead of bright yellow */
+.bg-yellow-50, .bg-yellow-100, .bg-yellow-200, .bg-yellow-300, .bg-yellow-400, .bg-yellow-500 {
+  background: #FEF3C7 !important; /* Subtle amber instead of bright yellow */
 }
 
 .text-yellow-600, .text-yellow-700, .text-yellow-800 {
@@ -331,6 +331,41 @@ select:focus {
 
 .border-yellow-200, .border-yellow-300, .border-yellow-500 {
   border-color: #FDE68A !important; /* Amber border */
+}
+
+/* Force override any inline yellow styles */
+button[style*="background: yellow"], 
+button[style*="background-color: yellow"],
+button[style*="background: rgb(255, 255, 0)"],
+button[style*="background-color: rgb(255, 255, 0)"] {
+  background: var(--primary) !important;
+  background-color: var(--primary) !important;
+}
+
+/* Override any bright yellow backgrounds */
+*[style*="background: yellow"], 
+*[style*="background-color: yellow"],
+*[style*="background: rgb(255, 255, 0)"],
+*[style*="background-color: rgb(255, 255, 0)"] {
+  background: var(--bg-surface) !important;
+  background-color: var(--bg-surface) !important;
+}
+
+/* Force button colors to be consistent */
+button {
+  background-color: transparent !important;
+}
+
+button[data-variant="default"], 
+.bg-primary {
+  background-color: var(--primary) !important;
+  color: var(--primary-foreground) !important;
+}
+
+button[data-variant="outline"] {
+  background-color: var(--background) !important;
+  color: var(--foreground) !important;
+  border-color: var(--border) !important;
 }
 
 /* ===============================
