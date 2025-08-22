@@ -207,15 +207,7 @@ const Reports = () => {
     }).format(amount);
   };
 
-  // Format currency from cents with thousands separators
-  const formatCurrencyFromCents = (cents) => {
-    const dollars = cents / 100;
-    return new Intl.NumberFormat('en-US', { 
-      style: 'currency', 
-      currency: 'USD',
-      maximumFractionDigits: 0
-    }).format(dollars);
-  };
+
 
   // Show toast notification
   const showToast = (message, type = 'success') => {
