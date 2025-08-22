@@ -398,21 +398,23 @@ const Customers = ({ currentUser, aiVoiceEnabled }) => {
           ))
         ) : (
           <div className="col-span-full">
-            <Card>
-              <CardContent className="p-12 text-center">
-                <Users className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
-                <h3 className="text-lg font-medium mb-2">No customers found</h3>
-                <p className="text-muted-foreground mb-4">
-                  {searchTerm ? 'No customers match your search criteria.' : "You haven't added any customers yet."}
-                </p>
-                {!searchTerm && (
-                  <Button onClick={() => setShowAddCustomer(true)}>
-                    <Plus className="w-4 h-4 mr-2" />
-                    Add Your First Customer
-                  </Button>
-                )}
-              </CardContent>
-            </Card>
+            <UnifiedCard className="p-12 text-center">
+              <Users className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+              <h3 className="text-lg font-medium mb-2 text-gray-900">No customers found</h3>
+              <p className="text-gray-500 mb-4">
+                {searchTerm ? 'No customers match your search criteria.' : "You haven't added any customers yet."}
+              </p>
+              {!searchTerm && (
+                <Button 
+                  onClick={() => setShowAddCustomer(true)}
+                  className="bg-blue-600 hover:bg-blue-700 text-white"
+                  style={{ backgroundColor: '#2563EB', color: '#FFFFFF' }}
+                >
+                  <Plus className="w-4 h-4 mr-2" />
+                  Add Your First Customer
+                </Button>
+              )}
+            </UnifiedCard>
           </div>
         )}
       </div>
