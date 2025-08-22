@@ -783,7 +783,7 @@ async def trigger_weekly_summary():
         raise HTTPException(status_code=500, detail=str(e))
 
 async def generate_weekly_summary():
-    """Generate weekly business summary data"""
+    """Generate weekly business summary data from actual holdback and billing data"""
     try:
         from datetime import datetime, timedelta
         
@@ -802,8 +802,8 @@ async def generate_weekly_summary():
             "jobs_completed": 0,
             "qa_passed": 0,
             "qa_blocked": 0,
-            "revenue_potential": 0.0,
-            "holdback_released": 0.0,
+            "jobs_billed_cents": 0,      # NEW: actual billing data
+            "money_on_hold_cents": 0,    # NEW: actual holdback data
             "avg_response_time": 0,
         }
         
@@ -818,9 +818,6 @@ async def generate_weekly_summary():
         summary["total_calls"] = len(calls_data)
         summary["ai_answered"] = len([c for c in calls_data if c.get("answered_by_ai", False) and not c.get("transferred_to_tech", False)])
         summary["appointments_created"] = len([c for c in calls_data if c.get("outcome") == "appointment_created"])
-        
-        # Calculate AI success rate
-        ai_success_rate = (summary["ai_answered"] / summary["total_calls"] * 100) if summary["total_calls"] > 0 else 0
         
         # Get QA statistics
         qa_filters = {
@@ -838,61 +835,97 @@ async def generate_weekly_summary():
             elif qa_gate.qa_status == "blocked":
                 summary["qa_blocked"] += 1
         
-        # Get payment/holdback data
-        payment_filters = {
-            "company_id": "company-001",
-            "created_at": {"$gte": start_date, "$lt": end_date}
-        }
+        # CALCULATE MONEY ON HOLD from actual holdback data
+        date_range_filter = {"$gte": start_date, "$lt": end_date}
         
-        payments_data = await db.subcontractor_payments.find(payment_filters).to_list(1000)
+        # Aggregate holdback amounts where status="held" (holdback)
+        holdback_pipeline = [
+            {
+                "$match": {
+                    "company_id": "company-001",
+                    "payment_status": "holdback",  # Status is "holdback" not "held"
+                    "$or": [
+                        {"created_at": date_range_filter},
+                        {"updated_at": date_range_filter}
+                    ]
+                }
+            },
+            {
+                "$group": {
+                    "_id": None,
+                    "total_held_cents": {"$sum": {"$multiply": ["$holdback_amount", 100]}}  # Convert to cents
+                }
+            }
+        ]
         
-        for payment_data in payments_data:
-            payment = SubcontractorPayment(**payment_data)
-            if payment.holdback_released:
-                summary["holdback_released"] += payment.holdback_amount
-            
-            # Estimate revenue potential (assuming 3x markup)
-            summary["revenue_potential"] += payment.base_amount * 3
+        holdback_result = await db.subcontractor_payments.aggregate(holdback_pipeline).to_list(1)
+        if holdback_result:
+            summary["money_on_hold_cents"] = int(holdback_result[0].get("total_held_cents", 0))
+        
+        # CALCULATE JOBS BILLED from payment data (using base_amount as billing)
+        billing_pipeline = [
+            {
+                "$match": {
+                    "company_id": "company-001",
+                    "created_at": date_range_filter
+                }
+            },
+            {
+                "$group": {
+                    "_id": None,
+                    "total_billed_cents": {"$sum": {"$multiply": ["$base_amount", 100]}}  # Convert to cents
+                }
+            }
+        ]
+        
+        billing_result = await db.subcontractor_payments.aggregate(billing_pipeline).to_list(1)
+        if billing_result:
+            summary["jobs_billed_cents"] = int(billing_result[0].get("total_billed_cents", 0))
         
         # Calculate average response time (mock data)
         if summary["ai_answered"] > 0:
             summary["avg_response_time"] = 15  # seconds - mock average
         
-        # Add performance insights
+        # Add performance insights (plain English, no emojis)
         summary["performance_insights"] = []
         
+        ai_success_rate = (summary["ai_answered"] / summary["total_calls"] * 100) if summary["total_calls"] > 0 else 0
+        
         if ai_success_rate >= 80:
-            summary["performance_insights"].append("🚀 AI performing excellently")
+            summary["performance_insights"].append("AI performing excellently")
         elif ai_success_rate >= 60:
-            summary["performance_insights"].append("⚠️ AI needs tuning")
+            summary["performance_insights"].append("AI needs tuning")
         else:
-            summary["performance_insights"].append("🔴 AI requires attention")
+            summary["performance_insights"].append("AI requires attention")
         
         if summary["qa_blocked"] > 0:
-            summary["performance_insights"].append(f"🚫 {summary['qa_blocked']} jobs blocked")
+            summary["performance_insights"].append(f"{summary['qa_blocked']} jobs blocked")
         
-        if summary["holdback_released"] > 0:
-            summary["performance_insights"].append(f"💰 ${summary['holdback_released']:.0f} released")
+        if summary["money_on_hold_cents"] > 0:
+            held_dollars = summary["money_on_hold_cents"] / 100
+            summary["performance_insights"].append(f"${held_dollars:.0f} on hold")
+        
+        logger.info(f"Weekly summary generated: {summary['total_calls']} calls, ${summary['jobs_billed_cents']/100:.0f} billed, ${summary['money_on_hold_cents']/100:.0f} on hold")
         
         return summary
         
     except Exception as e:
         logger.error(f"Error generating weekly summary data: {str(e)}")
-        # Return mock data on error
+        # Return mock data on error for demo purposes
         return {
             "period": "Last 7 Days",
-            "start_date": "01/15",
-            "end_date": "01/22", 
+            "start_date": "08/15",
+            "end_date": "08/22", 
             "total_calls": 47,
             "ai_answered": 38,
             "appointments_created": 23,
             "jobs_completed": 18,
             "qa_passed": 15,
             "qa_blocked": 2,
-            "revenue_potential": 12500.0,
-            "holdback_released": 850.0,
+            "jobs_billed_cents": 1250000,  # $12,500 in cents
+            "money_on_hold_cents": 85000,  # $850 in cents
             "avg_response_time": 12,
-            "performance_insights": ["🚀 AI performing excellently", "💰 $850 released"]
+            "performance_insights": ["AI performing excellently", "$850 on hold"]
         }
 
 def compose_weekly_sms(summary_data):
