@@ -421,6 +421,26 @@ class CallLogSearchResponse(BaseModel):
     total_count: int
     filters_applied: Dict[str, Any]
 
+# New Call system create models
+class CallCreate(BaseModel):
+    direction: CallDirection = CallDirection.INBOUND
+    from_: str = Field(alias="from")
+    to: str
+    status: CallStatus = CallStatus.INCOMING
+    customer_id: Optional[str] = None
+    appointment_id: Optional[str] = None
+
+class CallSearchResponse(BaseModel):
+    calls: List[Call]
+    total_count: int
+    next_cursor: Optional[str] = None
+    filters_applied: Dict[str, Any]
+
+class SimulateCallRequest(BaseModel):
+    scenario: str = "estimate"  # estimate, diagnostic, voicemail, reschedule
+    with_recording: bool = False
+    seed: Optional[int] = None
+
 # QA Gates & Subcontractor Models (Phase 7)
 class QAStatus(str, Enum):
     PENDING = "pending"
