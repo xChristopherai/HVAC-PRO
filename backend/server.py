@@ -929,77 +929,42 @@ async def generate_weekly_summary():
         }
 
 def compose_weekly_sms(summary_data):
-    """Compose concise weekly summary SMS"""
+    """Compose plain English weekly summary SMS (no emojis/judgement)"""
     try:
-        period = summary_data["period"]
-        total_calls = summary_data["total_calls"]
-        ai_answered = summary_data["ai_answered"]
-        appointments = summary_data["appointments_created"]
+        brand = "HVAC Pro"
+        start = summary_data["start_date"]
+        end = summary_data["end_date"]
+        calls = summary_data["total_calls"]
+        ai_pct = (summary_data["ai_answered"] / calls * 100) if calls > 0 else 0
         qa_passed = summary_data["qa_passed"]
-        qa_blocked = summary_data["qa_blocked"]
-        revenue = summary_data["revenue_potential"]
-        insights = summary_data.get("performance_insights", [])
         
-        # Calculate AI success rate
-        ai_rate = (ai_answered / total_calls * 100) if total_calls > 0 else 0
+        # Convert cents to dollars for display
+        jobs_billed = summary_data.get("jobs_billed_cents", 0) / 100
+        money_on_hold = summary_data.get("money_on_hold_cents", 0) / 100
         
-        # Build concise message
-        message_parts = []
+        # Format currency without cents for SMS brevity
+        jobs_billed_str = f"${jobs_billed:,.0f}" if jobs_billed >= 1000 else f"${jobs_billed:.0f}"
+        money_on_hold_str = f"${money_on_hold:,.0f}" if money_on_hold >= 1000 else f"${money_on_hold:.0f}"
         
-        # Header with period
-        message_parts.append(f"📊 HVAC Pro Weekly ({summary_data['start_date']}-{summary_data['end_date']})")
+        # Compose plain English message (no emojis, no judgement)
+        message = f"{brand} ({start}–{end}): {calls} calls | AI handled {ai_pct:.0f}% | {qa_passed} jobs QA passed | {jobs_billed_str} billed | {money_on_hold_str} on hold"
         
-        # Key metrics
-        message_parts.append(f"📞 {total_calls} calls, {ai_answered} AI-handled ({ai_rate:.0f}%)")
-        message_parts.append(f"📅 {appointments} appointments booked")
-        
-        # QA status
-        if qa_passed > 0 or qa_blocked > 0:
-            message_parts.append(f"✅ {qa_passed} jobs passed QA")
-            if qa_blocked > 0:
-                message_parts.append(f"🚫 {qa_blocked} jobs blocked")
-        
-        # Revenue potential
-        if revenue > 0:
-            message_parts.append(f"💰 ${revenue:.0f} potential revenue")
-        
-        # Performance insights (pick top 2)
-        top_insights = insights[:2]
-        if top_insights:
-            message_parts.extend(top_insights)
-        
-        # Join with separators and keep under 160 characters
-        full_message = " | ".join(message_parts)
-        
-        # Truncate if too long (SMS limit consideration)
-        if len(full_message) > 160:
-            # Create shorter version
-            short_parts = [
-                f"📊 HVAC Pro ({summary_data['start_date']}-{summary_data['end_date']})",
-                f"{total_calls} calls, {appointments} appts",
-                f"AI: {ai_rate:.0f}%, QA: {qa_passed}✅"
-            ]
+        # Ensure message stays under 160 characters
+        if len(message) > 160:
+            # Create shorter version if needed
+            message = f"{brand} ({start}–{end}): {calls} calls | AI {ai_pct:.0f}% | QA {qa_passed} | {jobs_billed_str} billed | {money_on_hold_str} held"
             
-            if qa_blocked > 0:
-                short_parts.append(f"{qa_blocked}🚫")
-            
-            if revenue > 0:
-                short_parts.append(f"${revenue:.0f} potential")
-            
-            # Add one insight if space allows
-            if insights:
-                test_message = " | ".join(short_parts + [insights[0]])
-                if len(test_message) <= 160:
-                    short_parts.append(insights[0])
-            
-            full_message = " | ".join(short_parts)
+            # Final fallback if still too long
+            if len(message) > 160:
+                message = f"{brand}: {calls} calls | AI {ai_pct:.0f}% | QA {qa_passed} | {jobs_billed_str} | {money_on_hold_str} held"
         
-        return full_message
+        logger.info(f"Composed SMS ({len(message)} chars): {message}")
+        return message
         
     except Exception as e:
         logger.error(f"Error composing SMS: {str(e)}")
         # Fallback message
-        return f"📊 HVAC Pro Weekly Summary: {summary_data.get('total_calls', 0)} calls, {summary_data.get('appointments_created', 0)} appointments. Check dashboard for details."
+        return f"HVAC Pro Weekly: {summary_data.get('total_calls', 0)} calls, {summary_data.get('qa_passed', 0)} jobs QA passed. Check dashboard for details."
 
 @app.get("/api/reports/weekly-summary/preview")
 async def preview_weekly_summary():
