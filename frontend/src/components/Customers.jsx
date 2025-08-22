@@ -496,8 +496,14 @@ const Customers = ({ currentUser, aiVoiceEnabled }) => {
                 <div className="flex items-start justify-between">
                   <div className="space-y-1">
                     <CardTitle className="text-lg">{customer.name}</CardTitle>
-                    <Badge variant="outline" className="text-xs">
-                      {customer.customer_type || 'Regular'}
+                    <Badge 
+                      variant="outline" 
+                      className={cn(
+                        "text-xs",
+                        customer.status === 'Active' ? 'border-emerald-200 text-emerald-700 bg-emerald-50' : 'border-gray-200 text-gray-600 bg-gray-50'
+                      )}
+                    >
+                      {customer.status}
                     </Badge>
                   </div>
                   <Button variant="ghost" size="icon" className="h-8 w-8">
