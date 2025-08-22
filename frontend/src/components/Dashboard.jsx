@@ -24,19 +24,19 @@ import authService from '../utils/auth';
 const NEW_UI = process.env.REACT_APP_NEW_UI !== 'false';
 const AI_VOICE_SCHEDULING_ENABLED = process.env.REACT_APP_AI_VOICE_SCHEDULING_ENABLED === 'true';
 
-// Stat Card Component - PayPal style with enhanced deltas
+// Stat Card Component - Clean Professional Design
 const StatCard = ({ title, value, change, icon: Icon, trend = 'up', changePercent }) => {
   return (
-    <Card className="bg-white border border-[#E5E7EB] rounded-xl shadow-sm">
+    <Card className="bg-white border border-gray-200 rounded-xl shadow-sm">
       <CardContent className="p-6">
         <div className="flex items-center justify-between">
           <div>
-            <p className="text-sm font-medium text-[#475569] mb-1">{title}</p>
-            <p className="text-3xl font-bold text-[#0B0F19]">{value}</p>
+            <p className="text-sm font-medium text-gray-600 mb-1">{title}</p>
+            <p className="text-3xl font-bold text-gray-900">{value}</p>
             {change && (
               <p className={cn(
                 "text-sm mt-2 flex items-center font-medium",
-                trend === 'up' ? "text-green-600" : "text-red-600"
+                trend === 'up' ? "text-emerald-600" : "text-red-600"
               )}>
                 {trend === 'up' ? (
                   <TrendingUp className="w-4 h-4 mr-1" />
@@ -47,7 +47,7 @@ const StatCard = ({ title, value, change, icon: Icon, trend = 'up', changePercen
               </p>
             )}
           </div>
-          <div className="w-12 h-12 bg-[#E6F1FD] rounded-lg flex items-center justify-center">
+          <div className="w-12 h-12 bg-blue-50 rounded-lg flex items-center justify-center">
             <Icon className="w-6 h-6 text-[#0070E0]" />
           </div>
         </div>
