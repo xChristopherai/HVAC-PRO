@@ -684,3 +684,18 @@ p, span, div, h1, h2, h3, h4, h5, h6 {
 .text-2xl {
   color: #111827 !important;
 }
+
+/* EMERGENCY OVERRIDE - Kill specific card classes causing yellow */
+.bg-card,
+[class*="bg-card"],
+div[class*="bg-card"],
+.rounded-2xl.border.bg-card,
+div.rounded-2xl.border.bg-card {
+  background: #FFFFFF !important;
+  background-color: #FFFFFF !important;
+}
+
+.text-card-foreground,
+[class*="text-card-foreground"] {
+  color: #111827 !important;
+}
