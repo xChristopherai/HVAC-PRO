@@ -301,6 +301,38 @@ const Customers = ({ currentUser, aiVoiceEnabled }) => {
         </div>
       )}
 
+      {/* Stats Tiles - Appointments Style */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <StatTile
+          label="Total Customers"
+          value={customers.length}
+          icon={Users}
+          color="text-blue-600"
+        />
+        <StatTile
+          label="Active"
+          value={customers.filter(c => c.total_jobs > 0).length}
+          icon={Users}
+          color="text-emerald-600"
+        />
+        <StatTile
+          label="New This Month"
+          value={customers.filter(c => {
+            const created = new Date(c.created_at || c.date_added);
+            const now = new Date();
+            return created.getMonth() === now.getMonth() && created.getFullYear() === now.getFullYear();
+          }).length}
+          icon={Plus}
+          color="text-amber-600"
+        />
+        <StatTile
+          label="Repeat Customers"
+          value={customers.filter(c => (c.total_jobs || 0) > 1).length}
+          icon={Users}
+          color="text-emerald-600"
+        />
+      </div>
+
       {/* Customers Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {filteredCustomers.length > 0 ? (
