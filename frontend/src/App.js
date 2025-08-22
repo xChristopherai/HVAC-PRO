@@ -61,9 +61,30 @@ const navigation = [
 const TopNavigation = ({ sidebarOpen, setSidebarOpen }) => {
   const location = useLocation();
   
+  const headerStyle = {
+    position: 'sticky',
+    top: 0,
+    zIndex: 50,
+    height: '64px',
+    backgroundColor: '#FFFFFF',
+    borderBottom: '1px solid #E5E7EB',
+    boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06)',
+    width: '100%'
+  };
+  
+  const containerStyle = {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    height: '100%',
+    maxWidth: '1400px',
+    margin: '0 auto',
+    padding: '0 1.5rem'
+  };
+  
   return (
-    <header className="top-nav">
-      <div className="top-nav-container">
+    <header className="top-nav" style={headerStyle}>
+      <div className="top-nav-container" style={containerStyle}>
         {/* Left side - Logo */}
         <div className="top-nav-logo">
           <div className="logo-icon">
@@ -73,7 +94,7 @@ const TopNavigation = ({ sidebarOpen, setSidebarOpen }) => {
         </div>
 
         {/* Center - Navigation items (desktop) */}
-        <nav className="top-nav-items">
+        <nav className="top-nav-items" style={{ display: window.innerWidth >= 1024 ? 'flex' : 'none' }}>
           {navigation.map((item) => {
             const Icon = item.icon;
             const isActive = location.pathname === item.href || 
@@ -98,7 +119,7 @@ const TopNavigation = ({ sidebarOpen, setSidebarOpen }) => {
 
         {/* Right side - Search, notifications, user menu */}
         <div className="top-nav-actions">
-          <div className="search-container">
+          <div className="search-container" style={{ display: window.innerWidth >= 1024 ? 'flex' : 'none' }}>
             <Search className="search-icon" />
             <Input 
               placeholder="Search..." 
@@ -111,11 +132,12 @@ const TopNavigation = ({ sidebarOpen, setSidebarOpen }) => {
             size="icon"
             className="notification-btn"
             aria-label="Notifications"
+            style={{ display: window.innerWidth >= 1024 ? 'flex' : 'none' }}
           >
             <Bell className="w-5 h-5" />
           </Button>
           
-          <div className="user-menu">
+          <div className="user-menu" style={{ display: window.innerWidth >= 1024 ? 'flex' : 'none' }}>
             <Button 
               variant="ghost" 
               className="user-menu-btn"
@@ -136,6 +158,7 @@ const TopNavigation = ({ sidebarOpen, setSidebarOpen }) => {
             className="mobile-menu-btn"
             onClick={() => setSidebarOpen(!sidebarOpen)}
             aria-label="Toggle menu"
+            style={{ display: window.innerWidth < 1024 ? 'flex' : 'none' }}
           >
             <Menu className="w-5 h-5" />
           </Button>
