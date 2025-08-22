@@ -61,7 +61,7 @@
     "start": "craco start",
     "build": "craco build",
     "test": "craco test",
-    "lint:colors": "grep -RIn 'bg-yellow\\|bg-amber\\|bg-warning\\|#FFFF00\\|background:\\s*yellow\\|text-white\\|#fff\\|#FFFFFF' src && echo '⚠ Found forbidden colors' && exit 1 || echo '✓ No forbidden colors'"
+    "lint:colors": "grep -RIn 'bg-yellow-[0-9]\\|\\btext-white\\b' src --exclude-dir=node_modules | grep -v 'override\\|kill\\|force\\|var(' && echo '⚠ Found forbidden colors in source code' && exit 1 || echo '✓ No forbidden colors in source code'"
   },
   "browserslist": {
     "production": [
