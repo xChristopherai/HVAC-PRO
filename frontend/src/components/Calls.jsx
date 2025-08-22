@@ -479,38 +479,42 @@ const Calls = () => {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-200">
-                  {calls.map((call) => (
-                    <tr 
-                      key={call.id} 
-                      className="hover:bg-gray-50 cursor-pointer"
-                      onClick={() => fetchCallDetails(call.id)}
-                    >
-                      <td className="px-4 py-3 text-sm text-gray-900">
-                        {formatDateTime(call.start_time)}
-                      </td>
-                      <td className="px-4 py-3 text-sm font-medium text-gray-900">
-                        {call.customer_name || 'Unknown'}
-                      </td>
-                      <td className="px-4 py-3 text-sm text-gray-900">
-                        {formatPhoneNumber(call.phone_number)}
-                      </td>
-                      <td className="px-4 py-3 text-sm text-gray-900 capitalize">
-                        {call.direction || 'inbound'}
-                      </td>
-                      <td className="px-4 py-3">
-                        <span className={`inline-block px-2 py-1 text-xs rounded-full ${
-                          call.status === 'completed' ? 'bg-green-100 text-green-800' :
-                          call.status === 'failed' ? 'bg-red-100 text-red-800' :
-                          'bg-gray-100 text-gray-800'
-                        }`}>
-                          {call.status || 'unknown'}
-                        </span>
-                      </td>
-                      <td className="px-4 py-3 text-sm text-gray-900">
-                        {formatDuration(call.duration)}
-                      </td>
-                    </tr>
-                  ))}
+                  {calls.map((call) => {
+                    const customerInfo = getCustomerInfo(call);
+                    return (
+                      <tr 
+                        key={call.id} 
+                        className="hover:bg-gray-50 cursor-pointer"
+                        onClick={() => fetchCallDetails(call.id)}
+                      >
+                        <td className="px-4 py-3 text-sm text-gray-900">
+                          {formatDateTime(call.started_at || call.start_time)}
+                        </td>
+                        <td className="px-4 py-3 text-sm font-medium text-gray-900">
+                          {customerInfo.name}
+                        </td>
+                        <td className="px-4 py-3 text-sm text-gray-900">
+                          {formatPhoneNumber(customerInfo.phone)}
+                        </td>
+                        <td className="px-4 py-3 text-sm text-gray-900 capitalize">
+                          {call.direction || 'inbound'}
+                        </td>
+                        <td className="px-4 py-3">
+                          <span className={`inline-block px-2 py-1 text-xs rounded-full ${
+                            call.status === 'completed' ? 'bg-green-100 text-green-800' :
+                            call.status === 'missed' ? 'bg-red-100 text-red-800' :
+                            call.status === 'voicemail' ? 'bg-yellow-100 text-yellow-800' :
+                            'bg-gray-100 text-gray-800'
+                          }`}>
+                            {call.status || 'unknown'}
+                          </span>
+                        </td>
+                        <td className="px-4 py-3 text-sm text-gray-900">
+                          {formatDuration(call.duration_sec || call.duration)}
+                        </td>
+                      </tr>
+                    );
+                  })}
                 </tbody>
               </table>
             </div>
