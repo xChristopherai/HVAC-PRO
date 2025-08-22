@@ -168,23 +168,95 @@ const Technicians = ({ currentUser }) => {
     try {
       setLoading(true);
       
-      let endpoint = `technicians?company_id=${currentUser?.company_id || 'company-001'}`;
+      // Mock demo data for realistic dashboard preview  
+      const mockTechnicians = [
+        {
+          id: 'tech-001',
+          name: 'John Smith',
+          email: 'john.smith@hvacpro.com',
+          phone: '(205) 555-1001',
+          specialization: 'Lead Technician',
+          role: 'lead',
+          is_lead: true,
+          status: 'busy',
+          rating: 4.9,
+          completed_jobs: 120,
+          years_experience: 8,
+          certifications: ['EPA 608', 'NATE Certified'],
+          created_at: '2025-01-15T09:00:00Z'
+        },
+        {
+          id: 'tech-002', 
+          name: 'Alex Martinez',
+          email: 'alex.martinez@hvacpro.com',
+          phone: '(205) 555-1002',
+          specialization: 'HVAC Technician',
+          role: 'technician',
+          is_lead: false,
+          status: 'available',
+          rating: 4.7,
+          completed_jobs: 90,
+          years_experience: 5,
+          certifications: ['EPA 608'],
+          created_at: '2025-02-20T10:30:00Z'
+        },
+        {
+          id: 'tech-003',
+          name: 'Kevin Lee', 
+          email: 'kevin.lee@hvacpro.com',
+          phone: '(205) 555-1003',
+          specialization: 'HVAC Technician',
+          role: 'technician',
+          is_lead: false,
+          status: 'available',
+          rating: 4.5,
+          completed_jobs: 45,
+          years_experience: 2,
+          certifications: ['EPA 608'],
+          created_at: '2025-04-10T14:15:00Z'
+        },
+        {
+          id: 'tech-004',
+          name: 'Sam Carter',
+          email: 'sam.carter@hvacpro.com',
+          phone: '(205) 555-1004', 
+          specialization: 'HVAC Technician',
+          role: 'technician',
+          is_lead: false,
+          status: 'off_duty',
+          rating: 4.3,
+          completed_jobs: 32,
+          years_experience: 1.5,
+          certifications: ['EPA 608'],
+          created_at: '2025-05-25T11:20:00Z'
+        },
+        {
+          id: 'tech-005',
+          name: 'James Green',
+          email: 'james.green@hvacpro.com',
+          phone: '(205) 555-1005',
+          specialization: 'Junior Technician',
+          role: 'technician',
+          is_lead: false, 
+          status: 'available',
+          rating: 4.1,
+          completed_jobs: 18,
+          years_experience: 0.5,
+          certifications: ['EPA 608'],
+          created_at: '2025-07-15T08:45:00Z'
+        }
+      ];
+
+      // Simulate API delay
+      await new Promise(resolve => setTimeout(resolve, 600));
       
-      // If filtering by specific status, use search endpoint
+      // Filter by status if needed
+      let filteredTechs = mockTechnicians;
       if (statusFilter !== 'all') {
-        endpoint = `/api/technicians/search?status=${statusFilter}`;
+        filteredTechs = mockTechnicians.filter(tech => tech.status === statusFilter);
       }
       
-      const response = await authService.authenticatedFetch(endpoint);
-      
-      if (response.ok) {
-        const data = await response.json();
-        // Handle both direct array and wrapped response
-        const technicianList = data.technicians || data;
-        setTechnicians(Array.isArray(technicianList) ? technicianList : []);
-      } else {
-        setTechnicians([]);
-      }
+      setTechnicians(filteredTechs);
     } catch (err) {
       console.error('Failed to fetch technicians:', err);
       setTechnicians([]);
