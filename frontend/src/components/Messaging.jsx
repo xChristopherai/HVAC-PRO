@@ -546,39 +546,71 @@ const Messaging = ({ currentUser }) => {
         />
       )}
       
-      {/* Header */}
+      {/* Header - Appointments Style */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold">Messaging</h1>
-          <p className="text-muted-foreground">SMS conversations and customer communications</p>
+          <h1 className="text-3xl font-bold text-gray-900">Messaging</h1>
+          <p className="text-gray-500">SMS conversations and customer communications</p>
         </div>
         {NEW_MESSAGE_ENABLED && (
-          <Button onClick={() => setShowNewMessage(true)}>
+          <Button 
+            onClick={() => setShowNewMessage(true)}
+            className="bg-blue-600 hover:bg-blue-700 text-white"
+            style={{ backgroundColor: '#2563EB', color: '#FFFFFF' }}
+          >
             <Plus className="w-4 h-4 mr-2" />
             New Message
           </Button>
         )}
       </div>
 
-      {/* Search and Filters - PHASE 4 Enhancement */}
+      {/* Search and Filters - Appointments Style */}
       <div className="flex flex-col sm:flex-row gap-4">
-        <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-          <Input
-            placeholder="Search conversations by customer name, phone, or message..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="pl-10"
-          />
-          {searching && (
-            <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
-              <div className="w-4 h-4 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
-            </div>
-          )}
-        </div>
+        <SearchBar
+          placeholder="Search conversations by customer name, phone, or message..."
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          loading={searching}
+        />
+        <FilterChips
+          options={[
+            { label: 'All', value: 'all', count: filteredConversations.length },
+            { label: 'Active', value: 'active', count: conversations.filter(c => c.status === 'active').length },
+            { label: 'Converted', value: 'converted', count: conversations.filter(c => c.status === 'converted').length },
+            { label: 'Pending', value: 'pending', count: conversations.filter(c => c.status === 'pending').length }
+          ]}
+          value={filter}
+          onChange={setFilter}
+        />
       </div>
 
-      {/* Status Tabs - PHASE 4 Enhancement */}
+      {/* Stats Tiles - Appointments Style */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <StatTile
+          label="Total Conversations"
+          value={conversations.length}
+          icon={MessageSquare}
+          color="text-blue-600"
+        />
+        <StatTile
+          label="Active"
+          value={conversations.filter(c => c.status === 'active').length}
+          icon={Clock}
+          color="text-amber-600"
+        />
+        <StatTile
+          label="Converted"
+          value={conversations.filter(c => c.status === 'converted').length}
+          icon={CheckCircle}
+          color="text-emerald-600"
+        />
+        <StatTile
+          label="Pending"
+          value={conversations.filter(c => c.status === 'pending').length}
+          icon={AlertCircle}
+          color="text-amber-600"
+        />
+      </div>
       <div className="flex flex-wrap gap-2">
         {[
           { value: 'all', label: 'All Conversations' },
