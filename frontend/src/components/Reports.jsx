@@ -72,7 +72,7 @@ const Reports = () => {
         console.log('Using mock data for preview');
         
         // Mock data with expected format
-        setPreview({
+        const mockData = {
           brand: "HVAC Pro",
           start: "01/15",
           end: "01/22",
@@ -81,9 +81,13 @@ const Reports = () => {
           qa_passed: 15,
           jobs_billed_cents: 1250000, // $12,500 in cents
           money_on_hold_cents: 85000,  // $850 in cents
-          sms: "HVAC Pro (01/15–01/22): 47 calls | AI handled 81% | 15 jobs QA passed | $12,500 billed | $850 on hold",
           mock_mode: true
-        });
+        };
+        
+        // Compose SMS using the utility function
+        mockData.sms = composePlainSMS(mockData);
+        
+        setPreview(mockData);
       }
     } catch (error) {
       console.error('Error fetching preview:', error);
