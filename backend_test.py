@@ -2689,7 +2689,8 @@ class HVACAPITester:
     
     def test_phase7_hard_block_job_closure_microns_fail(self):
         """Test Hard Block Job Closure - Microns Test (MUST FAIL)"""
-        job_id = "test-job-001"
+        import time
+        job_id = f"test-job-001-{int(time.time())}"  # Unique job ID
         technician_id = "tech-001"
         
         # Step 1: Create QA Gate
