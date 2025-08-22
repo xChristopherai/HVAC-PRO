@@ -1120,6 +1120,9 @@ async def list_calls(
         calls = []
         for call_data in calls_list:
             call_data["transcript"] = []  # Ensure empty transcript for list view
+            # Handle field alias conversion
+            if "from_" in call_data:
+                call_data["from"] = call_data.pop("from_")
             calls.append(Call(**call_data))
         
         return CallSearchResponse(
