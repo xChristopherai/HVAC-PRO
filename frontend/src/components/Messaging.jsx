@@ -24,6 +24,10 @@ import { Textarea } from './ui/textarea';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from './ui/dialog';
 import { Label } from './ui/label';
 import { cn, formatTime } from '../lib/utils';
+import StatTile from './ui/StatTile';
+import SearchBar from './ui/SearchBar';
+import FilterChips from './ui/FilterChips';
+import UnifiedCard from './ui/UnifiedCard';
 import authService from '../utils/auth';
 
 // Message Composer Component
