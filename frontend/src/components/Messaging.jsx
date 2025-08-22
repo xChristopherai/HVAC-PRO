@@ -611,69 +611,6 @@ const Messaging = ({ currentUser }) => {
           color="text-amber-600"
         />
       </div>
-      <div className="flex flex-wrap gap-2">
-        {[
-          { value: 'all', label: 'All Conversations' },
-          { value: 'active', label: 'Active' },
-          { value: 'converted', label: 'Converted' }, 
-          { value: 'pending', label: 'Pending' }
-        ].map((option) => (
-          <Button
-            key={option.value}
-            variant={filter === option.value ? "default" : "outline"}
-            size="sm"
-            onClick={() => setFilter(option.value)}
-            className={filter === option.value ? "bg-blue-600 hover:bg-blue-700" : ""}
-          >
-            {option.label}
-            <span className="ml-2 px-2 py-0.5 text-xs rounded-full bg-gray-200 text-gray-700">
-              {option.value === 'all' 
-                ? conversations.length 
-                : conversations.filter(c => c.status === option.value).length}
-            </span>
-          </Button>
-        ))}
-      </div>
-
-      {/* Search Results Indicator */}
-      {searchTerm.trim() && (
-        <div className="flex items-center justify-between py-2 px-4 bg-blue-50 rounded-lg">
-          <span className="text-sm text-blue-700">
-            {searching ? 'Searching...' : `Found ${filteredConversations.length} conversation${filteredConversations.length !== 1 ? 's' : ''} matching "${searchTerm}"`}
-          </span>
-          <Button 
-            variant="ghost" 
-            size="sm" 
-            onClick={() => setSearchTerm('')}
-            className="text-blue-700 hover:text-blue-800"
-          >
-            Clear
-          </Button>
-        </div>
-      )}
-
-      {/* Stats Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        {[
-          { label: 'Total Conversations', count: conversations.length, color: 'text-blue-600' },
-          { label: 'Unread Messages', count: conversations.filter(c => c.unread_count > 0).length, color: 'text-red-600' },
-          { label: 'Active Today', count: conversations.filter(c => new Date(c.last_message_at).toDateString() === new Date().toDateString()).length, color: 'text-green-600' },
-          { label: 'SMS Bridge Active', count: conversations.filter(c => c.is_sms_bridge).length, color: 'text-purple-600' },
-        ].map((stat, index) => (
-          <Card key={index}>
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-muted-foreground">{stat.label}</p>
-                  <p className={cn("text-2xl font-bold", stat.color)}>{stat.count}</p>
-                </div>
-                <MessageSquare className={cn("w-8 h-8", stat.color)} />
-              </div>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
-
       {/* Conversations Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
         {filteredConversations.length > 0 ? (
