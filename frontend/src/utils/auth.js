@@ -60,29 +60,30 @@ class AuthService {
   }
 
   async authenticatedFetch(endpoint, options = {}) {
-    // For demo purposes, return mock data if fetch fails
     try {
       if (!this.token) {
         await this.login();
       }
 
-      const url = endpoint.startsWith('http') ? endpoint : `${BACKEND_URL}/api/${endpoint.replace(/^\//, '')}`;
+      const url = endpoint.startsWith('http') ? endpoint : `${BACKEND_URL}${endpoint.startsWith('/api') ? endpoint : `/api/${endpoint.replace(/^\//, '')}`}`;
       
       const authOptions = {
         ...options,
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${this.token}`,
           ...options.headers,
         }
       };
 
-      console.log('Fetching:', url);
+      console.log('Fetching:', url, 'with token:', this.token ? 'present' : 'missing');
       const response = await fetch(url, authOptions);
       
       if (response.ok) {
         return response;
       } else {
-        throw new Error('Backend not available');
+        console.error('API response not ok:', response.status, response.statusText);
+        throw new Error(`API error: ${response.status}`);
       }
     } catch (error) {
       console.error('Fetch failed, using mock data:', error);
