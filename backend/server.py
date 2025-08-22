@@ -971,28 +971,45 @@ async def preview_weekly_summary():
     """Preview weekly summary data with proper holdback calculations"""
     try:
         summary_data = await generate_weekly_summary()
-        sms_body = compose_weekly_sms(summary_data)
         
-        # Format response for frontend compatibility
-        preview_response = {
+        # Extract financial data with proper defaults (always numbers)
+        jobs_billed_cents = int(summary_data.get("jobs_billed_cents", 0))
+        money_on_hold_cents = int(summary_data.get("money_on_hold_cents", 0))
+        
+        # Calculate AI percentage
+        calls = summary_data["total_calls"]
+        ai_pct = (summary_data["ai_answered"] / calls * 100) if calls > 0 else 0
+        
+        # Compose SMS with the financial values
+        sms_data = {
             "brand": "HVAC Pro",
             "start": summary_data["start_date"],
             "end": summary_data["end_date"],
-            "calls": summary_data["total_calls"],
-            "ai_pct": (summary_data["ai_answered"] / summary_data["total_calls"] * 100) if summary_data["total_calls"] > 0 else 0,
+            "calls": calls,
+            "ai_pct": ai_pct,
             "qa_passed": summary_data["qa_passed"],
-            "jobs_billed_cents": summary_data["jobs_billed_cents"],
-            "money_on_hold_cents": summary_data["money_on_hold_cents"],
-            "sms": sms_body
+            "jobs_billed_cents": jobs_billed_cents,
+            "money_on_hold_cents": money_on_hold_cents
         }
         
+        sms_body = compose_weekly_sms(sms_data)
+        
+        # Return response matching the expected format
         return {
-            "summary_data": summary_data,  # Keep original for backward compatibility
+            "brand": "HVAC Pro",
+            "start": summary_data["start_date"],
+            "end": summary_data["end_date"],
+            "calls": calls,
+            "ai_pct": round(ai_pct, 1),
+            "qa_passed": summary_data["qa_passed"],
+            "jobs_billed_cents": jobs_billed_cents,     # always a number
+            "money_on_hold_cents": money_on_hold_cents, # always a number
+            "sms": sms_body,
+            # Legacy fields for backward compatibility
+            "summary_data": summary_data,
             "sms_body": sms_body,
             "sms_length": len(sms_body),
-            "delivery_method": "real_sms" if twilio_enabled else "logged_only",
-            # Add new format for frontend
-            **preview_response
+            "delivery_method": "real_sms" if twilio_enabled else "logged_only"
         }
         
     except Exception as e:
