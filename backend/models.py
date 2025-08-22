@@ -502,8 +502,8 @@ class SubcontractorPayment(BaseDocument):
     # Payment Details
     base_amount: float
     holdback_percentage: float = 10.0  # Default 10% holdback
-    holdback_amount: float
-    releasable_amount: float
+    holdback_amount: float = 0.0
+    releasable_amount: float = 0.0
     
     # Payment Status
     payment_status: PaymentStatus = PaymentStatus.HOLDBACK
