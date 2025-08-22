@@ -238,7 +238,7 @@ const Customers = ({ currentUser, aiVoiceEnabled }) => {
   }
 
   return (
-    <div className="space-y-6">
+    <div id="customers-page" className="space-y-6">
       {/* Add Customer Dialog */}
       <AddCustomerDialog 
         open={showAddCustomer} 
