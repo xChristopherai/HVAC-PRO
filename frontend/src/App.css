@@ -365,6 +365,25 @@ body {
    RESPONSIVE BREAKPOINTS
    =============================== */
 
+/* Desktop and large tablets */
+@media (min-width: 1024px) {
+  .top-nav-items {
+    display: flex !important;
+  }
+  
+  .mobile-menu-btn {
+    display: none !important;
+  }
+  
+  .search-container {
+    display: flex !important;
+  }
+  
+  .user-menu {
+    display: flex !important;
+  }
+}
+
 /* Tablet and below */
 @media (max-width: 1023px) {
   .top-nav-items {
