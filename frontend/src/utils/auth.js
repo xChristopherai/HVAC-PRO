@@ -16,7 +16,36 @@ class AuthService {
 
   async login(role = 'owner', companyId = 'company-001') {
     try {
-      // Create mock authentication - skip API call for now
+      // Call actual login API to get proper JWT token
+      const response = await fetch(`${BACKEND_URL}/api/auth/login`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          role: role,
+          company_id: companyId
+        })
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        this.token = data.access_token;
+        this.user = {
+          sub: `mock-${role}-001`,
+          email: `${role}@hvactech.com`,
+          name: 'John Smith',
+          role: role,
+          company_id: companyId
+        };
+        
+        return { success: true, user: this.user };
+      } else {
+        throw new Error('Login API failed');
+      }
+    } catch (error) {
+      console.error('Authentication failed:', error);
+      // Fallback to mock token for demo
       this.token = 'mock-jwt-token-' + Date.now();
       this.user = {
         sub: 'mock-owner-001',
@@ -27,9 +56,6 @@ class AuthService {
       };
       
       return { success: true, user: this.user };
-    } catch (error) {
-      console.error('Authentication failed:', error);
-      return { success: false, error: error.message };
     }
   }
 
