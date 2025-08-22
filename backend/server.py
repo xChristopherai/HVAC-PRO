@@ -737,7 +737,520 @@ async def create_voice_appointment(session_data: dict, phone_number: str) -> App
         logger.error(f"Error creating voice appointment: {str(e)}")
         raise
 
-# ==================== SIMPLE CALLS API (PHASE 6 - MINIMAL) ====================
+# ==================== QA GATES & SUBCONTRACTOR ENDPOINTS (PHASE 7) ====================
+
+@app.post("/api/jobs/{job_id}/qa-gate")
+async def create_qa_gate(
+    job_id: str,
+    technician_id: str = Query(...),
+    company_id: str = Query("company-001"),
+    current_user: dict = Depends(get_current_user)
+):
+    """Create QA Gate for job"""
+    try:
+        # Check if QA gate already exists
+        existing_qa = await db.qa_gates.find_one({"job_id": job_id})
+        if existing_qa:
+            raise HTTPException(status_code=400, detail="QA Gate already exists for this job")
+        
+        qa_gate = QAGate(
+            job_id=job_id,
+            company_id=company_id,
+            technician_id=technician_id,
+            required_photos=["before", "after", "equipment", "startup_readings"]
+        )
+        
+        await db.qa_gates.insert_one(qa_gate.dict())
+        logger.info(f"Created QA Gate for job {job_id}")
+        
+        return qa_gate.dict()
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error creating QA gate: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.put("/api/jobs/{job_id}/qa-gate/startup-metrics")
+async def update_startup_metrics(
+    job_id: str,
+    metrics: StartupMetrics,
+    current_user: dict = Depends(get_current_user)
+):
+    """Update startup metrics for QA gate"""
+    try:
+        qa_gate_data = await db.qa_gates.find_one({"job_id": job_id})
+        if not qa_gate_data:
+            raise HTTPException(status_code=404, detail="QA Gate not found")
+        
+        qa_gate = QAGate(**qa_gate_data)
+        qa_gate.startup_metrics = metrics
+        qa_gate.calculate_qa_status()
+        
+        await db.qa_gates.update_one(
+            {"job_id": job_id},
+            {"$set": qa_gate.dict()}
+        )
+        
+        logger.info(f"Updated startup metrics for job {job_id}: microns={metrics.microns}")
+        
+        return {
+            "message": "Startup metrics updated",
+            "qa_status": qa_gate.qa_status,
+            "microns_pass": qa_gate.microns_pass,
+            "overall_pass": qa_gate.overall_pass,
+            "failure_reasons": qa_gate.failure_reasons
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error updating startup metrics: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/api/jobs/{job_id}/qa-gate/photos")
+async def add_qa_photo(
+    job_id: str,
+    photo_type: str = Query(..., description="Photo type: before, after, equipment, startup_readings"),
+    photo_url: str = Query(..., description="URL or path to photo"),
+    description: str = Query("", description="Photo description"),
+    current_user: dict = Depends(get_current_user)
+):
+    """Add photo to QA gate"""
+    try:
+        qa_gate_data = await db.qa_gates.find_one({"job_id": job_id})
+        if not qa_gate_data:
+            raise HTTPException(status_code=404, detail="QA Gate not found")
+        
+        qa_gate = QAGate(**qa_gate_data)
+        
+        # Add photo
+        photo_entry = {
+            "type": photo_type,
+            "url": photo_url,
+            "description": description,
+            "uploaded_at": datetime.utcnow().isoformat(),
+            "uploaded_by": current_user.get("username", "unknown")
+        }
+        qa_gate.photos.append(photo_entry)
+        
+        # Recalculate QA status
+        qa_gate.calculate_qa_status()
+        
+        await db.qa_gates.update_one(
+            {"job_id": job_id},
+            {"$set": qa_gate.dict()}
+        )
+        
+        logger.info(f"Added {photo_type} photo for job {job_id}")
+        
+        return {
+            "message": "Photo added successfully",
+            "photos_pass": qa_gate.photos_pass,
+            "overall_pass": qa_gate.overall_pass
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error adding QA photo: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/api/jobs/{job_id}/close")
+async def close_job(
+    job_id: str,
+    current_user: dict = Depends(get_current_user)
+):
+    """Attempt to close job - with QA gate validation"""
+    try:
+        # Check QA gate status
+        qa_gate_data = await db.qa_gates.find_one({"job_id": job_id})
+        if not qa_gate_data:
+            raise HTTPException(
+                status_code=400, 
+                detail="QA Gate not found. Cannot close job without QA validation."
+            )
+        
+        qa_gate = QAGate(**qa_gate_data)
+        qa_gate.calculate_qa_status()
+        
+        # Hard block if QA not passed
+        if not qa_gate.overall_pass:
+            error_message = "Job closure blocked - QA requirements not met:"
+            for reason in qa_gate.failure_reasons:
+                error_message += f"\n• {reason}"
+            
+            raise HTTPException(status_code=400, detail=error_message)
+        
+        # Check warranty registration
+        warranty_data = await db.warranty_registrations.find_one({"job_id": job_id})
+        if not warranty_data or not warranty_data.get("registered", False):
+            raise HTTPException(
+                status_code=400,
+                detail="Job closure blocked - Warranty must be registered before job closure"
+            )
+        
+        # Check inspection if required
+        inspection_data = await db.inspections.find_one({"job_id": job_id})
+        if inspection_data and inspection_data.get("required", True):
+            if not inspection_data.get("completed", False):
+                raise HTTPException(
+                    status_code=400,
+                    detail="Job closure blocked - Required inspection not completed"
+                )
+            if not inspection_data.get("inspection_pass", False):
+                raise HTTPException(
+                    status_code=400,
+                    detail="Job closure blocked - Inspection failed"
+                )
+        
+        # If all checks pass, close the job
+        job_data = {
+            "status": "completed",
+            "completed_at": datetime.utcnow().isoformat(),
+            "completed_by": current_user.get("username", "unknown"),
+            "qa_passed": True
+        }
+        
+        # Update job status (assuming jobs collection exists)
+        await db.jobs.update_one(
+            {"id": job_id},
+            {"$set": job_data}
+        )
+        
+        logger.info(f"Job {job_id} closed successfully - all QA gates passed")
+        
+        return {
+            "message": "Job closed successfully",
+            "job_id": job_id,
+            "completed_at": job_data["completed_at"],
+            "qa_status": "passed"
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error closing job: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/api/jobs/{job_id}/warranty")
+async def register_warranty(
+    job_id: str,
+    warranty_data: dict,
+    current_user: dict = Depends(get_current_user)
+):
+    """Register warranty for job"""
+    try:
+        warranty = WarrantyRegistration(
+            job_id=job_id,
+            company_id=warranty_data.get("company_id", "company-001"),
+            customer_id=warranty_data.get("customer_id", ""),
+            equipment_type=warranty_data.get("equipment_type", ""),
+            manufacturer=warranty_data.get("manufacturer", ""),
+            model_number=warranty_data.get("model_number", ""),
+            serial_number=warranty_data.get("serial_number", ""),
+            installation_date=datetime.fromisoformat(warranty_data.get("installation_date", datetime.utcnow().isoformat())),
+            warranty_start_date=datetime.fromisoformat(warranty_data.get("warranty_start_date", datetime.utcnow().isoformat())),
+            warranty_end_date=datetime.fromisoformat(warranty_data.get("warranty_end_date", (datetime.utcnow() + timedelta(days=365)).isoformat())),
+            warranty_type=warranty_data.get("warranty_type", "full"),
+            warranty_terms=warranty_data.get("warranty_terms", ""),
+            registered=True,
+            registration_number=f"WR-{job_id}-{int(datetime.utcnow().timestamp())}",
+            registered_at=datetime.utcnow(),
+            registered_by=current_user.get("username", "unknown")
+        )
+        
+        await db.warranty_registrations.insert_one(warranty.dict())
+        
+        # Update subcontractor payment status if exists
+        payment_data = await db.subcontractor_payments.find_one({"job_id": job_id})
+        if payment_data:
+            await db.subcontractor_payments.update_one(
+                {"job_id": job_id},
+                {"$set": {"warranty_registered": True}}
+            )
+        
+        logger.info(f"Warranty registered for job {job_id}: {warranty.registration_number}")
+        
+        return {
+            "message": "Warranty registered successfully",
+            "registration_number": warranty.registration_number,
+            "warranty_end_date": warranty.warranty_end_date.isoformat()
+        }
+        
+    except Exception as e:
+        logger.error(f"Error registering warranty: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/api/jobs/{job_id}/inspection")
+async def schedule_inspection(
+    job_id: str,
+    inspection_data: dict,
+    current_user: dict = Depends(get_current_user)
+):
+    """Schedule inspection for job"""
+    try:
+        inspection = Inspection(
+            job_id=job_id,
+            company_id=inspection_data.get("company_id", "company-001"),
+            inspection_type=InspectionType(inspection_data.get("inspection_type", "startup")),
+            scheduled_date=datetime.fromisoformat(inspection_data.get("scheduled_date", datetime.utcnow().isoformat())),
+            scheduled_by=current_user.get("username", "unknown"),
+            required=inspection_data.get("required", True)
+        )
+        
+        await db.inspections.insert_one(inspection.dict())
+        
+        logger.info(f"Inspection scheduled for job {job_id}: {inspection.inspection_type}")
+        
+        return {
+            "message": "Inspection scheduled successfully",
+            "inspection_id": inspection.id,
+            "scheduled_date": inspection.scheduled_date.isoformat()
+        }
+        
+    except Exception as e:
+        logger.error(f"Error scheduling inspection: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.put("/api/inspections/{inspection_id}/complete")
+async def complete_inspection(
+    inspection_id: str,
+    completion_data: dict,
+    current_user: dict = Depends(get_current_user)
+):
+    """Complete inspection"""
+    try:
+        inspection_pass = completion_data.get("inspection_pass", False)
+        notes = completion_data.get("notes", "")
+        deficiencies = completion_data.get("deficiencies", [])
+        
+        update_data = {
+            "completed": True,
+            "completed_date": datetime.utcnow(),
+            "inspector_id": current_user.get("user_id", "unknown"),
+            "inspection_pass": inspection_pass,
+            "inspection_notes": notes,
+            "deficiencies": deficiencies
+        }
+        
+        result = await db.inspections.update_one(
+            {"id": inspection_id},
+            {"$set": update_data}
+        )
+        
+        if result.matched_count == 0:
+            raise HTTPException(status_code=404, detail="Inspection not found")
+        
+        # Get inspection to update subcontractor payment
+        inspection_data = await db.inspections.find_one({"id": inspection_id})
+        if inspection_data and inspection_pass:
+            job_id = inspection_data["job_id"]
+            await db.subcontractor_payments.update_one(
+                {"job_id": job_id},
+                {"$set": {"inspection_passed": True}}
+            )
+        
+        logger.info(f"Inspection {inspection_id} completed: pass={inspection_pass}")
+        
+        return {
+            "message": "Inspection completed",
+            "inspection_pass": inspection_pass,
+            "completed_date": update_data["completed_date"].isoformat()
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error completing inspection: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/api/jobs/{job_id}/subcontractor-payment")
+async def create_subcontractor_payment(
+    job_id: str,
+    payment_data: dict,
+    current_user: dict = Depends(get_current_user)
+):
+    """Create subcontractor payment with holdback"""
+    try:
+        base_amount = payment_data.get("amount", 0.0)
+        holdback_percentage = payment_data.get("holdback_percentage", 10.0)
+        
+        payment = SubcontractorPayment(
+            job_id=job_id,
+            company_id=payment_data.get("company_id", "company-001"),
+            subcontractor_id=payment_data.get("subcontractor_id", ""),
+            base_amount=base_amount,
+            holdback_percentage=holdback_percentage,
+            inspection_required=payment_data.get("inspection_required", True)
+        )
+        
+        payment.calculate_amounts()
+        
+        await db.subcontractor_payments.insert_one(payment.dict())
+        
+        logger.info(f"Subcontractor payment created for job {job_id}: ${base_amount} (${payment.holdback_amount} holdback)")
+        
+        return {
+            "message": "Subcontractor payment created",
+            "payment_id": payment.id,
+            "base_amount": payment.base_amount,
+            "holdback_amount": payment.holdback_amount,
+            "releasable_amount": payment.releasable_amount,
+            "payment_status": payment.payment_status
+        }
+        
+    except Exception as e:
+        logger.error(f"Error creating subcontractor payment: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/api/subcontractor-payments/{payment_id}/release-holdback")
+async def release_holdback(
+    payment_id: str,
+    current_user: dict = Depends(get_current_user)
+):
+    """Attempt to release subcontractor holdback - with validation"""
+    try:
+        payment_data = await db.subcontractor_payments.find_one({"id": payment_id})
+        if not payment_data:
+            raise HTTPException(status_code=404, detail="Payment record not found")
+        
+        payment = SubcontractorPayment(**payment_data)
+        job_id = payment.job_id
+        
+        # Check QA gate status
+        qa_gate_data = await db.qa_gates.find_one({"job_id": job_id})
+        if qa_gate_data:
+            qa_gate = QAGate(**qa_gate_data)
+            qa_gate.calculate_qa_status()
+            payment.qa_gate_passed = qa_gate.overall_pass
+        
+        # Check warranty registration
+        warranty_data = await db.warranty_registrations.find_one({"job_id": job_id})
+        payment.warranty_registered = warranty_data and warranty_data.get("registered", False)
+        
+        # Check inspection if required
+        if payment.inspection_required:
+            inspection_data = await db.inspections.find_one({"job_id": job_id})
+            payment.inspection_passed = (
+                inspection_data and 
+                inspection_data.get("completed", False) and 
+                inspection_data.get("inspection_pass", False)
+            )
+        else:
+            payment.inspection_passed = True  # Not required
+        
+        # Check release conditions
+        can_release = payment.check_release_conditions()
+        
+        if not can_release:
+            # Build detailed error message
+            blocking_reasons = []
+            if not payment.qa_gate_passed:
+                blocking_reasons.append("QA Gate not passed")
+            if not payment.warranty_registered:
+                blocking_reasons.append("Warranty not registered")
+            if payment.inspection_required and not payment.inspection_passed:
+                blocking_reasons.append("Required inspection not passed")
+            
+            error_message = "Holdback release blocked - Requirements not met:"
+            for reason in blocking_reasons:
+                error_message += f"\n• {reason}"
+            
+            raise HTTPException(status_code=400, detail=error_message)
+        
+        # Release holdback
+        payment.holdback_released = True
+        payment.holdback_released_at = datetime.utcnow()
+        payment.payment_status = PaymentStatus.RELEASED
+        
+        # Add holdback release to payment history
+        release_payment = {
+            "amount": payment.holdback_amount,
+            "type": "holdback_release",
+            "date": payment.holdback_released_at.isoformat(),
+            "processed_by": current_user.get("username", "unknown")
+        }
+        payment.payments_made.append(release_payment)
+        payment.total_paid += payment.holdback_amount
+        
+        await db.subcontractor_payments.update_one(
+            {"id": payment_id},
+            {"$set": payment.dict()}
+        )
+        
+        logger.info(f"Holdback released for payment {payment_id}: ${payment.holdback_amount}")
+        
+        return {
+            "message": "Holdback released successfully",
+            "released_amount": payment.holdback_amount,
+            "total_paid": payment.total_paid,
+            "release_date": payment.holdback_released_at.isoformat()
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error releasing holdback: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/api/jobs/{job_id}/qa-status")
+async def get_qa_status(job_id: str):
+    """Get comprehensive QA status for job"""
+    try:
+        # QA Gate
+        qa_gate_data = await db.qa_gates.find_one({"job_id": job_id})
+        qa_status = None
+        if qa_gate_data:
+            qa_gate = QAGate(**qa_gate_data)
+            qa_gate.calculate_qa_status()
+            qa_status = {
+                "status": qa_gate.qa_status,
+                "overall_pass": qa_gate.overall_pass,
+                "microns_pass": qa_gate.microns_pass,
+                "photos_pass": qa_gate.photos_pass,
+                "metrics_pass": qa_gate.metrics_pass,
+                "failure_reasons": qa_gate.failure_reasons,
+                "startup_metrics": qa_gate.startup_metrics.dict() if qa_gate.startup_metrics else None,
+                "photos_count": len(qa_gate.photos)
+            }
+        
+        # Warranty
+        warranty_data = await db.warranty_registrations.find_one({"job_id": job_id})
+        warranty_status = {
+            "registered": warranty_data.get("registered", False) if warranty_data else False,
+            "registration_number": warranty_data.get("registration_number") if warranty_data else None
+        }
+        
+        # Inspection
+        inspection_data = await db.inspections.find_one({"job_id": job_id})
+        inspection_status = {
+            "required": inspection_data.get("required", True) if inspection_data else True,
+            "scheduled": inspection_data.get("scheduled_date") is not None if inspection_data else False,
+            "completed": inspection_data.get("completed", False) if inspection_data else False,
+            "passed": inspection_data.get("inspection_pass", False) if inspection_data else False
+        }
+        
+        # Overall status
+        can_close = (
+            qa_status and qa_status["overall_pass"] and
+            warranty_status["registered"] and
+            (not inspection_status["required"] or inspection_status["passed"])
+        )
+        
+        return {
+            "job_id": job_id,
+            "can_close": can_close,
+            "qa_gate": qa_status,
+            "warranty": warranty_status,
+            "inspection": inspection_status
+        }
+        
+    except Exception as e:
+        logger.error(f"Error getting QA status: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+# ==================== EXISTING SIMPLE CALLS API (PHASE 6 - MINIMAL) ====================
 
 @app.get("/api/calls")
 async def get_calls(
