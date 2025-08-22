@@ -26,6 +26,10 @@ import { Badge } from './ui/badge';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from './ui/dialog';
 import { Label } from './ui/label';
 import { cn } from '../lib/utils';
+import StatTile from './ui/StatTile';
+import SearchBar from './ui/SearchBar';
+import FilterChips from './ui/FilterChips';
+import UnifiedCard from './ui/UnifiedCard';
 import authService from '../utils/auth';
 
 const StatusBadge = ({ status }) => {
