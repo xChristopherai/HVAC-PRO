@@ -97,7 +97,7 @@ const TechnicianCard = ({ technician }) => {
           </div>
           <div className="text-center">
             <div className="flex items-center justify-center space-x-1">
-              <Star className="w-4 h-4 text-yellow-500 fill-current" />
+              <Star className="w-4 h-4 text-amber-500 fill-current" />
               <p className="text-sm font-medium">{technician.average_rating?.toFixed(1) || 'N/A'}</p>
             </div>
             <p className="text-xs text-muted-foreground">Avg Rating</p>
