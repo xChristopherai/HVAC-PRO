@@ -928,19 +928,19 @@ async def generate_weekly_summary():
             "performance_insights": ["AI performing excellently", "$850 on hold"]
         }
 
-def compose_weekly_sms(summary_data):
+def compose_weekly_sms(sms_data):
     """Compose plain English weekly summary SMS (no emojis/judgement)"""
     try:
-        brand = "HVAC Pro"
-        start = summary_data["start_date"]
-        end = summary_data["end_date"]
-        calls = summary_data["total_calls"]
-        ai_pct = (summary_data["ai_answered"] / calls * 100) if calls > 0 else 0
-        qa_passed = summary_data["qa_passed"]
+        brand = sms_data["brand"]
+        start = sms_data["start"]
+        end = sms_data["end"]
+        calls = sms_data["calls"]
+        ai_pct = sms_data["ai_pct"]
+        qa_passed = sms_data["qa_passed"]
         
-        # Convert cents to dollars for display
-        jobs_billed = summary_data.get("jobs_billed_cents", 0) / 100
-        money_on_hold = summary_data.get("money_on_hold_cents", 0) / 100
+        # Convert cents to dollars for display (guaranteed to be numbers)
+        jobs_billed = sms_data["jobs_billed_cents"] / 100
+        money_on_hold = sms_data["money_on_hold_cents"] / 100
         
         # Format currency without cents for SMS brevity
         jobs_billed_str = f"${jobs_billed:,.0f}" if jobs_billed >= 1000 else f"${jobs_billed:.0f}"
@@ -964,7 +964,7 @@ def compose_weekly_sms(summary_data):
     except Exception as e:
         logger.error(f"Error composing SMS: {str(e)}")
         # Fallback message
-        return f"HVAC Pro Weekly: {summary_data.get('total_calls', 0)} calls, {summary_data.get('qa_passed', 0)} jobs QA passed. Check dashboard for details."
+        return f"{sms_data.get('brand', 'HVAC Pro')} Weekly: {sms_data.get('calls', 0)} calls, {sms_data.get('qa_passed', 0)} jobs QA passed. Check dashboard for details."
 
 @app.get("/api/reports/weekly-summary/preview")
 async def preview_weekly_summary():
