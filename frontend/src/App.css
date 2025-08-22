@@ -368,41 +368,49 @@ header.top-nav .top-nav-container {
    RESPONSIVE BREAKPOINTS
    =============================== */
 
-/* Desktop and large tablets */
-@media (min-width: 1024px) {
-  .top-nav-items {
+/* Desktop and large tablets - FORCED */
+@media screen and (min-width: 1024px) {
+  header.top-nav .top-nav-items {
     display: flex !important;
+    visibility: visible !important;
   }
   
-  .mobile-menu-btn {
+  header.top-nav .mobile-menu-btn {
     display: none !important;
+    visibility: hidden !important;
   }
   
-  .search-container {
+  header.top-nav .search-container {
     display: flex !important;
+    visibility: visible !important;
   }
   
-  .user-menu {
+  header.top-nav .user-menu {
     display: flex !important;
+    visibility: visible !important;
   }
 }
 
-/* Tablet and below */
-@media (max-width: 1023px) {
-  .top-nav-items {
+/* Tablet and below - FORCED */
+@media screen and (max-width: 1023px) {
+  header.top-nav .top-nav-items {
     display: none !important;
+    visibility: hidden !important;
   }
   
-  .mobile-menu-btn {
+  header.top-nav .mobile-menu-btn {
     display: flex !important;
+    visibility: visible !important;
   }
   
-  .search-container {
+  header.top-nav .search-container {
     display: none !important;
+    visibility: hidden !important;
   }
   
-  .user-menu {
+  header.top-nav .user-menu {
     display: none !important;
+    visibility: hidden !important;
   }
 }
 
