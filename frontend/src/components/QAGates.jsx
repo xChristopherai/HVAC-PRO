@@ -640,7 +640,7 @@ const QAGates = () => {
                       setOverrideType('qa');
                       setShowOverrideModal(true);
                     }}
-                    className="w-full bg-yellow-600 text-white py-2 px-4 rounded-lg font-medium hover:bg-yellow-700"
+                    className="w-full bg-amber-600 text-white py-2 px-4 rounded-lg font-medium hover:bg-amber-700"
                   >
                     Override → Mark QA Passed
                   </button>
