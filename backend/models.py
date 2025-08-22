@@ -526,6 +526,9 @@ class SubcontractorPayment(BaseDocument):
         """Calculate holdback and releasable amounts"""
         self.holdback_amount = self.base_amount * (self.holdback_percentage / 100)
         self.releasable_amount = self.base_amount - self.holdback_amount
+        # Initialize total_paid to releasable_amount (initial payment)
+        if self.total_paid == 0.0:
+            self.total_paid = self.releasable_amount
     
     def check_release_conditions(self):
         """Check if holdback can be released"""
