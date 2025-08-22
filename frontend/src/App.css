@@ -150,20 +150,20 @@ body {
 }
 
 .nav-item-active {
-  color: var(--primary);
-  font-weight: 600;
+  color: var(--primary) !important;
+  font-weight: 600 !important;
 }
 
 .nav-item-active::after {
-  content: '';
-  position: absolute;
-  bottom: -1px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 24px;
-  height: 2px;
-  background: var(--primary);
-  border-radius: 2px;
+  content: '' !important;
+  position: absolute !important;
+  bottom: -1px !important;
+  left: 50% !important;
+  transform: translateX(-50%) !important;
+  width: 24px !important;
+  height: 3px !important;
+  background: var(--primary) !important;
+  border-radius: 2px !important;
 }
 
 .nav-item-icon {
