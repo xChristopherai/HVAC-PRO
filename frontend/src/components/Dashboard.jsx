@@ -358,13 +358,13 @@ const Dashboard = ({ currentUser }) => {
 
   return (
     <div className="space-y-8">
-      {/* Header - PayPal style */}
+      {/* Header - Clean Professional Style */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="section-header">Dashboard</h1>
-          <p className="text-[#475569]">Welcome back, {currentUser?.name || 'John Smith'}!</p>
+          <h1 className="text-2xl font-semibold text-gray-900">Dashboard</h1>
+          <p className="text-gray-600">Welcome back, {currentUser?.name || 'John Smith'}!</p>
         </div>
-        <Button className="bg-[#0070E0] hover:bg-[#065FC6] text-white">
+        <Button className="bg-blue-600 hover:bg-blue-700 text-white rounded-lg px-4 py-2">
           <ArrowUpRight className="w-4 h-4 mr-2" />
           View Reports
         </Button>
