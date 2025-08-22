@@ -3710,8 +3710,13 @@ def main():
     """Main test execution"""
     tester = HVACAPITester()
     
-    # Run PHASE 7 QA Gates & Subcontractor Holdback tests as requested
-    success = tester.run_phase7_qa_gates_subcontractor_tests()
+    # Authenticate first
+    if not tester.test_mock_user_login():
+        print("❌ Failed to authenticate - cannot run tests")
+        return 1
+    
+    # Run Call Transcript System tests as requested
+    success = tester.run_call_transcript_tests()
     return 0 if success else 1
 
 if __name__ == "__main__":
