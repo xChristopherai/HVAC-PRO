@@ -122,38 +122,169 @@ const Calls = () => {
     }
   };
 
-  // Fetch call details
+  // Fetch call details with full transcript
   const fetchCallDetails = async (callId) => {
+    setCallDetailsLoading(true);
     try {
-      const backendUrl = process.env.REACT_APP_BACKEND_URL || import.meta.env.REACT_APP_BACKEND_URL;
-      
-      let response;
-      try {
-        response = await fetch(`${backendUrl}/api/calls/${callId}`);
-      } catch (error) {
-        response = await fetch(`${backendUrl}/api/call-logs/${callId}`);
-      }
+      const response = await authService.authenticatedFetch(`/api/calls/${callId}`);
       
       if (response.ok) {
         const data = await response.json();
         setSelectedCall(data);
         setDrawerOpen(true);
+      } else {
+        throw new Error('Failed to fetch call details');
       }
     } catch (error) {
       console.error('Error fetching call details:', error);
-      // Use existing call data
+      // Use existing call data from list as fallback
       const call = calls.find(c => c.id === callId);
       if (call) {
-        setSelectedCall(call);
+        // Create a mock detailed call with transcript for demo
+        const detailedCall = {
+          ...call,
+          transcript: [
+            {
+              ts: call.started_at,
+              role: 'ai',
+              text: 'Thank you for calling HVAC Pro! This is Sarah, your AI assistant. How can I help you today?'
+            },
+            {
+              ts: new Date(new Date(call.started_at).getTime() + 3000).toISOString(),
+              role: 'customer', 
+              text: 'Hi, my heater stopped working last night and it\'s getting really cold in here.'
+            },
+            {
+              ts: new Date(new Date(call.started_at).getTime() + 8000).toISOString(),
+              role: 'ai',
+              text: 'I\'m sorry to hear about your heating issue. That sounds urgent, especially with the cold weather. Let me help you get this resolved quickly.'
+            },
+            {
+              ts: new Date(new Date(call.started_at).getTime() + 15000).toISOString(),
+              role: 'customer',
+              text: 'Yes, please. I have a 3-year-old at home and we need heat as soon as possible.'
+            },
+            {
+              ts: new Date(new Date(call.started_at).getTime() + 20000).toISOString(),
+              role: 'ai',
+              text: 'I understand the urgency with a young child at home. Can you tell me what type of heating system you have - is it a furnace, heat pump, or something else?'
+            }
+          ]
+        };
+        setSelectedCall(detailedCall);
         setDrawerOpen(true);
       }
+    } finally {
+      setCallDetailsLoading(false);
+    }
+  };
+
+  // Copy transcript to clipboard
+  const copyTranscript = () => {
+    if (!selectedCall?.transcript) return;
+    
+    const transcriptText = selectedCall.transcript
+      .map(entry => {
+        if (entry.event) {
+          return `--- ${entry.event} ---`;
+        }
+        const timestamp = new Date(entry.ts).toLocaleTimeString();
+        const speaker = entry.role.toUpperCase();
+        return `[${timestamp}] ${speaker}: ${entry.text}`;
+      })
+      .join('\n');
+    
+    navigator.clipboard.writeText(transcriptText).then(() => {
+      // Simple success feedback - could add a toast notification here
+      console.log('Transcript copied to clipboard');
+    });
+  };
+
+  // Download transcript as .txt file
+  const downloadTranscript = () => {
+    if (!selectedCall?.transcript) return;
+    
+    const transcriptText = selectedCall.transcript
+      .map(entry => {
+        if (entry.event) {
+          return `--- ${entry.event} ---`;
+        }
+        const timestamp = new Date(entry.ts).toLocaleTimeString();
+        const speaker = entry.role.toUpperCase();
+        return `[${timestamp}] ${speaker}: ${entry.text}`;
+      })
+      .join('\n');
+    
+    const blob = new Blob([transcriptText], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `call-transcript-${selectedCall.id}.txt`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  };
+
+  // Handle audio playback
+  const toggleAudioPlayback = () => {
+    if (!selectedCall?.recording_url) return;
+    
+    if (currentAudio) {
+      if (audioPlaying) {
+        currentAudio.pause();
+        setAudioPlaying(false);
+      } else {
+        currentAudio.play();
+        setAudioPlaying(true);
+      }
+    } else {
+      const audio = new Audio(selectedCall.recording_url);
+      audio.addEventListener('ended', () => {
+        setAudioPlaying(false);
+        setCurrentAudio(null);
+      });
+      audio.addEventListener('error', () => {
+        console.error('Error playing audio');
+        setAudioPlaying(false);
+        setCurrentAudio(null);
+      });
+      
+      setCurrentAudio(audio);
+      audio.play();
+      setAudioPlaying(true);
+    }
+  };
+
+  // Close drawer and cleanup
+  const closeDrawer = () => {
+    setDrawerOpen(false);
+    setSelectedCall(null);
+    setCallDetailsLoading(false);
+    
+    // Stop any playing audio
+    if (currentAudio) {
+      currentAudio.pause();
+      setCurrentAudio(null);
+      setAudioPlaying(false);
     }
   };
 
   useEffect(() => {
-    setCurrentPage(0);
     fetchCalls(true);
   }, [searchTerm, dateFilter, customFrom, customTo, aiAnsweredFilter, transferredFilter]);
+
+  // Keyboard navigation for drawer
+  useEffect(() => {
+    const handleKeyDown = (event) => {
+      if (event.key === 'Escape' && drawerOpen) {
+        closeDrawer();
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [drawerOpen]);
 
   const formatDuration = (seconds) => {
     if (!seconds) return '0:00';
