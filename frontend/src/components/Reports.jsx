@@ -1,6 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { Copy, Send, RefreshCw, Calendar, X } from 'lucide-react';
 
+// Utility function for safe currency formatting
+function formatDollars(cents) {
+  if (typeof cents !== 'number' || isNaN(cents)) return '$0';
+  return `$${(cents / 100).toLocaleString()}`;
+}
+
 const Reports = () => {
   const [datePreset, setDatePreset] = useState('last7');
   const [customStart, setCustomStart] = useState('');
