@@ -466,11 +466,14 @@ const Appointments = ({ currentUser, aiVoiceEnabled }) => {
               ))
             ) : (
               <div className="col-span-full">
-                <Card>
+                <Card 
+                  className="bg-white shadow-sm rounded-xl border border-gray-200"
+                  style={{ backgroundColor: '#FFFFFF', borderColor: '#E5E7EB' }}
+                >
                   <CardContent className="p-12 text-center">
-                    <CalendarIcon className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
-                    <h3 className="text-lg font-medium mb-2">No appointments found</h3>
-                    <p className="text-muted-foreground mb-4">
+                    <CalendarIcon className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+                    <h3 className="text-lg font-medium mb-2 text-gray-900">No appointments found</h3>
+                    <p className="text-gray-500 mb-4">
                       {filter !== 'all' 
                         ? `No appointments with status "${filter}".` 
                         : "You haven't scheduled any appointments yet."
