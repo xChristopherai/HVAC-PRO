@@ -94,7 +94,10 @@ const Reports = () => {
 
   // Compose plain English SMS
   const composePlainSMS = (data) => {
-    return `${data.brand} (${data.start}–${data.end}): ${data.calls} calls | AI handled ${data.ai_pct}% | ${data.qa_passed} jobs QA passed | ${data.jobs_billed} billed | ${data.on_hold} on hold`;
+    const billed = formatDollars(data.jobs_billed_cents);
+    const onHold = formatDollars(data.money_on_hold_cents);
+    
+    return `${data.brand} (${data.start}–${data.end}): ${data.calls} calls | AI handled ${data.ai_pct}% | ${data.qa_passed} jobs QA passed | ${billed} billed | ${onHold} on hold`;
   };
 
   // Trigger SMS
