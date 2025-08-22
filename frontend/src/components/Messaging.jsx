@@ -819,6 +819,11 @@ const Messaging = ({ currentUser }) => {
               key={conversation.id} 
               className="hover:shadow-md transition-shadow cursor-pointer"
               onClick={() => setSelectedConversation(conversation)}
+              style={{
+                backgroundColor: '#FFFFFF',
+                borderColor: '#E5E7EB',
+                color: '#111827'
+              }}
             >
               <CardHeader className="pb-3">
                 <div className="flex items-start justify-between">
