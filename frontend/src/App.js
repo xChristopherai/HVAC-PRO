@@ -260,6 +260,7 @@ const App = () => {
           <Route path="/appointments" element={<Appointments currentUser={currentUser} aiVoiceEnabled={AI_VOICE_SCHEDULING_ENABLED} />} />
           <Route path="/technicians" element={<Technicians currentUser={currentUser} />} />
           <Route path="/messaging" element={<Messaging currentUser={currentUser} />} />
+          <Route path="/call-log" element={<CallLog currentUser={currentUser} />} />
           <Route path="/settings" element={<Settings currentUser={currentUser} />} />
           <Route path="*" element={<Navigate to="/dashboard" replace />} />
         </Routes>
