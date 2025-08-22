@@ -57,9 +57,27 @@ const navigation = [
   { name: 'Settings', href: '/settings', icon: SettingsIcon },
 ];
 
+// Hook for responsive behavior
+const useResponsive = () => {
+  const [isMobile, setIsMobile] = useState(false);
+  
+  useEffect(() => {
+    const checkSize = () => {
+      setIsMobile(window.innerWidth < 1024);
+    };
+    
+    checkSize();
+    window.addEventListener('resize', checkSize);
+    return () => window.removeEventListener('resize', checkSize);
+  }, []);
+  
+  return { isMobile };
+};
+
 // Top Navigation Component - Stripe Style
 const TopNavigation = ({ sidebarOpen, setSidebarOpen }) => {
   const location = useLocation();
+  const { isMobile } = useResponsive();
   
   const headerStyle = {
     position: 'sticky',
@@ -82,6 +100,15 @@ const TopNavigation = ({ sidebarOpen, setSidebarOpen }) => {
     padding: '0 1.5rem'
   };
   
+  const navItemsStyle = {
+    display: isMobile ? 'none' : 'flex',
+    alignItems: 'center',
+    gap: '0.25rem',
+    flex: 1,
+    justifyContent: 'center',
+    maxWidth: '800px'
+  };
+  
   return (
     <header className="top-nav" style={headerStyle}>
       <div className="top-nav-container" style={containerStyle}>
@@ -94,7 +121,7 @@ const TopNavigation = ({ sidebarOpen, setSidebarOpen }) => {
         </div>
 
         {/* Center - Navigation items (desktop) */}
-        <nav className="top-nav-items" style={{ display: window.innerWidth >= 1024 ? 'flex' : 'none' }}>
+        <nav className="top-nav-items" style={navItemsStyle}>
           {navigation.map((item) => {
             const Icon = item.icon;
             const isActive = location.pathname === item.href || 
@@ -119,49 +146,53 @@ const TopNavigation = ({ sidebarOpen, setSidebarOpen }) => {
 
         {/* Right side - Search, notifications, user menu */}
         <div className="top-nav-actions">
-          <div className="search-container" style={{ display: window.innerWidth >= 1024 ? 'flex' : 'none' }}>
-            <Search className="search-icon" />
-            <Input 
-              placeholder="Search..." 
-              className="search-input"
-            />
-          </div>
-          
-          <Button 
-            variant="ghost" 
-            size="icon"
-            className="notification-btn"
-            aria-label="Notifications"
-            style={{ display: window.innerWidth >= 1024 ? 'flex' : 'none' }}
-          >
-            <Bell className="w-5 h-5" />
-          </Button>
-          
-          <div className="user-menu" style={{ display: window.innerWidth >= 1024 ? 'flex' : 'none' }}>
-            <Button 
-              variant="ghost" 
-              className="user-menu-btn"
-              aria-label="User menu"
-            >
-              <div className="user-avatar">
-                <User className="w-4 h-4" />
+          {!isMobile && (
+            <>
+              <div className="search-container">
+                <Search className="search-icon" />
+                <Input 
+                  placeholder="Search..." 
+                  className="search-input"
+                />
               </div>
-              <span className="user-name">John Smith</span>
-              <ChevronDown className="w-4 h-4" />
-            </Button>
-          </div>
+              
+              <Button 
+                variant="ghost" 
+                size="icon"
+                className="notification-btn"
+                aria-label="Notifications"
+              >
+                <Bell className="w-5 h-5" />
+              </Button>
+              
+              <div className="user-menu">
+                <Button 
+                  variant="ghost" 
+                  className="user-menu-btn"
+                  aria-label="User menu"
+                >
+                  <div className="user-avatar">
+                    <User className="w-4 h-4" />
+                  </div>
+                  <span className="user-name">John Smith</span>
+                  <ChevronDown className="w-4 h-4" />
+                </Button>
+              </div>
+            </>
+          )}
 
           {/* Mobile hamburger button */}
-          <Button
-            variant="ghost"
-            size="icon"
-            className="mobile-menu-btn"
-            onClick={() => setSidebarOpen(!sidebarOpen)}
-            aria-label="Toggle menu"
-            style={{ display: window.innerWidth < 1024 ? 'flex' : 'none' }}
-          >
-            <Menu className="w-5 h-5" />
-          </Button>
+          {isMobile && (
+            <Button
+              variant="ghost"
+              size="icon"
+              className="mobile-menu-btn"
+              onClick={() => setSidebarOpen(!sidebarOpen)}
+              aria-label="Toggle menu"
+            >
+              <Menu className="w-5 h-5" />
+            </Button>
+          )}
         </div>
       </div>
     </header>
