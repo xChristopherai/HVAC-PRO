@@ -134,19 +134,149 @@ const Customers = ({ currentUser, aiVoiceEnabled }) => {
   const fetchCustomers = async () => {
     try {
       setLoading(true);
-      const response = await authService.authenticatedFetch(`customers?company_id=${currentUser?.company_id || 'company-001'}`);
       
-      if (response.ok) {
-        const data = await response.json();
-        // Ensure data is always an array
-        setCustomers(Array.isArray(data) ? data : []);
-      } else {
-        // Set empty array on error
-        setCustomers([]);
-      }
+      // Mock demo data for realistic dashboard preview
+      const mockCustomers = [
+        {
+          id: 'cust-001',
+          name: 'Sarah Johnson',
+          phone: '(205) 555-1432',
+          email: 'sarah.j@email.com',
+          address: '1234 Elm Street, Birmingham, AL',
+          status: 'Active',
+          total_jobs: 3,
+          created_at: '2025-08-19T10:00:00Z',
+          date_added: '2025-08-19T10:00:00Z'
+        },
+        {
+          id: 'cust-002',
+          name: 'Mike Peterson',
+          phone: '(205) 555-2211',
+          email: 'mikep@email.com',
+          address: '567 Oak Avenue, Birmingham, AL',
+          status: 'Active',
+          total_jobs: 1,
+          created_at: '2025-08-21T14:30:00Z',
+          date_added: '2025-08-21T14:30:00Z'
+        },
+        {
+          id: 'cust-003',
+          name: 'Robert Miller',
+          phone: '(205) 555-8321',
+          email: 'robertm@email.com',
+          address: '890 Pine Road, Birmingham, AL',
+          status: 'Repeat',
+          total_jobs: 5,
+          created_at: '2025-08-10T09:15:00Z',
+          date_added: '2025-08-10T09:15:00Z'
+        },
+        {
+          id: 'cust-004',
+          name: 'Jennifer Davis',
+          phone: '(205) 555-9876',
+          email: 'jennifer.davis@email.com',
+          address: '321 Maple Drive, Hoover, AL',
+          status: 'Active',
+          total_jobs: 2,
+          created_at: '2025-08-15T16:20:00Z',
+          date_added: '2025-08-15T16:20:00Z'
+        },
+        {
+          id: 'cust-005',
+          name: 'David Wilson',
+          phone: '(205) 555-4567',
+          email: 'davidw@email.com',
+          address: '654 Cedar Lane, Vestavia Hills, AL',
+          status: 'Repeat',
+          total_jobs: 4,
+          created_at: '2025-07-28T11:45:00Z',
+          date_added: '2025-07-28T11:45:00Z'
+        },
+        {
+          id: 'cust-006',
+          name: 'Lisa Thompson',
+          phone: '(205) 555-7890',
+          email: 'lisa.thompson@email.com',
+          address: '987 Birch Street, Mountain Brook, AL',
+          status: 'Active',
+          total_jobs: 1,
+          created_at: '2025-08-22T08:30:00Z',
+          date_added: '2025-08-22T08:30:00Z'
+        },
+        {
+          id: 'cust-007',
+          name: 'Michael Brown',
+          phone: '(205) 555-3456',
+          email: 'mbrown@email.com',
+          address: '147 Walnut Avenue, Homewood, AL',
+          status: 'Repeat',
+          total_jobs: 3,
+          created_at: '2025-07-15T13:10:00Z',
+          date_added: '2025-07-15T13:10:00Z'
+        },
+        {
+          id: 'cust-008',
+          name: 'Amanda Garcia',
+          phone: '(205) 555-6543',
+          email: 'amanda.g@email.com',
+          address: '258 Hickory Place, Pelham, AL',
+          status: 'Active',
+          total_jobs: 2,
+          created_at: '2025-08-12T15:25:00Z',
+          date_added: '2025-08-12T15:25:00Z'
+        },
+        {
+          id: 'cust-009',
+          name: 'Christopher Lee',
+          phone: '(205) 555-2468',
+          email: 'chris.lee@email.com',
+          address: '369 Poplar Road, Chelsea, AL',
+          status: 'Active',
+          total_jobs: 1,
+          created_at: '2025-08-18T12:00:00Z',
+          date_added: '2025-08-18T12:00:00Z'
+        },
+        {
+          id: 'cust-010',
+          name: 'Michelle Martinez',
+          phone: '(205) 555-1357',
+          email: 'michelle.m@email.com',
+          address: '741 Dogwood Drive, Alabaster, AL',
+          status: 'Repeat',
+          total_jobs: 6,
+          created_at: '2025-06-20T10:45:00Z',
+          date_added: '2025-06-20T10:45:00Z'
+        },
+        {
+          id: 'cust-011',
+          name: 'Kevin Rodriguez',
+          phone: '(205) 555-9753',
+          email: 'kevin.r@email.com',
+          address: '852 Willow Lane, Trussville, AL',
+          status: 'Active',
+          total_jobs: 1,
+          created_at: '2025-08-20T17:15:00Z',
+          date_added: '2025-08-20T17:15:00Z'
+        },
+        {
+          id: 'cust-012',
+          name: 'Rachel White',
+          phone: '(205) 555-8642',
+          email: 'rachel.white@email.com',
+          address: '963 Ash Street, Gardendale, AL',
+          status: 'Repeat',
+          total_jobs: 3,
+          created_at: '2025-07-08T14:20:00Z',
+          date_added: '2025-07-08T14:20:00Z'
+        }
+      ];
+
+      // Simulate API delay
+      await new Promise(resolve => setTimeout(resolve, 800));
+      
+      setCustomers(mockCustomers);
     } catch (err) {
       console.error('Failed to fetch customers:', err);
-      // Set empty array on exception
       setCustomers([]);
     } finally {
       setLoading(false);
