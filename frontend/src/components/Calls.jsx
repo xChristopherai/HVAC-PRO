@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Search, Phone, Clock, User, X, Play, Pause } from 'lucide-react';
+import { Search, Phone, Clock, User, X, Play, Pause, Download, Copy, ExternalLink, Calendar } from 'lucide-react';
+import authService from '../utils/auth';
 
 const Calls = () => {
   const [calls, setCalls] = useState([]);
@@ -13,9 +14,12 @@ const Calls = () => {
   const [stats, setStats] = useState({ total: 0, aiAnswered: 0, transferred: 0, avgDuration: 0 });
   const [selectedCall, setSelectedCall] = useState(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
-  const [currentPage, setCurrentPage] = useState(0);
+  const [nextCursor, setNextCursor] = useState(null);
   const [hasMore, setHasMore] = useState(false);
   const [twilioEnabled, setTwilioEnabled] = useState(true);
+  const [callDetailsLoading, setCallDetailsLoading] = useState(false);
+  const [audioPlaying, setAudioPlaying] = useState(false);
+  const [currentAudio, setCurrentAudio] = useState(null);
 
   const limit = 20;
 
