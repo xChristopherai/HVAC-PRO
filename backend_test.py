@@ -3040,7 +3040,12 @@ class HVACAPITester:
     
     def test_phase7_qa_status_comprehensive(self):
         """Test GET /api/jobs/{job_id}/qa-status - Comprehensive QA status"""
-        job_id = "test-job-003"  # Use the happy path job
+        # Store the job_id from happy path test
+        if hasattr(self, '_happy_path_job_id'):
+            job_id = self._happy_path_job_id
+        else:
+            import time
+            job_id = f"test-job-003-{int(time.time())}"  # Fallback unique job ID
         
         success, data = self.make_request('GET', f'/jobs/{job_id}/qa-status')
         
