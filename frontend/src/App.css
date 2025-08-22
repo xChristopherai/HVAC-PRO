@@ -249,7 +249,7 @@ body {
 
 /* Mobile Menu Button - Hidden on desktop */
 .mobile-menu-btn {
-  display: none;
+  display: none !important;
   color: var(--text-secondary) !important;
 }
 
