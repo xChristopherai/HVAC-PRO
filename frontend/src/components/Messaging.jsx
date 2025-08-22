@@ -349,33 +349,233 @@ const Messaging = ({ currentUser }) => {
     try {
       setLoading(true);
       
-      let endpoint = `conversations?company_id=${currentUser?.company_id || 'company-001'}`;
-      
-      // If filtering by specific status, use search endpoint  
-      if (filter !== 'all') {
-        endpoint = `/api/messages/search?status=${filter}`;
-      }
-      
-      const response = await authService.authenticatedFetch(endpoint);
-      
-      if (response.ok) {
-        const data = await response.json();
-        // Handle both direct array and wrapped response
-        const messageList = data.messages || data;
-        
-        // Ensure conversations have message history
-        const conversationsWithMessages = (messageList || []).map(conv => ({
-          ...conv,
-          messages: conv.conversation_history || [
+      // Mock demo data for realistic dashboard preview
+      const mockConversations = [
+        {
+          id: 'conv-001',
+          customer_name: 'Sarah Johnson',
+          customer_phone: '(205) 555-1432',
+          customer_email: 'sarah.j@email.com',
+          status: 'active',
+          last_message: 'Can we reschedule for Thursday?',
+          last_message_time: '2025-08-20T14:30:00Z',
+          created_at: '2025-08-20T09:15:00Z',
+          conversation_history: [
             {
               sender: 'customer',
-              message: conv.last_message || conv.initial_message,
-              timestamp: conv.last_message_time || conv.created_at
+              message: 'Hi, I need to schedule an HVAC repair',
+              timestamp: '2025-08-20T09:15:00Z'
+            },
+            {
+              sender: 'business',
+              message: 'Hi Sarah! We can schedule you for Wednesday morning. Would 10am work?',
+              timestamp: '2025-08-20T09:45:00Z'
+            },
+            {
+              sender: 'customer', 
+              message: 'Can we reschedule for Thursday?',
+              timestamp: '2025-08-20T14:30:00Z'
             }
           ]
-        }));
-        setConversations(conversationsWithMessages);
+        },
+        {
+          id: 'conv-002',
+          customer_name: 'Mike Peterson',
+          customer_phone: '(205) 555-2211',
+          customer_email: 'mikep@email.com',
+          status: 'converted',
+          last_message: 'Thanks, see you tomorrow!',
+          last_message_time: '2025-08-19T16:45:00Z',
+          created_at: '2025-08-19T10:20:00Z',
+          conversation_history: [
+            {
+              sender: 'customer',
+              message: 'My AC stopped working, can you help?',
+              timestamp: '2025-08-19T10:20:00Z'
+            },
+            {
+              sender: 'business',
+              message: 'Absolutely! We can have a technician there tomorrow at 2pm.',
+              timestamp: '2025-08-19T10:25:00Z'
+            },
+            {
+              sender: 'customer',
+              message: 'Thanks, see you tomorrow!',
+              timestamp: '2025-08-19T16:45:00Z'
+            }
+          ]
+        },
+        {
+          id: 'conv-003',
+          customer_name: 'Robert Miller',
+          customer_phone: '(205) 555-8321',
+          customer_email: 'robertm@email.com',
+          status: 'pending',
+          last_message: 'Still waiting on a technician...',
+          last_message_time: '2025-08-18T11:20:00Z',
+          created_at: '2025-08-18T08:30:00Z',
+          conversation_history: [
+            {
+              sender: 'customer',
+              message: 'I scheduled a repair for today but no one showed up',
+              timestamp: '2025-08-18T08:30:00Z'
+            },
+            {
+              sender: 'business',
+              message: 'Sorry about that! Let me check on your appointment.',
+              timestamp: '2025-08-18T08:45:00Z'
+            },
+            {
+              sender: 'customer',
+              message: 'Still waiting on a technician...',
+              timestamp: '2025-08-18T11:20:00Z'
+            }
+          ]
+        },
+        {
+          id: 'conv-004',
+          customer_name: 'Jennifer Davis',
+          customer_phone: '(205) 555-9876',
+          customer_email: 'jennifer.davis@email.com',
+          status: 'converted',
+          last_message: 'Perfect, thank you!',
+          last_message_time: '2025-08-17T15:10:00Z',
+          created_at: '2025-08-17T13:00:00Z'
+        },
+        {
+          id: 'conv-005',
+          customer_name: 'David Wilson',
+          customer_phone: '(205) 555-4567',
+          customer_email: 'davidw@email.com',
+          status: 'converted',
+          last_message: 'Great service, will recommend!',
+          last_message_time: '2025-08-16T17:30:00Z',
+          created_at: '2025-08-16T09:45:00Z'
+        },
+        {
+          id: 'conv-006',
+          customer_name: 'Lisa Thompson',
+          customer_phone: '(205) 555-7890',
+          customer_email: 'lisa.thompson@email.com',  
+          status: 'active',
+          last_message: 'What time can you come by?',
+          last_message_time: '2025-08-21T10:15:00Z',
+          created_at: '2025-08-21T09:00:00Z'
+        },
+        {
+          id: 'conv-007',
+          customer_name: 'Michael Brown',
+          customer_phone: '(205) 555-3456',
+          customer_email: 'mbrown@email.com',
+          status: 'converted',
+          last_message: 'Appointment confirmed for Friday',
+          last_message_time: '2025-08-15T14:20:00Z',
+          created_at: '2025-08-15T12:30:00Z'
+        },
+        {
+          id: 'conv-008',
+          customer_name: 'Amanda Garcia',
+          customer_phone: '(205) 555-6543',
+          customer_email: 'amanda.g@email.com',
+          status: 'pending',
+          last_message: 'Need estimate for new unit',
+          last_message_time: '2025-08-14T16:45:00Z',
+          created_at: '2025-08-14T16:45:00Z'
+        },
+        {
+          id: 'conv-009',
+          customer_name: 'Christopher Lee',
+          customer_phone: '(205) 555-2468',
+          customer_email: 'chris.lee@email.com',
+          status: 'converted',
+          last_message: 'Fixed! Invoice paid.',
+          last_message_time: '2025-08-13T18:00:00Z',
+          created_at: '2025-08-13T08:15:00Z'
+        },
+        {
+          id: 'conv-010',
+          customer_name: 'Michelle Martinez',
+          customer_phone: '(205) 555-1357',
+          customer_email: 'michelle.m@email.com',
+          status: 'active',
+          last_message: 'Can you check the warranty?',
+          last_message_time: '2025-08-21T13:25:00Z',
+          created_at: '2025-08-21T11:00:00Z'
+        },
+        {
+          id: 'conv-011',
+          customer_name: 'Kevin Rodriguez',
+          customer_phone: '(205) 555-9753',
+          customer_email: 'kevin.r@email.com',
+          status: 'converted',
+          last_message: 'All good, thanks!',
+          last_message_time: '2025-08-12T16:30:00Z',
+          created_at: '2025-08-12T14:00:00Z'
+        },
+        {
+          id: 'conv-012',
+          customer_name: 'Rachel White',
+          customer_phone: '(205) 555-8642',
+          customer_email: 'rachel.white@email.com',
+          status: 'converted',
+          last_message: 'Maintenance scheduled',
+          last_message_time: '2025-08-11T12:15:00Z',
+          created_at: '2025-08-11T10:45:00Z'
+        },
+        {
+          id: 'conv-013',
+          customer_name: 'Steven Taylor',
+          customer_phone: '(205) 555-5678',
+          customer_email: 'steven.t@email.com',
+          status: 'pending',
+          last_message: 'When can you come out?',
+          last_message_time: '2025-08-10T15:40:00Z',
+          created_at: '2025-08-10T15:40:00Z'
+        },
+        {
+          id: 'conv-014',
+          customer_name: 'Nicole Johnson',
+          customer_phone: '(205) 555-7412',
+          customer_email: 'nicole.j@email.com',
+          status: 'converted',
+          last_message: 'Problem solved!',
+          last_message_time: '2025-08-09T19:20:00Z',
+          created_at: '2025-08-09T08:30:00Z'
+        },
+        {
+          id: 'conv-015',
+          customer_name: 'Ryan Mitchell',
+          customer_phone: '(205) 555-9630',
+          customer_email: 'ryan.m@email.com',
+          status: 'pending',
+          last_message: 'Need urgent repair',
+          last_message_time: '2025-08-08T07:45:00Z',
+          created_at: '2025-08-08T07:45:00Z'
+        }
+      ];
+
+      // Simulate API delay
+      await new Promise(resolve => setTimeout(resolve, 500));
+      
+      // Filter by status if needed
+      let filteredConversations = mockConversations;
+      if (filter !== 'all') {
+        filteredConversations = mockConversations.filter(conv => conv.status === filter);
       }
+      
+      // Ensure conversations have message history
+      const conversationsWithMessages = filteredConversations.map(conv => ({
+        ...conv,
+        messages: conv.conversation_history || [
+          {
+            sender: 'customer',
+            message: conv.last_message || 'Initial message',
+            timestamp: conv.last_message_time || conv.created_at
+          }
+        ]
+      }));
+      
+      setConversations(conversationsWithMessages);
     } catch (err) {
       console.error('Failed to fetch conversations:', err);
       setConversations([]);
