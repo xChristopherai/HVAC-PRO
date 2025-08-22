@@ -422,7 +422,7 @@ const QAGates = () => {
                             {job.inspection_pass ? (
                               <span className="text-green-500" title="Inspection passed ✓">🟢</span>
                             ) : job.inspection_status === 'scheduled' ? (
-                              <span className="text-yellow-500" title="Inspection scheduled ⏳">🟡</span>
+                              <span className="text-amber-600" title="Inspection scheduled ⏳">🟡</span>
                             ) : (
                               <span className="text-red-500" title="Inspection pending/failed ❌">🔴</span>
                             )}
