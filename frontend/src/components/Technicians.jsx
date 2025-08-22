@@ -69,7 +69,14 @@ const StatusBadge = ({ status }) => {
 
 const TechnicianCard = ({ technician }) => {
   return (
-    <Card className="hover:shadow-md transition-shadow">
+    <Card 
+      className="hover:shadow-md transition-shadow"
+      style={{
+        backgroundColor: '#FFFFFF',
+        borderColor: '#E5E7EB',
+        color: '#111827'
+      }}
+    >
       <CardHeader className="pb-3">
         <div className="flex items-start justify-between">
           <div className="flex items-start space-x-3">
