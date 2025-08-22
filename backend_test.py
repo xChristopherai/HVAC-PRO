@@ -2885,7 +2885,8 @@ class HVACAPITester:
     
     def test_phase7_happy_path_successful_payout_release(self):
         """Test Happy Path - Successful Payout Release (MUST SUCCEED)"""
-        job_id = "test-job-003"
+        import time
+        job_id = f"test-job-003-{int(time.time())}"  # Unique job ID
         technician_id = "tech-003"
         
         # Step 1: Create QA Gate
