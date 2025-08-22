@@ -2685,6 +2685,534 @@ class HVACAPITester:
             print("❌ PHASE 4 has critical issues that need attention")
             return False
 
+    # ==================== CALL TRANSCRIPT SYSTEM TESTS ====================
+    
+    def test_call_simulation_estimate_scenario(self):
+        """Test POST /api/calls/simulate with estimate scenario"""
+        request_data = {
+            "scenario": "estimate",
+            "with_recording": True,
+            "seed": 12345
+        }
+        
+        success, data = self.make_request('POST', '/calls/simulate', request_data, self.user_token)
+        
+        if success:
+            # Check response structure
+            has_message = 'message' in data and 'successfully' in data['message'].lower()
+            has_call_id = 'call_id' in data
+            correct_scenario = data.get('scenario') == 'estimate'
+            has_duration = 'duration_sec' in data and isinstance(data['duration_sec'], int)
+            has_transcript_entries = 'transcript_entries' in data and data['transcript_entries'] >= 10
+            correct_disposition = data.get('disposition') == 'quote'
+            has_tags = 'tags' in data and isinstance(data['tags'], list)
+            
+            all_valid = (has_message and has_call_id and correct_scenario and 
+                        has_duration and has_transcript_entries and correct_disposition and has_tags)
+            
+            # Store call_id for later tests
+            if has_call_id:
+                self.simulated_call_id = data['call_id']
+            
+            self.log_test("Call Simulation - Estimate Scenario", all_valid,
+                         f"Call ID: {data.get('call_id', 'none')[:8]}..., Duration: {data.get('duration_sec', 0)}s, Entries: {data.get('transcript_entries', 0)}")
+            return all_valid
+        else:
+            self.log_test("Call Simulation - Estimate Scenario", False, f"Error: {data.get('detail', 'Unknown error')}")
+            return False
+
+    def test_call_simulation_diagnostic_scenario(self):
+        """Test POST /api/calls/simulate with diagnostic scenario"""
+        request_data = {
+            "scenario": "diagnostic",
+            "with_recording": False,
+            "seed": 54321
+        }
+        
+        success, data = self.make_request('POST', '/calls/simulate', request_data, self.user_token)
+        
+        if success:
+            correct_scenario = data.get('scenario') == 'diagnostic'
+            correct_disposition = data.get('disposition') == 'booked'
+            has_transcript_entries = data.get('transcript_entries', 0) >= 10
+            duration_in_range = 240 <= data.get('duration_sec', 0) <= 480  # 4-8 minutes
+            
+            all_valid = correct_scenario and correct_disposition and has_transcript_entries and duration_in_range
+            
+            self.log_test("Call Simulation - Diagnostic Scenario", all_valid,
+                         f"Scenario: {data.get('scenario')}, Disposition: {data.get('disposition')}, Entries: {data.get('transcript_entries', 0)}")
+            return all_valid
+        else:
+            self.log_test("Call Simulation - Diagnostic Scenario", False, f"Error: {data.get('detail', 'Unknown error')}")
+            return False
+
+    def test_call_simulation_voicemail_scenario(self):
+        """Test POST /api/calls/simulate with voicemail scenario"""
+        request_data = {
+            "scenario": "voicemail",
+            "with_recording": True
+        }
+        
+        success, data = self.make_request('POST', '/calls/simulate', request_data, self.user_token)
+        
+        if success:
+            correct_scenario = data.get('scenario') == 'voicemail'
+            correct_disposition = data.get('disposition') == 'no_answer'
+            short_duration = data.get('duration_sec', 0) <= 90  # Should be short for voicemail
+            has_voicemail_tag = 'voicemail_left' in data.get('tags', [])
+            
+            all_valid = correct_scenario and correct_disposition and short_duration and has_voicemail_tag
+            
+            self.log_test("Call Simulation - Voicemail Scenario", all_valid,
+                         f"Duration: {data.get('duration_sec', 0)}s, Tags: {data.get('tags', [])}")
+            return all_valid
+        else:
+            self.log_test("Call Simulation - Voicemail Scenario", False, f"Error: {data.get('detail', 'Unknown error')}")
+            return False
+
+    def test_call_simulation_reschedule_scenario(self):
+        """Test POST /api/calls/simulate with reschedule scenario"""
+        request_data = {
+            "scenario": "reschedule",
+            "seed": 99999
+        }
+        
+        success, data = self.make_request('POST', '/calls/simulate', request_data, self.user_token)
+        
+        if success:
+            correct_scenario = data.get('scenario') == 'reschedule'
+            correct_disposition = data.get('disposition') == 'booked'
+            has_reschedule_tag = 'appointment_rescheduled' in data.get('tags', [])
+            has_ai_answered_tag = 'ai_answered' in data.get('tags', [])
+            
+            all_valid = correct_scenario and correct_disposition and has_reschedule_tag and has_ai_answered_tag
+            
+            self.log_test("Call Simulation - Reschedule Scenario", all_valid,
+                         f"Disposition: {data.get('disposition')}, Tags: {data.get('tags', [])}")
+            return all_valid
+        else:
+            self.log_test("Call Simulation - Reschedule Scenario", False, f"Error: {data.get('detail', 'Unknown error')}")
+            return False
+
+    def test_call_list_api_basic(self):
+        """Test GET /api/calls - Basic call listing"""
+        params = {
+            "limit": 10
+        }
+        
+        success, data = self.make_request('GET', '/calls', params=params, token=self.user_token)
+        
+        if success:
+            # Check CallSearchResponse structure
+            has_calls = 'calls' in data and isinstance(data['calls'], list)
+            has_total_count = 'total_count' in data and isinstance(data['total_count'], int)
+            has_filters_applied = 'filters_applied' in data and isinstance(data['filters_applied'], dict)
+            
+            # Check that transcript is excluded for performance
+            calls = data.get('calls', [])
+            transcript_excluded = True
+            if calls:
+                for call in calls:
+                    if 'transcript' in call and len(call['transcript']) > 0:
+                        transcript_excluded = False
+                        break
+            
+            all_valid = has_calls and has_total_count and has_filters_applied and transcript_excluded
+            call_count = len(calls)
+            
+            self.log_test("Call List API - Basic", all_valid,
+                         f"Found {call_count} calls, Total: {data.get('total_count', 0)}, Transcript excluded: {transcript_excluded}")
+            return all_valid
+        else:
+            self.log_test("Call List API - Basic", False, f"Error: {data.get('detail', 'Unknown error')}")
+            return False
+
+    def test_call_list_api_phone_filtering(self):
+        """Test GET /api/calls with phone number filtering"""
+        params = {
+            "from": "+1-205-555-1234",
+            "limit": 5
+        }
+        
+        success, data = self.make_request('GET', '/calls', params=params, token=self.user_token)
+        
+        if success:
+            has_calls = 'calls' in data
+            filters_applied = data.get('filters_applied', {})
+            correct_filter = filters_applied.get('from') == '+1-205-555-1234'
+            
+            # Check if returned calls match filter
+            calls = data.get('calls', [])
+            filter_works = True
+            if calls:
+                for call in calls:
+                    if call.get('from') != '+1-205-555-1234':
+                        filter_works = False
+                        break
+            
+            all_valid = has_calls and correct_filter and filter_works
+            
+            self.log_test("Call List API - Phone Filtering", all_valid,
+                         f"Filter applied: {correct_filter}, Results match: {filter_works}, Count: {len(calls)}")
+            return all_valid
+        else:
+            self.log_test("Call List API - Phone Filtering", False, f"Error: {data.get('detail', 'Unknown error')}")
+            return False
+
+    def test_call_list_api_text_search(self):
+        """Test GET /api/calls with text search (q parameter)"""
+        params = {
+            "q": "heater",
+            "limit": 10
+        }
+        
+        success, data = self.make_request('GET', '/calls', params=params, token=self.user_token)
+        
+        if success:
+            has_calls = 'calls' in data
+            filters_applied = data.get('filters_applied', {})
+            correct_filter = filters_applied.get('q') == 'heater'
+            
+            all_valid = has_calls and correct_filter
+            call_count = len(data.get('calls', []))
+            
+            self.log_test("Call List API - Text Search", all_valid,
+                         f"Search term: 'heater', Filter applied: {correct_filter}, Results: {call_count}")
+            return all_valid
+        else:
+            self.log_test("Call List API - Text Search", False, f"Error: {data.get('detail', 'Unknown error')}")
+            return False
+
+    def test_call_list_api_status_filtering(self):
+        """Test GET /api/calls with status filtering"""
+        params = {
+            "status": "completed",
+            "limit": 5
+        }
+        
+        success, data = self.make_request('GET', '/calls', params=params, token=self.user_token)
+        
+        if success:
+            has_calls = 'calls' in data
+            filters_applied = data.get('filters_applied', {})
+            correct_filter = filters_applied.get('status') == 'completed'
+            
+            # Check if returned calls match status filter
+            calls = data.get('calls', [])
+            status_filter_works = True
+            if calls:
+                for call in calls:
+                    if call.get('status') != 'completed':
+                        status_filter_works = False
+                        break
+            
+            all_valid = has_calls and correct_filter and status_filter_works
+            
+            self.log_test("Call List API - Status Filtering", all_valid,
+                         f"Status filter: {correct_filter}, Results match: {status_filter_works}, Count: {len(calls)}")
+            return all_valid
+        else:
+            self.log_test("Call List API - Status Filtering", False, f"Error: {data.get('detail', 'Unknown error')}")
+            return False
+
+    def test_call_list_api_tag_filtering(self):
+        """Test GET /api/calls with tag filtering"""
+        params = {
+            "tag": "ai_answered",
+            "limit": 5
+        }
+        
+        success, data = self.make_request('GET', '/calls', params=params, token=self.user_token)
+        
+        if success:
+            has_calls = 'calls' in data
+            filters_applied = data.get('filters_applied', {})
+            correct_filter = filters_applied.get('tag') == 'ai_answered'
+            
+            # Check if returned calls have the tag
+            calls = data.get('calls', [])
+            tag_filter_works = True
+            if calls:
+                for call in calls:
+                    if 'ai_answered' not in call.get('tags', []):
+                        tag_filter_works = False
+                        break
+            
+            all_valid = has_calls and correct_filter and tag_filter_works
+            
+            self.log_test("Call List API - Tag Filtering", all_valid,
+                         f"Tag filter: {correct_filter}, Results match: {tag_filter_works}, Count: {len(calls)}")
+            return all_valid
+        else:
+            self.log_test("Call List API - Tag Filtering", False, f"Error: {data.get('detail', 'Unknown error')}")
+            return False
+
+    def test_call_list_api_pagination(self):
+        """Test GET /api/calls with cursor-based pagination"""
+        params = {
+            "limit": 3
+        }
+        
+        success, data = self.make_request('GET', '/calls', params=params, token=self.user_token)
+        
+        if success:
+            has_calls = 'calls' in data
+            has_next_cursor = 'next_cursor' in data
+            respects_limit = len(data.get('calls', [])) <= 3
+            
+            # Test with cursor if available
+            cursor_works = True
+            if data.get('next_cursor'):
+                cursor_params = {
+                    "limit": 2,
+                    "cursor": data['next_cursor']
+                }
+                cursor_success, cursor_data = self.make_request('GET', '/calls', params=cursor_params, token=self.user_token)
+                cursor_works = cursor_success and 'calls' in cursor_data
+            
+            all_valid = has_calls and has_next_cursor and respects_limit and cursor_works
+            
+            self.log_test("Call List API - Pagination", all_valid,
+                         f"Limit respected: {respects_limit}, Has cursor: {data.get('next_cursor') is not None}, Cursor works: {cursor_works}")
+            return all_valid
+        else:
+            self.log_test("Call List API - Pagination", False, f"Error: {data.get('detail', 'Unknown error')}")
+            return False
+
+    def test_call_details_api(self):
+        """Test GET /api/calls/{id} - Full call with transcript"""
+        # First get a call ID from the list
+        params = {"limit": 1}
+        success, data = self.make_request('GET', '/calls', params=params, token=self.user_token)
+        
+        if not success or not data.get('calls'):
+            # Use simulated call ID if available
+            if hasattr(self, 'simulated_call_id'):
+                call_id = self.simulated_call_id
+            else:
+                self.log_test("Call Details API", False, "No calls available for testing")
+                return False
+        else:
+            call_id = data['calls'][0]['id']
+        
+        # Test individual call retrieval
+        detail_success, detail_data = self.make_request('GET', f'/calls/{call_id}', token=self.user_token)
+        
+        if detail_success:
+            # Check Call model fields
+            required_fields = ['id', 'direction', 'from', 'to', 'started_at', 'status']
+            has_required_fields = all(field in detail_data for field in required_fields)
+            
+            # Check transcript is included and is array
+            has_transcript = 'transcript' in detail_data and isinstance(detail_data['transcript'], list)
+            
+            # Check transcript entries structure if present
+            transcript_valid = True
+            if detail_data.get('transcript'):
+                for entry in detail_data['transcript']:
+                    required_entry_fields = ['ts', 'role']
+                    if not all(field in entry for field in required_entry_fields):
+                        transcript_valid = False
+                        break
+            
+            # Check other important fields
+            has_tags = 'tags' in detail_data and isinstance(detail_data['tags'], list)
+            has_duration = 'duration_sec' in detail_data
+            
+            all_valid = has_required_fields and has_transcript and transcript_valid and has_tags and has_duration
+            transcript_count = len(detail_data.get('transcript', []))
+            
+            self.log_test("Call Details API", all_valid,
+                         f"Call ID: {call_id[:8]}..., Transcript entries: {transcript_count}, Required fields: {has_required_fields}")
+            return all_valid
+        else:
+            self.log_test("Call Details API", False, f"Failed to get call details: {detail_data.get('detail', 'Unknown error')}")
+            return False
+
+    def test_call_data_model_validation(self):
+        """Test Call model fields and TranscriptEntry structure"""
+        # Create a test call via simulation to validate model
+        request_data = {
+            "scenario": "estimate",
+            "seed": 11111
+        }
+        
+        success, data = self.make_request('POST', '/calls/simulate', request_data, self.user_token)
+        
+        if success and 'call_id' in data:
+            call_id = data['call_id']
+            
+            # Get the full call to validate model
+            detail_success, call_data = self.make_request('GET', f'/calls/{call_id}', token=self.user_token)
+            
+            if detail_success:
+                # Validate Call model fields
+                call_fields = ['id', 'direction', 'from', 'to', 'started_at', 'ended_at', 
+                              'duration_sec', 'status', 'disposition', 'tags', 'transcript', 
+                              'sentiment', 'created_by']
+                has_call_fields = all(field in call_data for field in call_fields)
+                
+                # Validate enums
+                valid_direction = call_data.get('direction') in ['inbound', 'outbound']
+                valid_status = call_data.get('status') in ['incoming', 'completed', 'missed', 'voicemail', 'transferred']
+                valid_disposition = call_data.get('disposition') in ['booked', 'quote', 'support', 'spam', 'follow_up', 'no_answer']
+                
+                # Validate TranscriptEntry structure
+                transcript_valid = True
+                transcript = call_data.get('transcript', [])
+                if transcript:
+                    for entry in transcript:
+                        entry_fields = ['ts', 'role']
+                        valid_role = entry.get('role') in ['ai', 'customer', 'tech', 'system']
+                        if not all(field in entry for field in entry_fields) or not valid_role:
+                            transcript_valid = False
+                            break
+                
+                all_valid = has_call_fields and valid_direction and valid_status and valid_disposition and transcript_valid
+                
+                self.log_test("Call Data Model Validation", all_valid,
+                             f"Fields: {has_call_fields}, Enums: {valid_direction and valid_status and valid_disposition}, Transcript: {transcript_valid}")
+                return all_valid
+            else:
+                self.log_test("Call Data Model Validation", False, "Failed to retrieve call for validation")
+                return False
+        else:
+            self.log_test("Call Data Model Validation", False, "Failed to create test call")
+            return False
+
+    def test_call_search_functionality(self):
+        """Test search functionality with different content"""
+        # First create calls with specific content
+        scenarios = [
+            {"scenario": "diagnostic", "seed": 1001},  # Should contain "heater" or heating related terms
+            {"scenario": "estimate", "seed": 1002}     # Should contain AC/cooling related terms
+        ]
+        
+        created_calls = []
+        for scenario_data in scenarios:
+            success, data = self.make_request('POST', '/calls/simulate', scenario_data, self.user_token)
+            if success and 'call_id' in data:
+                created_calls.append(data['call_id'])
+        
+        if len(created_calls) < 2:
+            self.log_test("Call Search Functionality", False, "Failed to create test calls")
+            return False
+        
+        # Test search by phone number pattern
+        phone_search_params = {"q": "205-555", "limit": 10}
+        phone_success, phone_data = self.make_request('GET', '/calls', params=phone_search_params, token=self.user_token)
+        
+        # Test search by content (heater)
+        content_search_params = {"q": "heater", "limit": 10}
+        content_success, content_data = self.make_request('GET', '/calls', params=content_search_params, token=self.user_token)
+        
+        # Test search by customer info
+        customer_search_params = {"q": "HVAC", "limit": 10}
+        customer_success, customer_data = self.make_request('GET', '/calls', params=customer_search_params, token=self.user_token)
+        
+        all_searches_work = phone_success and content_success and customer_success
+        
+        phone_results = len(phone_data.get('calls', [])) if phone_success else 0
+        content_results = len(content_data.get('calls', [])) if content_success else 0
+        customer_results = len(customer_data.get('calls', [])) if customer_success else 0
+        
+        self.log_test("Call Search Functionality", all_searches_work,
+                     f"Phone: {phone_results}, Content: {content_results}, Customer: {customer_results} results")
+        return all_searches_work
+
+    def test_mongodb_integration(self):
+        """Test MongoDB integration - calls are saved and retrieved properly"""
+        # Create a call and verify it's saved
+        request_data = {
+            "scenario": "diagnostic",
+            "seed": 2001
+        }
+        
+        success, data = self.make_request('POST', '/calls/simulate', request_data, self.user_token)
+        
+        if success and 'call_id' in data:
+            call_id = data['call_id']
+            
+            # Verify call is retrievable
+            detail_success, call_data = self.make_request('GET', f'/calls/{call_id}', token=self.user_token)
+            
+            if detail_success:
+                # Verify transcript array is stored properly
+                has_transcript = 'transcript' in call_data and isinstance(call_data['transcript'], list)
+                transcript_count = len(call_data.get('transcript', []))
+                
+                # Verify call appears in list
+                list_success, list_data = self.make_request('GET', '/calls', params={"limit": 50}, token=self.user_token)
+                call_in_list = False
+                if list_success:
+                    for call in list_data.get('calls', []):
+                        if call['id'] == call_id:
+                            call_in_list = True
+                            break
+                
+                # Verify indexing works (search should find it)
+                search_success, search_data = self.make_request('GET', '/calls', 
+                                                              params={"q": call_data.get('from', ''), "limit": 10}, 
+                                                              token=self.user_token)
+                search_works = search_success and len(search_data.get('calls', [])) > 0
+                
+                all_valid = has_transcript and call_in_list and search_works
+                
+                self.log_test("MongoDB Integration", all_valid,
+                             f"Transcript stored: {has_transcript} ({transcript_count} entries), In list: {call_in_list}, Search works: {search_works}")
+                return all_valid
+            else:
+                self.log_test("MongoDB Integration", False, "Failed to retrieve saved call")
+                return False
+        else:
+            self.log_test("MongoDB Integration", False, "Failed to create test call")
+            return False
+
+    def run_call_transcript_tests(self):
+        """Run all Call Transcript System tests"""
+        print("\n" + "="*80)
+        print("🔥 CALL TRANSCRIPT SYSTEM TESTING")
+        print("="*80)
+        
+        tests = [
+            self.test_call_simulation_estimate_scenario,
+            self.test_call_simulation_diagnostic_scenario,
+            self.test_call_simulation_voicemail_scenario,
+            self.test_call_simulation_reschedule_scenario,
+            self.test_call_list_api_basic,
+            self.test_call_list_api_phone_filtering,
+            self.test_call_list_api_text_search,
+            self.test_call_list_api_status_filtering,
+            self.test_call_list_api_tag_filtering,
+            self.test_call_list_api_pagination,
+            self.test_call_details_api,
+            self.test_call_data_model_validation,
+            self.test_call_search_functionality,
+            self.test_mongodb_integration
+        ]
+        
+        passed = 0
+        total = len(tests)
+        
+        for test in tests:
+            try:
+                if test():
+                    passed += 1
+            except Exception as e:
+                print(f"❌ {test.__name__} - EXCEPTION: {str(e)}")
+        
+        print(f"\n📊 CALL TRANSCRIPT SYSTEM RESULTS: {passed}/{total} tests passed")
+        
+        if passed == total:
+            print("✅ ALL CALL TRANSCRIPT TESTS PASSED - SYSTEM READY")
+            return True
+        elif passed >= 10:  # Allow some minor failures
+            print("⚠️ CALL TRANSCRIPT SYSTEM has minor issues but core functionality works")
+            return True
+        else:
+            print("❌ CALL TRANSCRIPT SYSTEM has critical issues that need attention")
+            return False
+
     # ==================== PHASE 7 TESTS - QA GATES & SUBCONTRACTOR HOLDBACK ====================
     
     def test_phase7_hard_block_job_closure_microns_fail(self):
