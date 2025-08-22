@@ -29,6 +29,12 @@
   --border: #E5E7EB;           /* border-gray-200 */
   --input: #E5E7EB;            /* border-gray-200 */
   --ring: #2563EB;             /* blue-600 for focus rings */
+  --card: #FFFFFF;             /* bg-white for cards */
+  --card-foreground: #111827;  /* text-gray-900 for card text */
+  --popover: #FFFFFF;          /* bg-white */
+  --popover-foreground: #111827; /* text-gray-900 */
+  --destructive: #DC2626;      /* red-600 */
+  --destructive-foreground: #FFFFFF; /* white text */
   
   /* Status Colors - Professional */
   --success: #059669;           /* text-emerald-600 */
