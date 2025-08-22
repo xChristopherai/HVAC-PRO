@@ -2747,7 +2747,8 @@ class HVACAPITester:
     
     def test_phase7_hard_block_payout_no_inspection_fail(self):
         """Test Hard Block Payout - No Inspection Pass (MUST FAIL)"""
-        job_id = "test-job-002"
+        import time
+        job_id = f"test-job-002-{int(time.time())}"  # Unique job ID
         technician_id = "tech-002"
         
         # Step 1: Create QA Gate with passing metrics
