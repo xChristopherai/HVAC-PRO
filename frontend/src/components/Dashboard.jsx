@@ -55,12 +55,6 @@ const StatCard = ({ title, value, change, icon: Icon, trend = 'up', changePercen
     </Card>
   );
 };
-          </div>
-        </div>
-      </CardContent>
-    </Card>
-  );
-};
 
 // Appointment Item Component with AI Voice badge support
 const AppointmentItem = ({ appointment }) => {
