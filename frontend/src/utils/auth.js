@@ -97,7 +97,58 @@ class AuthService {
     // Mock response based on endpoint
     let mockData = {};
     
-    if (endpoint.includes('dashboard')) {
+    if (endpoint.includes('calls')) {
+      // Mock calls data matching our new API structure
+      mockData = {
+        calls: [
+          {
+            id: 'mock-call-1',
+            direction: 'inbound',
+            from: '+1-205-555-1234',
+            to: '+1-205-555-HVAC',
+            started_at: new Date(Date.now() - 1800000).toISOString(), // 30 minutes ago
+            ended_at: new Date(Date.now() - 1500000).toISOString(),
+            duration_sec: 300,
+            status: 'completed',
+            disposition: 'booked',
+            tags: ['ai_answered', 'diagnostic_scheduled'],
+            sentiment: 'positive',
+            transcript: []
+          },
+          {
+            id: 'mock-call-2', 
+            direction: 'inbound',
+            from: '+1-205-555-5678',
+            to: '+1-205-555-HVAC',
+            started_at: new Date(Date.now() - 3600000).toISOString(), // 1 hour ago
+            ended_at: new Date(Date.now() - 3300000).toISOString(),
+            duration_sec: 180,
+            status: 'completed',
+            disposition: 'quote',
+            tags: ['ai_answered', 'estimate_requested'],
+            sentiment: 'positive',
+            transcript: []
+          },
+          {
+            id: 'mock-call-3',
+            direction: 'inbound', 
+            from: '+1-205-555-9999',
+            to: '+1-205-555-HVAC',
+            started_at: new Date(Date.now() - 7200000).toISOString(), // 2 hours ago
+            ended_at: new Date(Date.now() - 7140000).toISOString(),
+            duration_sec: 60,
+            status: 'voicemail',
+            disposition: 'no_answer',
+            tags: ['voicemail_left'],
+            sentiment: 'neutral',
+            transcript: []
+          }
+        ],
+        total_count: 3,
+        next_cursor: null,
+        filters_applied: {}
+      };
+    } else if (endpoint.includes('dashboard')) {
       mockData = {
         stats: {
           total_customers: 15,
