@@ -457,7 +457,7 @@ const Customers = ({ currentUser, aiVoiceEnabled }) => {
         />
         <StatTile
           label="Active"
-          value={customers.filter(c => c.total_jobs > 0).length}
+          value={customers.filter(c => c.status === 'Active').length}
           icon={Users}
           color="text-emerald-600"
         />
