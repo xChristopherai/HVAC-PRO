@@ -60,9 +60,11 @@ const StatCard = ({ title, value, change, icon: Icon, trend = 'up', changePercen
 const AppointmentItem = ({ appointment }) => {
   const getStatusColor = (status) => {
     switch (status) {
-      case 'confirmed': return 'text-green-600 bg-green-50';
+      case 'confirmed': return 'text-emerald-600 bg-emerald-50';
       case 'scheduled': return 'text-blue-600 bg-blue-50';
-      case 'in_progress': return 'text-yellow-600 bg-yellow-50';
+      case 'in_progress': return 'text-amber-600 bg-amber-50';
+      case 'completed': return 'text-emerald-600 bg-emerald-50';
+      case 'cancelled': return 'text-red-600 bg-red-50';
       default: return 'text-gray-600 bg-gray-50';
     }
   };
