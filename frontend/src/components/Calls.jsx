@@ -36,15 +36,8 @@ const Calls = () => {
         params.append('cursor', nextCursor);
       }
 
-      // Date filters - convert to from/to parameters
-      if (dateFilter === 'today') {
-        const today = new Date().toISOString().split('T')[0];
-        params.append('from', `+1-*`); // Search all US numbers for demo
-      } else if (dateFilter === 'week') {
-        params.append('from', `+1-*`); // Search all US numbers for demo
-      } else if (dateFilter === 'custom' && customFrom && customTo) {
-        params.append('from', `+1-*`); // Search all US numbers for demo
-      }
+      // Date filters - for demo, don't restrict by phone patterns, just search all calls
+      // Remove phone-based filtering to show all calls regardless of date filter
 
       // Search term
       if (searchTerm.trim()) {
