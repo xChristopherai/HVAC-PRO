@@ -8,6 +8,7 @@ import {
   MessageSquare, 
   Settings as SettingsIcon, 
   Phone,
+  Shield,
   Search,
   Bell,
   Menu,
@@ -26,6 +27,7 @@ import Appointments from './components/Appointments';
 import Technicians from './components/Technicians';
 import Messaging from './components/Messaging';
 import Calls from './components/Calls';
+import QAGates from './components/QAGates';
 
 // Legacy components with NEW_UI flag support
 import Settings from './components/Settings';
@@ -46,6 +48,7 @@ const navigation = [
   { name: 'Technicians', href: '/technicians', icon: Wrench },
   { name: 'Messaging', href: '/messaging', icon: MessageSquare },
   { name: 'Calls', href: '/calls', icon: Phone },
+  { name: 'QA Gates', href: '/qa-gates', icon: Shield },
   { name: 'Settings', href: '/settings', icon: SettingsIcon },
 ];
 
