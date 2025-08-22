@@ -467,7 +467,15 @@ const Customers = ({ currentUser, aiVoiceEnabled }) => {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {filteredCustomers.length > 0 ? (
           filteredCustomers.map((customer) => (
-            <Card key={customer.id} className="hover:shadow-md transition-shadow cursor-pointer">
+            <Card 
+              key={customer.id} 
+              className="hover:shadow-md transition-shadow cursor-pointer"
+              style={{
+                backgroundColor: '#FFFFFF',
+                borderColor: '#E5E7EB',
+                color: '#111827'
+              }}
+            >
               <CardHeader className="pb-3">
                 <div className="flex items-start justify-between">
                   <div className="space-y-1">
