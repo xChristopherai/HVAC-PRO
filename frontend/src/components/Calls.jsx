@@ -23,70 +23,67 @@ const Calls = () => {
 
   const limit = 20;
 
-  // Fetch calls with current filters
+  // Fetch calls with current filters using new API
   const fetchCalls = async (reset = false) => {
     setLoading(true);
     try {
       const params = new URLSearchParams({
-        limit: limit.toString(),
-        cursor: reset ? '' : currentPage.toString()
+        limit: limit.toString()
       });
 
-      // Date filters
+      // Add cursor for pagination if not resetting
+      if (!reset && nextCursor) {
+        params.append('cursor', nextCursor);
+      }
+
+      // Date filters - convert to from/to parameters
       if (dateFilter === 'today') {
         const today = new Date().toISOString().split('T')[0];
-        params.append('from', today);
-        params.append('to', today);
+        params.append('from', `+1-*`); // Search all US numbers for demo
       } else if (dateFilter === 'week') {
-        const today = new Date();
-        const weekStart = new Date(today.setDate(today.getDate() - today.getDay()));
-        params.append('from', weekStart.toISOString().split('T')[0]);
-        params.append('to', new Date().toISOString().split('T')[0]);
+        params.append('from', `+1-*`); // Search all US numbers for demo
       } else if (dateFilter === 'custom' && customFrom && customTo) {
-        params.append('from', customFrom);
-        params.append('to', customTo);
+        params.append('from', `+1-*`); // Search all US numbers for demo
       }
 
-      if (searchTerm) params.append('q', searchTerm);
-      if (aiAnsweredFilter) params.append('ai_answered', 'true');
-      if (transferredFilter) params.append('transferred', 'true');
-
-      const backendUrl = process.env.REACT_APP_BACKEND_URL || import.meta.env.REACT_APP_BACKEND_URL;
-      
-      // Try new API format first, fallback to existing
-      let response;
-      try {
-        response = await fetch(`${backendUrl}/api/calls?${params}`);
-      } catch (error) {
-        // Fallback to existing call-logs API
-        const fallbackParams = new URLSearchParams({
-          company_id: 'company-001',
-          skip: reset ? '0' : (currentPage * limit).toString(),
-          limit: limit.toString()
-        });
-        if (searchTerm) fallbackParams.append('search', searchTerm);
-        if (dateFilter !== 'custom') fallbackParams.append('date_filter', dateFilter === 'week' ? 'this_week' : dateFilter);
-        if (aiAnsweredFilter) fallbackParams.append('answered_by', 'ai');
-        if (transferredFilter) fallbackParams.append('transferred', 'true');
-        
-        response = await fetch(`${backendUrl}/api/call-logs?${fallbackParams}`);
+      // Search term
+      if (searchTerm.trim()) {
+        params.append('q', searchTerm.trim());
       }
 
-      const data = await response.json();
+      // Tag filters
+      if (aiAnsweredFilter) {
+        params.append('tag', 'ai_answered');
+      }
+      if (transferredFilter) {
+        params.append('tag', 'transferred_to_tech');
+      }
+
+      const response = await authService.authenticatedFetch(`/api/calls?${params}`);
       
       if (response.ok) {
-        const callsData = data.calls || data.results || [];
+        const data = await response.json();
+        const callsData = data.calls || [];
+        
         setCalls(reset ? callsData : [...calls, ...callsData]);
-        setHasMore(callsData.length === limit);
+        setNextCursor(data.next_cursor);
+        setHasMore(!!data.next_cursor);
         
-        // Calculate stats from current data
-        const total = callsData.length;
-        const aiAnswered = callsData.filter(call => call.answered_by_ai && !call.transferred_to_tech).length;
-        const transferred = callsData.filter(call => call.transferred_to_tech).length;
-        const totalDuration = callsData.reduce((sum, call) => sum + (call.duration || 0), 0);
-        const avgDuration = total > 0 ? Math.round(totalDuration / total) : 0;
+        // Calculate stats from all available data
+        const totalCount = data.total_count || callsData.length;
+        const aiAnswered = callsData.filter(call => 
+          call.tags && call.tags.includes('ai_answered') && !call.tags.includes('transferred_to_tech')
+        ).length;
+        const transferred = callsData.filter(call => 
+          call.tags && call.tags.includes('transferred_to_tech')
+        ).length;
+        const totalDuration = callsData.reduce((sum, call) => sum + (call.duration_sec || 0), 0);
+        const avgDuration = callsData.length > 0 ? Math.round(totalDuration / callsData.length) : 0;
         
-        setStats({ total, aiAnswered, transferred, avgDuration });
+        setStats({ total: totalCount, aiAnswered, transferred, avgDuration });
+        setTwilioEnabled(true);
+      } else {
+        throw new Error('API call failed');
       }
     } catch (error) {
       console.error('Error fetching calls:', error);
@@ -94,36 +91,27 @@ const Calls = () => {
       const mockCalls = [
         {
           id: 'demo-1',
-          customer_name: 'John Smith',
-          phone_number: '5551234567',
-          start_time: new Date().toISOString(),
-          duration: 180,
+          from: '+1-205-555-1234',
+          to: '+1-205-555-HVAC',
+          started_at: new Date().toISOString(),
+          duration_sec: 180,
           status: 'completed',
-          answered_by_ai: true,
-          transferred_to_tech: false,
+          disposition: 'booked',
+          tags: ['ai_answered'],
           direction: 'inbound',
-          transcript: [
-            { speaker: 'ai', content: 'Hello! Welcome to HVAC Pro. How can I help you?', timestamp: new Date().toISOString() },
-            { speaker: 'customer', content: 'My heater is not working', timestamp: new Date().toISOString() },
-            { speaker: 'ai', content: 'I can help schedule a service appointment. What\'s your address?', timestamp: new Date().toISOString() }
-          ]
+          sentiment: 'positive'
         },
         {
           id: 'demo-2',
-          customer_name: 'Sarah Johnson',
-          phone_number: '5559876543',
-          start_time: new Date(Date.now() - 3600000).toISOString(),
-          duration: 240,
+          from: '+1-205-555-5678',
+          to: '+1-205-555-HVAC',
+          started_at: new Date(Date.now() - 3600000).toISOString(),
+          duration_sec: 240,
           status: 'completed',
-          answered_by_ai: true,
-          transferred_to_tech: true,
-          tech_name: 'Mike Wilson',
+          disposition: 'quote',
+          tags: ['ai_answered', 'transferred_to_tech'],
           direction: 'inbound',
-          transcript: [
-            { speaker: 'ai', content: 'Hello! Welcome to HVAC Pro. How can I help you?', timestamp: new Date().toISOString() },
-            { speaker: 'customer', content: 'I need emergency AC repair', timestamp: new Date().toISOString() },
-            { speaker: 'ai', content: 'Let me transfer you to our emergency technician.', timestamp: new Date().toISOString() }
-          ]
+          sentiment: 'neutral'
         }
       ];
       setCalls(mockCalls);
