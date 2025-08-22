@@ -268,6 +268,7 @@ const App = () => {
           <Route path="/messaging" element={<Messaging currentUser={currentUser} />} />
           <Route path="/calls" element={<Calls currentUser={currentUser} />} />
           <Route path="/qa-gates" element={<QAGates currentUser={currentUser} />} />
+          <Route path="/reports" element={<Reports currentUser={currentUser} />} />
           <Route path="/settings" element={<Settings currentUser={currentUser} />} />
           <Route path="*" element={<Navigate to="/dashboard" replace />} />
         </Routes>
