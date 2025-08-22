@@ -479,9 +479,11 @@ const Appointments = ({ currentUser, aiVoiceEnabled }) => {
 const AppointmentCalendarView = ({ appointments, loading }) => {
   const getStatusColor = (status) => {
     switch (status) {
-      case 'confirmed': return 'border-l-green-500 bg-green-50';
-      case 'scheduled': return 'border-l-blue-500 bg-blue-50';
-      case 'in_progress': return 'border-l-yellow-500 bg-yellow-50';
+      case 'confirmed': return 'border-l-emerald-500 bg-emerald-50';
+      case 'scheduled': return 'border-l-blue-500 bg-blue-50';  
+      case 'in_progress': return 'border-l-amber-500 bg-amber-50';
+      case 'completed': return 'border-l-emerald-500 bg-emerald-50';
+      case 'cancelled': return 'border-l-red-500 bg-red-50';
       case 'completed': return 'border-l-gray-500 bg-gray-50';
       default: return 'border-l-gray-300 bg-gray-50';
     }
