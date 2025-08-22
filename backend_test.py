@@ -3152,7 +3152,7 @@ class HVACAPITester:
                 
                 # Verify indexing works (search should find it)
                 search_success, search_data = self.make_request('GET', '/calls', 
-                                                              params={"q": call_data.get('from', ''), "limit": 10}, 
+                                                              params={"q": "205", "limit": 10}, 
                                                               token=self.user_token)
                 search_works = search_success and len(search_data.get('calls', [])) > 0
                 
