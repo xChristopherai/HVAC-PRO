@@ -629,7 +629,7 @@ button[data-variant="outline"] {
   background-color: #ffffff !important;
 }
 
-/* Force every element on customers page to have proper background */
+/* NUCLEAR OPTION - Force every element on customers page to have proper background */
 #customers-page input {
   background: #ffffff !important;
   background-color: #ffffff !important;
@@ -643,4 +643,44 @@ button[data-variant="outline"] {
 #customers-page button[data-variant="outline"] {
   background: #ffffff !important;
   background-color: #ffffff !important;
+}
+
+/* FORCE ALL CARDS TO BE WHITE - GLOBAL OVERRIDE */
+div[class*="rounded"],
+div[class*="border"],
+div[class*="shadow"],
+.card,
+[class*="card"],
+div[class*="bg-card"],
+div[class*="hover:shadow"] {
+  background: #FFFFFF !important;
+  background-color: #FFFFFF !important;
+}
+
+/* KILL ALL YELLOW EVERYWHERE - GLOBAL */
+*[class*="yellow"],
+*[style*="yellow"], 
+*[style*="255, 255, 0"],
+*[class*="bg-yellow"],
+*[class*="bg-amber"] {
+  background: #FFFFFF !important;
+  background-color: #FFFFFF !important;
+}
+
+/* Force all text to be dark */
+* {
+  color: #111827 !important;
+}
+
+/* Override specific problematic elements */
+p, span, div, h1, h2, h3, h4, h5, h6 {
+  color: #374151 !important;
+}
+
+.text-sm {
+  color: #6B7280 !important;
+}
+
+.text-2xl {
+  color: #111827 !important;
 }
