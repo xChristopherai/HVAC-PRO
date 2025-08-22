@@ -13,7 +13,9 @@ import {
   Search,
   Bell,
   Menu,
-  X
+  X,
+  User,
+  ChevronDown
 } from 'lucide-react';
 import { Button } from './components/ui/button';
 import { Input } from './components/ui/input';
@@ -55,28 +57,23 @@ const navigation = [
   { name: 'Settings', href: '/settings', icon: SettingsIcon },
 ];
 
-// Sidebar Component - PayPal style
-const Sidebar = ({ isOpen, setIsOpen }) => {
+// Top Navigation Component - Stripe Style
+const TopNavigation = ({ sidebarOpen, setSidebarOpen }) => {
   const location = useLocation();
   
   return (
-    <div className={cn(
-      "sidebar fixed inset-y-0 left-0 z-50 transform transition-transform duration-200 ease-in-out lg:translate-x-0 lg:static lg:inset-0",
-      isOpen ? "translate-x-0" : "-translate-x-full"
-    )}>
-      <div className="flex flex-col h-full">
-        {/* Logo */}
-        <div className="flex items-center h-16 px-6 border-b border-[#E5E7EB]">
-          <div className="flex items-center space-x-2">
-            <div className="w-8 h-8 bg-[#0070E0] rounded-lg flex items-center justify-center">
-              <span className="text-white font-bold text-sm">H</span>
-            </div>
-            <span className="text-lg font-semibold text-[#0B0F19]">HVAC Pro</span>
+    <header className="top-nav">
+      <div className="top-nav-container">
+        {/* Left side - Logo */}
+        <div className="top-nav-logo">
+          <div className="logo-icon">
+            <span className="logo-text">H</span>
           </div>
+          <span className="logo-brand">HVAC Pro</span>
         </div>
 
-        {/* Navigation */}
-        <nav className="flex-1 py-4">
+        {/* Center - Navigation items (desktop) */}
+        <nav className="top-nav-items">
           {navigation.map((item) => {
             const Icon = item.icon;
             const isActive = location.pathname === item.href || 
@@ -87,26 +84,146 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
                 key={item.name}
                 to={item.href}
                 className={cn(
-                  "sidebar-item",
-                  isActive && "active"
+                  "nav-item",
+                  isActive && "nav-item-active"
                 )}
-                onClick={() => setIsOpen(false)}
+                aria-current={isActive ? "page" : undefined}
               >
-                <Icon className="w-[18px] h-[18px] mr-3" />
-                <span className="text-base font-medium">{item.name}</span>
+                <Icon className="nav-item-icon" />
+                <span className="nav-item-label">{item.name}</span>
               </Link>
             );
           })}
         </nav>
 
-        {/* User info */}
-        <div className="p-6 border-t border-[#E5E7EB]">
-          <div className="text-sm text-[#475569]">
-            Signed in as <span className="font-medium text-[#0B0F19]">John Smith</span>
+        {/* Right side - Search, notifications, user menu */}
+        <div className="top-nav-actions">
+          <div className="search-container">
+            <Search className="search-icon" />
+            <Input 
+              placeholder="Search..." 
+              className="search-input"
+            />
           </div>
+          
+          <Button 
+            variant="ghost" 
+            size="icon"
+            className="notification-btn"
+            aria-label="Notifications"
+          >
+            <Bell className="w-5 h-5" />
+          </Button>
+          
+          <div className="user-menu">
+            <Button 
+              variant="ghost" 
+              className="user-menu-btn"
+              aria-label="User menu"
+            >
+              <div className="user-avatar">
+                <User className="w-4 h-4" />
+              </div>
+              <span className="user-name">John Smith</span>
+              <ChevronDown className="w-4 h-4" />
+            </Button>
+          </div>
+
+          {/* Mobile hamburger button */}
+          <Button
+            variant="ghost"
+            size="icon"
+            className="mobile-menu-btn"
+            onClick={() => setSidebarOpen(!sidebarOpen)}
+            aria-label="Toggle menu"
+          >
+            <Menu className="w-5 h-5" />
+          </Button>
         </div>
       </div>
-    </div>
+    </header>
+  );
+};
+
+// Mobile Navigation Drawer
+const MobileNavDrawer = ({ isOpen, setIsOpen }) => {
+  const location = useLocation();
+  
+  // Close drawer on escape key
+  useEffect(() => {
+    const handleEscape = (e) => {
+      if (e.key === 'Escape') {
+        setIsOpen(false);
+      }
+    };
+    
+    if (isOpen) {
+      document.addEventListener('keydown', handleEscape);
+      document.body.style.overflow = 'hidden';
+    }
+    
+    return () => {
+      document.removeEventListener('keydown', handleEscape);
+      document.body.style.overflow = 'unset';
+    };
+  }, [isOpen, setIsOpen]);
+  
+  return (
+    <>
+      {/* Backdrop */}
+      {isOpen && (
+        <div 
+          className="mobile-nav-backdrop"
+          onClick={() => setIsOpen(false)}
+          aria-hidden="true"
+        />
+      )}
+      
+      {/* Drawer */}
+      <div className={cn("mobile-nav-drawer", isOpen && "mobile-nav-drawer-open")}>
+        <div className="mobile-nav-header">
+          <div className="mobile-nav-logo">
+            <div className="logo-icon">
+              <span className="logo-text">H</span>
+            </div>
+            <span className="logo-brand">HVAC Pro</span>
+          </div>
+          
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => setIsOpen(false)}
+            aria-label="Close menu"
+          >
+            <X className="w-5 h-5" />
+          </Button>
+        </div>
+        
+        <nav className="mobile-nav-items">
+          {navigation.map((item) => {
+            const Icon = item.icon;
+            const isActive = location.pathname === item.href || 
+                           (item.href === '/dashboard' && location.pathname === '/');
+            
+            return (
+              <Link
+                key={item.name}
+                to={item.href}
+                className={cn(
+                  "mobile-nav-item",
+                  isActive && "mobile-nav-item-active"
+                )}
+                onClick={() => setIsOpen(false)}
+                aria-current={isActive ? "page" : undefined}
+              >
+                <Icon className="mobile-nav-icon" />
+                <span className="mobile-nav-label">{item.name}</span>
+              </Link>
+            );
+          })}
+        </nav>
+      </div>
+    </>
   );
 };
 
@@ -135,42 +252,18 @@ const useAuth = () => {
   return { user, loading };
 };
 
-// Main Layout Component - FIXED LAYOUT
+// Main Layout Component - NEW HORIZONTAL LAYOUT
 const Layout = ({ children }) => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   
   return (
-    <div className="main-layout">
-      <Sidebar isOpen={sidebarOpen} setIsOpen={setSidebarOpen} />
+    <div className="app-layout">
+      <TopNavigation sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} />
+      <MobileNavDrawer isOpen={sidebarOpen} setIsOpen={setSidebarOpen} />
       
-      {/* Mobile backdrop */}
-      {sidebarOpen && (
-        <div 
-          className="fixed inset-0 bg-black bg-opacity-50 z-40 lg:hidden"
-          onClick={() => setSidebarOpen(false)}
-        />
-      )}
-      
-      <div className="main-content">
-        {/* Top Bar - Mobile only */}
-        <header className="h-16 bg-white border-b border-[#E5E7EB] flex items-center justify-between px-6 lg:hidden">
-          <div className="flex items-center space-x-4">
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => setSidebarOpen(!sidebarOpen)}
-            >
-              <Menu className="w-5 h-5" />
-            </Button>
-            <span className="text-lg font-semibold text-[#0B0F19]">HVAC Pro</span>
-          </div>
-        </header>
-        
-        {/* Main content area */}
-        <main className="content-wrapper">
-          {children}
-        </main>
-      </div>
+      <main className="main-content-area">
+        {children}
+      </main>
     </div>
   );
 };
