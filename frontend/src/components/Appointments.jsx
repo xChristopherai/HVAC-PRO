@@ -432,19 +432,23 @@ const Appointments = ({ currentUser, aiVoiceEnabled }) => {
         />
       ) : (
         <>
-          {/* Stats Cards */}
+          {/* Stats Cards - Clean Professional Design */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             {[
               { label: 'Today', count: appointments.filter(a => new Date(a.scheduled_date).toDateString() === new Date().toDateString()).length, color: 'text-blue-600' },
-              { label: 'This Week', count: appointments.length, color: 'text-green-600' },
+              { label: 'This Week', count: appointments.length, color: 'text-emerald-600' },
               { label: 'Confirmed', count: appointments.filter(a => a.status === 'confirmed').length, color: 'text-emerald-600' },
               { label: 'In Progress', count: appointments.filter(a => a.status === 'in_progress').length, color: 'text-amber-600' },
             ].map((stat, index) => (
-              <Card key={index}>
+              <Card 
+                key={index} 
+                className="bg-white border-gray-200 shadow-sm"
+                style={{ backgroundColor: '#FFFFFF', borderColor: '#E5E7EB' }}
+              >
                 <CardContent className="p-4">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-sm font-medium text-muted-foreground">{stat.label}</p>
+                      <p className="text-sm font-medium text-gray-600">{stat.label}</p>
                       <p className={cn("text-2xl font-bold", stat.color)}>{stat.count}</p>
                     </div>
                     <CalendarIcon className={cn("w-8 h-8", stat.color)} />
