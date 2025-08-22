@@ -136,7 +136,9 @@ const Customers = ({ currentUser, aiVoiceEnabled }) => {
       setLoading(true);
       
       // Mock demo data for realistic dashboard preview
+      // Designed to match requirements: ~40-50% active, 2-3 new this month, 3-4 repeat customers
       const mockCustomers = [
+        // Active customers with jobs (5 total = ~42% of 12)
         {
           id: 'cust-001',
           name: 'Sarah Johnson',
@@ -144,9 +146,10 @@ const Customers = ({ currentUser, aiVoiceEnabled }) => {
           email: 'sarah.j@email.com',
           address: '1234 Elm Street, Birmingham, AL',
           status: 'Active',
-          total_jobs: 3,
-          created_at: '2025-08-19T10:00:00Z',
-          date_added: '2025-08-19T10:00:00Z'
+          total_jobs: 2,
+          created_at: '2025-06-15T10:00:00Z',
+          date_added: '2025-06-15T10:00:00Z',
+          last_appointment: '2025-08-10T14:30:00Z'
         },
         {
           id: 'cust-002',
@@ -157,7 +160,8 @@ const Customers = ({ currentUser, aiVoiceEnabled }) => {
           status: 'Active',
           total_jobs: 1,
           created_at: '2025-08-21T14:30:00Z',
-          date_added: '2025-08-21T14:30:00Z'
+          date_added: '2025-08-21T14:30:00Z',
+          last_appointment: '2025-08-21T14:30:00Z'
         },
         {
           id: 'cust-003',
@@ -165,10 +169,11 @@ const Customers = ({ currentUser, aiVoiceEnabled }) => {
           phone: '(205) 555-8321',
           email: 'robertm@email.com',
           address: '890 Pine Road, Birmingham, AL',
-          status: 'Repeat',
-          total_jobs: 5,
-          created_at: '2025-08-10T09:15:00Z',
-          date_added: '2025-08-10T09:15:00Z'
+          status: 'Active',
+          total_jobs: 4,
+          created_at: '2025-05-10T09:15:00Z',
+          date_added: '2025-05-10T09:15:00Z',
+          last_appointment: '2025-08-18T11:00:00Z'
         },
         {
           id: 'cust-004',
@@ -177,9 +182,10 @@ const Customers = ({ currentUser, aiVoiceEnabled }) => {
           email: 'jennifer.davis@email.com',
           address: '321 Maple Drive, Hoover, AL',
           status: 'Active',
-          total_jobs: 2,
-          created_at: '2025-08-15T16:20:00Z',
-          date_added: '2025-08-15T16:20:00Z'
+          total_jobs: 3,
+          created_at: '2025-07-15T16:20:00Z',
+          date_added: '2025-07-15T16:20:00Z',
+          last_appointment: '2025-08-20T16:15:00Z'
         },
         {
           id: 'cust-005',
@@ -187,21 +193,25 @@ const Customers = ({ currentUser, aiVoiceEnabled }) => {
           phone: '(205) 555-4567',
           email: 'davidw@email.com',
           address: '654 Cedar Lane, Vestavia Hills, AL',
-          status: 'Repeat',
-          total_jobs: 4,
-          created_at: '2025-07-28T11:45:00Z',
-          date_added: '2025-07-28T11:45:00Z'
+          status: 'Active',
+          total_jobs: 5,
+          created_at: '2025-04-28T11:45:00Z',
+          date_added: '2025-04-28T11:45:00Z',
+          last_appointment: '2025-08-17T09:30:00Z'
         },
+
+        // Inactive customers (7 total = ~58% of 12)
         {
           id: 'cust-006',
           name: 'Lisa Thompson',
           phone: '(205) 555-7890',
           email: 'lisa.thompson@email.com',
           address: '987 Birch Street, Mountain Brook, AL',
-          status: 'Active',
-          total_jobs: 1,
+          status: 'Inactive',
+          total_jobs: 0,
           created_at: '2025-08-22T08:30:00Z',
-          date_added: '2025-08-22T08:30:00Z'
+          date_added: '2025-08-22T08:30:00Z',
+          last_appointment: null
         },
         {
           id: 'cust-007',
@@ -209,10 +219,11 @@ const Customers = ({ currentUser, aiVoiceEnabled }) => {
           phone: '(205) 555-3456',
           email: 'mbrown@email.com',
           address: '147 Walnut Avenue, Homewood, AL',
-          status: 'Repeat',
-          total_jobs: 3,
+          status: 'Inactive',
+          total_jobs: 0,
           created_at: '2025-07-15T13:10:00Z',
-          date_added: '2025-07-15T13:10:00Z'
+          date_added: '2025-07-15T13:10:00Z',
+          last_appointment: null
         },
         {
           id: 'cust-008',
@@ -220,10 +231,11 @@ const Customers = ({ currentUser, aiVoiceEnabled }) => {
           phone: '(205) 555-6543',
           email: 'amanda.g@email.com',
           address: '258 Hickory Place, Pelham, AL',
-          status: 'Active',
-          total_jobs: 2,
-          created_at: '2025-08-12T15:25:00Z',
-          date_added: '2025-08-12T15:25:00Z'
+          status: 'Inactive',
+          total_jobs: 0,
+          created_at: '2025-06-12T15:25:00Z',
+          date_added: '2025-06-12T15:25:00Z',
+          last_appointment: null
         },
         {
           id: 'cust-009',
@@ -231,10 +243,11 @@ const Customers = ({ currentUser, aiVoiceEnabled }) => {
           phone: '(205) 555-2468',
           email: 'chris.lee@email.com',
           address: '369 Poplar Road, Chelsea, AL',
-          status: 'Active',
-          total_jobs: 1,
+          status: 'Inactive',
+          total_jobs: 0,
           created_at: '2025-08-18T12:00:00Z',
-          date_added: '2025-08-18T12:00:00Z'
+          date_added: '2025-08-18T12:00:00Z',
+          last_appointment: null
         },
         {
           id: 'cust-010',
@@ -242,10 +255,11 @@ const Customers = ({ currentUser, aiVoiceEnabled }) => {
           phone: '(205) 555-1357',
           email: 'michelle.m@email.com',
           address: '741 Dogwood Drive, Alabaster, AL',
-          status: 'Repeat',
-          total_jobs: 6,
-          created_at: '2025-06-20T10:45:00Z',
-          date_added: '2025-06-20T10:45:00Z'
+          status: 'Inactive',
+          total_jobs: 0,
+          created_at: '2025-05-20T10:45:00Z',
+          date_added: '2025-05-20T10:45:00Z',
+          last_appointment: null
         },
         {
           id: 'cust-011',
@@ -253,10 +267,11 @@ const Customers = ({ currentUser, aiVoiceEnabled }) => {
           phone: '(205) 555-9753',
           email: 'kevin.r@email.com',
           address: '852 Willow Lane, Trussville, AL',
-          status: 'Active',
-          total_jobs: 1,
-          created_at: '2025-08-20T17:15:00Z',
-          date_added: '2025-08-20T17:15:00Z'
+          status: 'Inactive',
+          total_jobs: 0,
+          created_at: '2025-07-20T17:15:00Z',
+          date_added: '2025-07-20T17:15:00Z',
+          last_appointment: null
         },
         {
           id: 'cust-012',
@@ -264,10 +279,11 @@ const Customers = ({ currentUser, aiVoiceEnabled }) => {
           phone: '(205) 555-8642',
           email: 'rachel.white@email.com',
           address: '963 Ash Street, Gardendale, AL',
-          status: 'Repeat',
-          total_jobs: 3,
-          created_at: '2025-07-08T14:20:00Z',
-          date_added: '2025-07-08T14:20:00Z'
+          status: 'Inactive',
+          total_jobs: 0,
+          created_at: '2025-06-08T14:20:00Z',
+          date_added: '2025-06-08T14:20:00Z',
+          last_appointment: null
         }
       ];
 
