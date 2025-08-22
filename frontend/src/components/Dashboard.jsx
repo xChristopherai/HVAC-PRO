@@ -50,6 +50,11 @@ const StatCard = ({ title, value, change, icon: Icon, trend = 'up', changePercen
           <div className="w-12 h-12 bg-blue-50 rounded-lg flex items-center justify-center">
             <Icon className="w-6 h-6 text-blue-600" />
           </div>
+        </div>
+      </CardContent>
+    </Card>
+  );
+};
           </div>
         </div>
       </CardContent>
