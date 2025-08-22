@@ -212,8 +212,8 @@ const Reports = () => {
   // Show toast notification
   const showToast = (message, type = 'success') => {
     const toast = document.createElement('div');
-    toast.className = `fixed top-4 right-4 px-6 py-3 rounded-lg shadow-lg z-50 text-white font-medium ${
-      type === 'success' ? 'bg-green-600' : 'bg-red-600'
+    toast.className = `fixed top-4 right-4 px-6 py-3 rounded-lg shadow-lg z-50 font-medium ${
+      type === 'success' ? 'toast-success' : 'toast-error'
     }`;
     toast.textContent = message;
     document.body.appendChild(toast);
