@@ -102,7 +102,56 @@
 # Testing Data - Main Agent and testing sub agent both should log testing data below this section
 #====================================================================================================
 
-user_problem_statement: "Complete AI Voice Scheduling implementation with mock Twilio adapters. Backend needs to handle voice state machine, create appointments from phone calls, and send SMS confirmations. Frontend needs to hide Schedule Appointment button when AI_VOICE_SCHEDULING_ENABLED=true, show AI Voice badges, and wire Add Customer button."
+user_problem_statement: "Persist full call transcripts and expose them via clean APIs for the Call Log drawer. Implement comprehensive Call model with transcript storage, search functionality, and realistic call simulation for demo purposes."
+
+backend:
+  - task: "Call Transcript Data Model"
+    implemented: true
+    working: false
+    file: "backend/models.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+        - working: false
+        - agent: "main"
+        - comment: "Added comprehensive Call model with CallDirection, CallStatus, CallDisposition, CallSentiment, TranscriptRole, and TranscriptEntry models. Includes full transcript support with timestamp, role, text, and event fields. Maintained backward compatibility with existing CallLog model."
+
+  - task: "Call Transcript APIs - GET /api/calls"
+    implemented: true
+    working: false
+    file: "backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+        - working: false
+        - agent: "main"
+        - comment: "Implemented list calls endpoint with comprehensive filtering: from/to phone numbers, text search in customer names/phones/transcripts, status and tag filtering, cursor-based pagination. Excludes full transcript for performance."
+
+  - task: "Call Transcript APIs - GET /api/calls/{id}"
+    implemented: true
+    working: false
+    file: "backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+        - working: false
+        - agent: "main"
+        - comment: "Implemented get full call endpoint returning complete call document including full transcript array with validation to ensure transcript is always an array."
+
+  - task: "Call Transcript APIs - POST /api/calls/simulate"
+    implemented: true
+    working: false
+    file: "backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+        - working: false
+        - agent: "main"
+        - comment: "Implemented realistic call simulation with 4 scenarios (estimate, diagnostic, voicemail, reschedule). Generates 10-25 transcript turns with realistic conversation flows, timing, duration, tags, and optional recording URLs. Includes proper seed support for reproducible results."
 
 backend:
   - task: "AI Voice Scheduling environment variable"
