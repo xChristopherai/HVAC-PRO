@@ -32,6 +32,22 @@ import FilterChips from './ui/FilterChips';
 import UnifiedCard from './ui/UnifiedCard';
 import authService from '../utils/auth';
 
+// Helper function for status colors
+const getStatusColor = (status) => {
+  switch (status) {
+    case 'available':
+      return 'bg-emerald-100 text-emerald-800 border-emerald-200';
+    case 'busy':
+      return 'bg-amber-100 text-amber-800 border-amber-200';
+    case 'off_duty':
+      return 'bg-gray-100 text-gray-800 border-gray-200';
+    case 'unavailable':
+      return 'bg-red-100 text-red-800 border-red-200';
+    default:
+      return 'bg-gray-100 text-gray-800 border-gray-200';
+  }
+};
+
 const StatusBadge = ({ status }) => {
   const configs = {
     available: { label: 'Available', variant: 'success', icon: CheckCircle },
