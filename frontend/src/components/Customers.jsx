@@ -530,9 +530,23 @@ const Customers = ({ currentUser, aiVoiceEnabled }) => {
                   </div>
                 )}
                 
+                {customer.last_appointment && (
+                  <div className="flex items-center space-x-2 text-sm text-muted-foreground">
+                    <Calendar className="w-4 h-4" />
+                    <span>Last: {new Date(customer.last_appointment).toLocaleDateString()}</span>
+                  </div>
+                )}
+                
                 <div className="pt-2 flex items-center justify-between">
-                  <div className="text-xs text-muted-foreground">
-                    {customer.total_jobs || 0} jobs
+                  <div className="flex items-center space-x-4">
+                    <div className="text-xs text-muted-foreground">
+                      {customer.total_jobs || 0} jobs
+                    </div>
+                    {customer.total_jobs > 1 && (
+                      <Badge variant="secondary" className="text-xs px-2 py-0.5 bg-blue-100 text-blue-700">
+                        Repeat
+                      </Badge>
+                    )}
                   </div>
                   
                   <div className="flex space-x-1">
