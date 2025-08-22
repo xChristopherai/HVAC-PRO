@@ -519,6 +519,15 @@ button[data-variant="outline"] {
    CUSTOMERS PAGE SPECIFIC STYLES - MAXIMUM SPECIFICITY
    =============================== */
 
+/* Override CSS Variables for Customers Page */
+#customers-page {
+  --background: #ffffff !important;
+  --card: #ffffff !important;
+  --input: #e5e7eb !important;
+  --border: #e5e7eb !important;
+  --primary: #4f46e5 !important;
+}
+
 /* Customers page ONLY - Nuclear Override for Yellow Elements */
 #customers-page input[type="search"],
 #customers-page .search-bar,
