@@ -65,13 +65,13 @@ body {
    =============================== */
 
 .top-nav {
-  position: sticky;
-  top: 0;
-  z-index: 50;
-  height: var(--nav-height);
-  background: var(--surface);
-  border-bottom: 1px solid var(--border);
-  box-shadow: var(--shadow);
+  position: sticky !important;
+  top: 0 !important;
+  z-index: 50 !important;
+  height: var(--nav-height) !important;
+  background: var(--surface) !important;
+  border-bottom: 1px solid var(--border) !important;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06) !important;
 }
 
 .top-nav-container {
