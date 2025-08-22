@@ -24,7 +24,6 @@ import authService from './utils/auth';
 
 // Import components
 import Dashboard from './components/Dashboard';
-// New UI Components (to be created)
 import Customers from './components/Customers';
 import Appointments from './components/Appointments';
 import Technicians from './components/Technicians';
@@ -32,14 +31,9 @@ import Messaging from './components/Messaging';
 import Calls from './components/Calls';
 import QAGates from './components/QAGates';
 import Reports from './components/Reports';
-
-// Legacy components with NEW_UI flag support
 import Settings from './components/Settings';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
-
-// Feature Flag for NEW_UI
-const NEW_UI = true;
 
 // AI Voice Scheduling Feature Flag
 const AI_VOICE_SCHEDULING_ENABLED = process.env.REACT_APP_AI_VOICE_SCHEDULING_ENABLED === 'true';
@@ -75,7 +69,7 @@ const useResponsive = () => {
 };
 
 // Top Navigation Component - Stripe Style
-const TopNavigation = ({ sidebarOpen, setSidebarOpen }) => {
+const TopNavigation = ({ mobileMenuOpen, setMobileMenuOpen }) => {
   const location = useLocation();
   const { isMobile } = useResponsive();
   
@@ -95,7 +89,7 @@ const TopNavigation = ({ sidebarOpen, setSidebarOpen }) => {
     alignItems: 'center',
     justifyContent: 'space-between',
     height: '100%',
-    maxWidth: '1400px',
+    maxWidth: '1280px',
     margin: '0 auto',
     padding: '0 1.5rem'
   };
@@ -113,15 +107,15 @@ const TopNavigation = ({ sidebarOpen, setSidebarOpen }) => {
     <header className="top-nav" style={headerStyle}>
       <div className="top-nav-container" style={containerStyle}>
         {/* Left side - Logo */}
-        <div className="top-nav-logo">
-          <div className="logo-icon">
-            <span className="logo-text">H</span>
+        <div className="flex items-center gap-2">
+          <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
+            <span className="text-white font-bold text-sm">H</span>
           </div>
-          <span className="logo-brand">HVAC Pro</span>
+          <span className="text-lg font-semibold text-gray-900">HVAC Pro</span>
         </div>
 
-        {/* Center - Navigation items (desktop) */}
-        <nav className="top-nav-items" style={navItemsStyle}>
+        {/* Center - Navigation items (desktop only) */}
+        <nav style={navItemsStyle}>
           {navigation.map((item) => {
             const Icon = item.icon;
             const isActive = location.pathname === item.href || 
@@ -132,52 +126,53 @@ const TopNavigation = ({ sidebarOpen, setSidebarOpen }) => {
                 key={item.name}
                 to={item.href}
                 className={cn(
-                  "nav-item",
-                  isActive && "nav-item-active"
+                  "flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-50 transition-colors relative",
+                  isActive && "text-blue-600 font-semibold"
                 )}
                 aria-current={isActive ? "page" : undefined}
               >
-                <Icon className="nav-item-icon" />
-                <span className="nav-item-label">{item.name}</span>
+                <Icon className="w-4 h-4" />
+                <span>{item.name}</span>
+                {isActive && (
+                  <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-6 h-0.5 bg-blue-600 rounded-full" />
+                )}
               </Link>
             );
           })}
         </nav>
 
         {/* Right side - Search, notifications, user menu */}
-        <div className="top-nav-actions">
+        <div className="flex items-center gap-3">
           {!isMobile && (
             <>
-              <div className="search-container">
-                <Search className="search-icon" />
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
                 <Input 
                   placeholder="Search..." 
-                  className="search-input"
+                  className="pl-9 w-64 bg-white border-gray-200"
                 />
               </div>
               
               <Button 
                 variant="ghost" 
                 size="icon"
-                className="notification-btn"
+                className="text-gray-600 hover:text-gray-900"
                 aria-label="Notifications"
               >
                 <Bell className="w-5 h-5" />
               </Button>
               
-              <div className="user-menu">
-                <Button 
-                  variant="ghost" 
-                  className="user-menu-btn"
-                  aria-label="User menu"
-                >
-                  <div className="user-avatar">
-                    <User className="w-4 h-4" />
-                  </div>
-                  <span className="user-name">John Smith</span>
-                  <ChevronDown className="w-4 h-4" />
-                </Button>
-              </div>
+              <Button 
+                variant="ghost" 
+                className="flex items-center gap-2 px-3 py-2 text-gray-600 hover:text-gray-900"
+                aria-label="User menu"
+              >
+                <div className="w-7 h-7 bg-gray-100 border border-gray-200 rounded-full flex items-center justify-center">
+                  <User className="w-4 h-4" />
+                </div>
+                <span className="text-sm font-medium">John Smith</span>
+                <ChevronDown className="w-4 h-4" />
+              </Button>
             </>
           )}
 
@@ -186,9 +181,9 @@ const TopNavigation = ({ sidebarOpen, setSidebarOpen }) => {
             <Button
               variant="ghost"
               size="icon"
-              className="mobile-menu-btn"
-              onClick={() => setSidebarOpen(!sidebarOpen)}
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
               aria-label="Toggle menu"
+              className="text-gray-600 hover:text-gray-900"
             >
               <Menu className="w-5 h-5" />
             </Button>
@@ -222,25 +217,25 @@ const MobileNavDrawer = ({ isOpen, setIsOpen }) => {
     };
   }, [isOpen, setIsOpen]);
   
+  if (!isOpen) return null;
+  
   return (
     <>
       {/* Backdrop */}
-      {isOpen && (
-        <div 
-          className="mobile-nav-backdrop"
-          onClick={() => setIsOpen(false)}
-          aria-hidden="true"
-        />
-      )}
+      <div 
+        className="fixed inset-0 bg-black bg-opacity-50 z-50"
+        onClick={() => setIsOpen(false)}
+        aria-hidden="true"
+      />
       
       {/* Drawer */}
-      <div className={cn("mobile-nav-drawer", isOpen && "mobile-nav-drawer-open")}>
-        <div className="mobile-nav-header">
-          <div className="mobile-nav-logo">
-            <div className="logo-icon">
-              <span className="logo-text">H</span>
+      <div className="fixed top-0 right-0 h-full w-80 bg-white shadow-xl z-50 flex flex-col">
+        <div className="flex items-center justify-between p-4 border-b border-gray-200">
+          <div className="flex items-center gap-2">
+            <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
+              <span className="text-white font-bold text-sm">H</span>
             </div>
-            <span className="logo-brand">HVAC Pro</span>
+            <span className="text-lg font-semibold text-gray-900">HVAC Pro</span>
           </div>
           
           <Button
@@ -253,7 +248,7 @@ const MobileNavDrawer = ({ isOpen, setIsOpen }) => {
           </Button>
         </div>
         
-        <nav className="mobile-nav-items">
+        <nav className="flex-1 p-4 space-y-2">
           {navigation.map((item) => {
             const Icon = item.icon;
             const isActive = location.pathname === item.href || 
@@ -264,14 +259,14 @@ const MobileNavDrawer = ({ isOpen, setIsOpen }) => {
                 key={item.name}
                 to={item.href}
                 className={cn(
-                  "mobile-nav-item",
-                  isActive && "mobile-nav-item-active"
+                  "flex items-center gap-3 px-4 py-3 text-base font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded-lg transition-colors",
+                  isActive && "bg-blue-50 text-blue-600 border-l-4 border-blue-600"
                 )}
                 onClick={() => setIsOpen(false)}
                 aria-current={isActive ? "page" : undefined}
               >
-                <Icon className="mobile-nav-icon" />
-                <span className="mobile-nav-label">{item.name}</span>
+                <Icon className="w-5 h-5" />
+                <span>{item.name}</span>
               </Link>
             );
           })}
@@ -281,41 +276,17 @@ const MobileNavDrawer = ({ isOpen, setIsOpen }) => {
   );
 };
 
-// Authentication hook
-const useAuth = () => {
-  const [user, setUser] = useState(null);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    const initAuth = async () => {
-      try {
-        const authResult = await authService.login('owner', 'company-001');
-        if (authResult.success) {
-          setUser(authResult.user);
-        }
-      } catch (err) {
-        console.error('Authentication failed:', err);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    initAuth();
-  }, []);
-
-  return { user, loading };
-};
-
-// Main Layout Component - NEW HORIZONTAL LAYOUT
+// Main Layout Component - CLEAN NO SIDEBAR
 const Layout = ({ children }) => {
-  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   
   return (
-    <div className="app-layout">
-      <TopNavigation sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} />
-      <MobileNavDrawer isOpen={sidebarOpen} setIsOpen={setSidebarOpen} />
+    <div className="min-h-screen bg-gray-50">
+      <TopNavigation mobileMenuOpen={mobileMenuOpen} setMobileMenuOpen={setMobileMenuOpen} />
+      <MobileNavDrawer isOpen={mobileMenuOpen} setIsOpen={setMobileMenuOpen} />
       
-      <main className="main-content-area">
+      {/* Main Content - Full Width, No Sidebar Space */}
+      <main className="mx-auto max-w-7xl px-6 lg:px-8 py-6">
         {children}
       </main>
     </div>
@@ -367,20 +338,14 @@ const App = () => {
     }
   };
 
-  const handleLogout = () => {
-    authService.logout();
-    setCurrentUser(null);
-    setIsAuthenticated(false);
-  };
-
   if (loading) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center space-y-4">
-          <div className="w-8 h-8 bg-primary rounded-lg animate-pulse mx-auto flex items-center justify-center">
-            <Wrench className="w-4 h-4 text-primary-foreground" />
+          <div className="w-8 h-8 bg-blue-600 rounded-lg animate-pulse mx-auto flex items-center justify-center">
+            <Wrench className="w-4 h-4 text-white" />
           </div>
-          <p className="text-muted-foreground">Loading HVAC Pro...</p>
+          <p className="text-gray-600">Loading HVAC Pro...</p>
         </div>
       </div>
     );
@@ -388,13 +353,13 @@ const App = () => {
 
   if (error && !isAuthenticated) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center space-y-4 max-w-md mx-auto p-6">
-          <div className="w-12 h-12 bg-destructive/10 rounded-lg mx-auto flex items-center justify-center">
-            <X className="w-6 h-6 text-destructive" />
+          <div className="w-12 h-12 bg-red-50 rounded-lg mx-auto flex items-center justify-center">
+            <X className="w-6 h-6 text-red-600" />
           </div>
-          <h2 className="text-xl font-semibold">Something went wrong</h2>
-          <p className="text-muted-foreground">{error}</p>
+          <h2 className="text-xl font-semibold text-gray-900">Something went wrong</h2>
+          <p className="text-gray-600">{error}</p>
           <Button onClick={() => window.location.reload()}>
             Try Again
           </Button>
