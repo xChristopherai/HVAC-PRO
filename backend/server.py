@@ -736,7 +736,185 @@ async def create_voice_appointment(session_data: dict, phone_number: str) -> App
         logger.error(f"Error creating voice appointment: {str(e)}")
         raise
 
-# ==================== CALL LOG ENDPOINTS (PHASE 6) ====================
+# ==================== SIMPLE CALLS API (PHASE 6 - MINIMAL) ====================
+
+@app.get("/api/calls")
+async def get_calls(
+    from_date: Optional[str] = Query(None, alias="from", description="Start date (YYYY-MM-DD)"),
+    to_date: Optional[str] = Query(None, alias="to", description="End date (YYYY-MM-DD)"),
+    q: Optional[str] = Query(None, description="Search query for name or phone"),
+    ai_answered: Optional[bool] = Query(None, description="Filter by AI answered calls"),
+    transferred: Optional[bool] = Query(None, description="Filter by transferred calls"),
+    limit: int = Query(20, description="Number of results"),
+    cursor: Optional[str] = Query(None, description="Pagination cursor")
+):
+    """Simple calls API matching the frontend spec"""
+    try:
+        # Build query filters
+        filters = {"company_id": "company-001"}  # Default company
+        
+        # Date filters
+        if from_date or to_date:
+            date_filter = {}
+            if from_date:
+                try:
+                    from_dt = datetime.strptime(from_date, "%Y-%m-%d")
+                    date_filter["$gte"] = from_dt
+                except ValueError:
+                    pass
+            if to_date:
+                try:
+                    to_dt = datetime.strptime(to_date, "%Y-%m-%d") + timedelta(days=1)
+                    date_filter["$lt"] = to_dt
+                except ValueError:
+                    pass
+            if date_filter:
+                filters["start_time"] = date_filter
+        
+        # Search filter
+        if q:
+            search_regex = {"$regex": q.replace("+", "\\+"), "$options": "i"}
+            filters["$or"] = [
+                {"customer_name": search_regex},
+                {"phone_number": search_regex}
+            ]
+        
+        # AI answered filter
+        if ai_answered is not None:
+            if ai_answered:
+                filters["answered_by_ai"] = True
+                filters["transferred_to_tech"] = False
+            else:
+                filters["$or"] = [
+                    {"answered_by_ai": False},
+                    {"transferred_to_tech": True}
+                ]
+        
+        # Transferred filter
+        if transferred is not None:
+            filters["transferred_to_tech"] = transferred
+        
+        # Pagination
+        skip = 0
+        if cursor:
+            try:
+                skip = int(cursor) * limit
+            except ValueError:
+                skip = 0
+        
+        # Get calls
+        calls_data = await db.call_logs.find(filters)\
+            .sort("start_time", -1)\
+            .skip(skip)\
+            .limit(limit)\
+            .to_list(limit)
+        
+        # Convert to simple format
+        calls = []
+        for call_data in calls_data:
+            calls.append({
+                "id": call_data["id"],
+                "customer_name": call_data.get("customer_name", "Unknown"),
+                "phone_number": call_data.get("phone_number", ""),
+                "start_time": call_data.get("start_time", datetime.utcnow()).isoformat(),
+                "duration": call_data.get("duration", 0),
+                "status": call_data.get("status", "unknown"),
+                "direction": call_data.get("direction", "inbound"),
+                "answered_by_ai": call_data.get("answered_by_ai", False),
+                "transferred_to_tech": call_data.get("transferred_to_tech", False),
+                "tech_name": call_data.get("tech_name"),
+                "outcome": call_data.get("outcome"),
+                "issue_type": call_data.get("issue_type")
+            })
+        
+        return {
+            "calls": calls,
+            "has_more": len(calls) == limit,
+            "next_cursor": str(int(cursor or 0) + 1) if len(calls) == limit else None
+        }
+        
+    except Exception as e:
+        logger.error(f"Error fetching calls: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/api/calls/{call_id}")
+async def get_call_details(call_id: str):
+    """Get detailed call information with transcript"""
+    try:
+        call_data = await db.call_logs.find_one({"id": call_id})
+        if not call_data:
+            raise HTTPException(status_code=404, detail="Call not found")
+        
+        # Return detailed call data
+        return {
+            "id": call_data["id"],
+            "customer_name": call_data.get("customer_name", "Unknown"),
+            "phone_number": call_data.get("phone_number", ""),
+            "start_time": call_data.get("start_time", datetime.utcnow()).isoformat(),
+            "end_time": call_data.get("end_time", datetime.utcnow()).isoformat() if call_data.get("end_time") else None,
+            "duration": call_data.get("duration", 0),
+            "status": call_data.get("status", "unknown"),
+            "direction": call_data.get("direction", "inbound"),
+            "answered_by_ai": call_data.get("answered_by_ai", False),
+            "transferred_to_tech": call_data.get("transferred_to_tech", False),
+            "tech_name": call_data.get("tech_name"),
+            "outcome": call_data.get("outcome"),
+            "issue_type": call_data.get("issue_type"),
+            "transcript": call_data.get("transcript", []),
+            "session_data": call_data.get("session_data", {}),
+            "ai_confidence": call_data.get("ai_confidence"),
+            "recording_url": call_data.get("recording_url"),  # For audio player
+            "notes": call_data.get("notes", "")
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error fetching call details: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/api/calls/simulate")
+async def simulate_call():
+    """Optional demo endpoint to create a fake call for testing"""
+    try:
+        fake_call = CallLog(
+            company_id="company-001",
+            phone_number=f"+155512{str(random.randint(10000, 99999))}",
+            customer_name=random.choice(["John Doe", "Jane Smith", "Mike Johnson", "Sarah Wilson", "Chris Brown"]),
+            call_sid=f"demo_call_{datetime.utcnow().timestamp()}",
+            direction="inbound",
+            status=CallStatus.COMPLETED,
+            duration=random.randint(60, 300),
+            answered_by_ai=random.choice([True, False]),
+            transferred_to_tech=random.choice([True, False]),
+            outcome=random.choice([CallOutcome.APPOINTMENT_CREATED, CallOutcome.INFORMATION_PROVIDED, CallOutcome.FOLLOW_UP_NEEDED]),
+            issue_type=random.choice([IssueType.NO_HEAT, IssueType.NO_COOL, IssueType.MAINTENANCE]),
+            transcript=[
+                {
+                    "timestamp": datetime.utcnow().isoformat(),
+                    "speaker": "ai",
+                    "content": "Hello! Welcome to HVAC Pro. How can I help you today?",
+                    "confidence": 1.0
+                },
+                {
+                    "timestamp": datetime.utcnow().isoformat(),
+                    "speaker": "customer", 
+                    "content": "My heater is not working properly.",
+                    "confidence": 0.9
+                }
+            ],
+            ai_confidence=0.85
+        )
+        
+        await db.call_logs.insert_one(fake_call.dict())
+        
+        return {"message": "Fake call created successfully", "call": fake_call.dict()}
+        
+    except Exception as e:
+        logger.error(f"Error creating fake call: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+# ==================== EXISTING CALL LOG ENDPOINTS (LEGACY) ====================
 
 @app.get("/api/call-logs", response_model=CallLogSearchResponse)
 async def search_call_logs(
