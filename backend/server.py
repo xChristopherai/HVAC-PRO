@@ -740,9 +740,7 @@ async def create_voice_appointment(session_data: dict, phone_number: str) -> App
 # ==================== OWNER WEEKLY SUMMARY SMS (PHASE 8) ====================
 
 @app.post("/api/reports/weekly-summary/trigger")
-async def trigger_weekly_summary(
-    current_user: dict = Depends(get_current_user)
-):
+async def trigger_weekly_summary():
     """Manual trigger for weekly owner summary SMS"""
     try:
         # Generate weekly summary
