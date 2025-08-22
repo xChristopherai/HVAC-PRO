@@ -241,7 +241,7 @@ const QAGates = () => {
   const getStatusIcon = (status) => {
     switch (status) {
       case 'passed': return <CheckCircle className="h-5 w-5 text-green-500" />;
-      case 'pending': return <Clock className="h-5 w-5 text-yellow-500" />;
+      case 'pending': return <Clock className="h-5 w-5 text-amber-600" />;
       case 'blocked': return <XCircle className="h-5 w-5 text-red-500" />;
       default: return <Clock className="h-5 w-5 text-gray-400" />;
     }
