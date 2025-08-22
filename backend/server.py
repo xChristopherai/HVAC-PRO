@@ -1216,7 +1216,7 @@ async def simulate_call(request: SimulateCallRequest, current_user: dict = Depen
         # Create call
         call = Call(
             direction=CallDirection.INBOUND,
-            from_=random.choice(customer_phones),
+            **{"from": random.choice(customer_phones)},  # Use alias field name
             to=business_phone,
             started_at=started_at,
             ended_at=ended_at,
