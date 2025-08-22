@@ -494,7 +494,7 @@ const Reports = () => {
                 <span className={`inline-flex px-3 py-1 text-sm font-medium rounded-full ${
                   selectedMessage.status === 'sent' 
                     ? 'text-green-700 bg-green-100'
-                    : 'text-yellow-700 bg-yellow-100'
+                    : 'text-amber-700 bg-amber-100'
                 }`}>
                   {selectedMessage.status === 'sent' ? 'Sent' : 'Logged'}
                 </span>
