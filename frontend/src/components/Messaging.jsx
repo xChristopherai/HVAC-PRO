@@ -536,7 +536,7 @@ const Messaging = ({ currentUser }) => {
   ];
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6" style={{ background: '#F3F4F6' }}>
       {/* New Message Dialog */}
       {NEW_MESSAGE_ENABLED && (
         <NewMessageDialog 
