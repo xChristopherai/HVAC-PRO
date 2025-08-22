@@ -368,7 +368,7 @@ body {
 /* Tablet and below */
 @media (max-width: 1023px) {
   .top-nav-items {
-    display: none;
+    display: none !important;
   }
   
   .mobile-menu-btn {
@@ -376,11 +376,11 @@ body {
   }
   
   .search-container {
-    display: none;
+    display: none !important;
   }
   
   .user-menu {
-    display: none;
+    display: none !important;
   }
 }
 
