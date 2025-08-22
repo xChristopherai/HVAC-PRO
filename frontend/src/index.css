@@ -1,73 +1,76 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-/* FORCE LIGHT BLUE BACKGROUND - HIGHEST PRIORITY */
-* {
-  background-color: #F0F8FF !important;
+/* Dark Text Tokens - No White Text Policy */
+:root {
+  --text-primary: #111827;   /* slate-900 */
+  --text-secondary: #374151; /* slate-700 */
+  --text-muted: #4B5563;     /* slate-600 */
 }
 
-/* Only cards and inputs should be white */
-.card, [class*="card"], .bg-white, button, input, textarea, select, 
-.sidebar, [class*="sidebar"], header, nav {
+/* Global body styles with dark text */
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
   background-color: #FFFFFF !important;
+  color: var(--text-primary) !important; /* Dark text instead of default */
 }
 
-/* Blue elements */
-.bg-primary, .bg-blue-600, [class*="primary"] {
-  background-color: #0070E0 !important;
+code {
+  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
+    monospace;
 }
 
+/* Shadcn UI Variables with Dark Text Tokens */
 @layer base {
   :root {
-    --background: 240 248 255; /* #F0F8FF - Very Light Blue */
-    --foreground: 31 41 55; /* #1F2937 - text-gray-800 */
+    --background: 255 255 255; /* #FFFFFF */
+    --foreground: 17 24 39; /* var(--text-primary) */
     --card: 255 255 255; /* #FFFFFF */
-    --card-foreground: 31 41 55; /* #1F2937 - text-gray-800 */
+    --card-foreground: 17 24 39; /* var(--text-primary) */
     --popover: 255 255 255; /* #FFFFFF */
-    --popover-foreground: 31 41 55; /* #1F2937 - text-gray-800 */
-    --primary: 0 112 224; /* #0070E0 - PayPal Blue */
-    --primary-foreground: 255 255 255; /* #FFFFFF */
-    --secondary: 229 231 235; /* #E5E7EB */
-    --secondary-foreground: 31 41 55; /* #1F2937 - text-gray-800 */
-    --muted: 249 250 251; /* #F9FAFB */
-    --muted-foreground: 75 85 99; /* #4B5563 - text-gray-600 */
-    --accent: 249 250 251; /* #F9FAFB */
-    --accent-foreground: 31 41 55; /* #1F2937 - text-gray-800 */
-    --destructive: 239 68 68; /* #EF4444 */
-    --destructive-foreground: 255 255 255; /* #FFFFFF */
-    --border: 229 231 235; /* #E5E7EB */
-    --input: 229 231 235; /* #E5E7EB */
-    --ring: 124 58 237; /* #7C3AED */
-    --radius: 0.75rem; /* 12px */
-    --chart-1: 124 58 237; /* #7C3AED */
-    --chart-2: 59 130 246; /* #3B82F6 */
-    --chart-3: 16 185 129; /* #10B981 */
-    --chart-4: 245 158 11; /* #F59E0B */
-    --chart-5: 239 68 68; /* #EF4444 */
+    --popover-foreground: 17 24 39; /* var(--text-primary) */
+    --primary: 59 130 246; 
+    --primary-foreground: 17 24 39; /* Dark text on primary buttons */
+    --secondary: 241 245 249;
+    --secondary-foreground: 17 24 39; /* var(--text-primary) */
+    --muted: 241 245 249;
+    --muted-foreground: 75 85 99; /* var(--text-muted) */
+    --accent: 241 245 249;
+    --accent-foreground: 17 24 39; /* var(--text-primary) */
+    --destructive: 239 68 68;
+    --destructive-foreground: 17 24 39; /* Dark text on destructive buttons */
+    --border: 229 231 235;
+    --input: 229 231 235;
+    --ring: 59 130 246;
+    --radius: 0.5rem;
   }
 
   .dark {
-    --background: 11 13 18; /* #0B0D12 */
-    --foreground: 248 250 252; /* #F8FAFC */
-    --card: 17 19 26; /* #11131A */
-    --card-foreground: 248 250 252; /* #F8FAFC */
-    --popover: 17 19 26; /* #11131A */
-    --popover-foreground: 248 250 252; /* #F8FAFC */
-    --primary: 124 58 237; /* #7C3AED violet-600 */
-    --primary-foreground: 255 255 255; /* #FFFFFF */
-    --secondary: 31 36 48; /* #1F2430 */
-    --secondary-foreground: 248 250 252; /* #F8FAFC */
-    --muted: 31 36 48; /* #1F2430 */
-    --muted-foreground: 148 163 184; /* #94A3B8 */
-    --accent: 31 36 48; /* #1F2430 */
-    --accent-foreground: 248 250 252; /* #F8FAFC */
-    --destructive: 239 68 68; /* #EF4444 */
-    --destructive-foreground: 255 255 255; /* #FFFFFF */
-    --border: 31 36 48; /* #1F2430 */
-    --input: 31 36 48; /* #1F2430 */
-    --ring: 124 58 237; /* #7C3AED */
+    --background: 2 6 23;
+    --foreground: 248 250 252;
+    --card: 2 6 23;
+    --card-foreground: 248 250 252;
+    --popover: 2 6 23;
+    --popover-foreground: 248 250 252;
+    --primary: 248 250 252;
+    --primary-foreground: 2 6 23;
+    --secondary: 30 41 59;
+    --secondary-foreground: 248 250 252;
+    --muted: 30 41 59;
+    --muted-foreground: 148 163 184;
+    --accent: 30 41 59;
+    --accent-foreground: 248 250 252;
+    --destructive: 127 29 29;
+    --destructive-foreground: 248 250 252;
+    --border: 30 41 59;
+    --input: 30 41 59;
+    --ring: 212 212 216;
   }
 }
 
@@ -76,98 +79,62 @@
     @apply border-border;
   }
   body {
-    @apply bg-background text-foreground font-sans;
-    font-feature-settings: "rlig" 1, "calt" 1;
-  }
-
-  /* Global Text Styling - Stripe.com inspired */
-  h1, h2, h3, h4, h5, h6 {
-    color: rgb(31 41 55) !important; /* text-gray-800 */
-    font-weight: 500;
-  }
-
-  p, span, div, label, button:not(.bg-primary), a {
-    color: rgb(31 41 55) !important; /* text-gray-800 */
-  }
-
-  /* Secondary/Muted text elements */
-  .text-muted-foreground,
-  .text-secondary,
-  small,
-  [class*="description"],
-  [class*="subtitle"],
-  [class*="helper"],
-  time {
-    color: rgb(75 85 99) !important; /* text-gray-600 */
-  }
-
-  /* Form elements */
-  input, textarea, select {
-    color: rgb(31 41 55) !important; /* text-gray-800 */
-  }
-
-  input::placeholder, textarea::placeholder, select::placeholder {
-    color: rgb(107 114 128) !important; /* text-gray-500 */
-  }
-
-  /* Table elements */
-  th, td {
-    color: rgb(31 41 55) !important; /* text-gray-800 */
-  }
-
-  /* Sidebar and navigation */
-  nav, nav a, nav button, nav span {
-    color: rgb(31 41 55) !important; /* text-gray-800 */
-  }
-
-  /* Card content */
-  [class*="card"] h1,
-  [class*="card"] h2, 
-  [class*="card"] h3,
-  [class*="card"] p,
-  [class*="card"] span,
-  [class*="card"] div,
-  [class*="card"] label {
-    color: rgb(31 41 55) !important; /* text-gray-800 */
-  }
-
-  /* Override problematic light text except on dark backgrounds */
-  .text-white:not(.bg-primary *):not(.bg-blue-600 *):not(.bg-gray-900 *):not(.bg-black *) {
-    color: rgb(31 41 55) !important; /* text-gray-800 */
-  }
-
-  /* Keep white text only on dark backgrounds */
-  .bg-primary, .bg-primary *,
-  .bg-blue-600, .bg-blue-600 *,
-  .bg-gray-900, .bg-gray-900 *,
-  .bg-black, .bg-black *,
-  button.bg-primary, button.bg-primary *,
-  button.bg-blue-600, button.bg-blue-600 * {
-    color: rgb(255 255 255) !important; /* white */
-  }
-
-  /* Timestamps and dates */
-  time, [class*="timestamp"], [class*="date"] {
-    color: rgb(75 85 99) !important; /* text-gray-600 */
-  }
-
-  /* Links */
-  a:not(.button) {
-    color: rgb(31 41 55) !important; /* text-gray-800 */
-  }
-
-  a:not(.button):hover {
-    color: rgb(55 65 81) !important; /* text-gray-700 */
-  }
-
-  /* Badge and status elements */
-  [class*="badge"], [class*="status"] {
-    color: rgb(31 41 55) !important; /* text-gray-800 */
+    @apply bg-background text-foreground;
   }
 }
 
-@layer utilities {
-  .text-balance {
-    text-wrap: balance;
-  }
+/* Remove problematic white text overrides */
+/* REMOVED: Force white text on gray backgrounds - replaced with dark text */
+.dark-text-primary {
+  color: var(--text-primary) !important;
+}
+
+.dark-text-secondary {
+  color: var(--text-secondary) !important;
+}
+
+.dark-text-muted {
+  color: var(--text-muted) !important;
+}
+
+/* Button text should be dark on light backgrounds */
+.btn-light {
+  background-color: #f8fafc;
+  color: var(--text-primary);
+  border: 1px solid #e2e8f0;
+}
+
+.btn-light:hover {
+  background-color: #f1f5f9;
+  color: var(--text-primary);
+}
+
+/* Toast notifications with dark text */
+.toast-success {
+  background-color: #f0fdf4;
+  color: var(--text-primary);
+  border: 1px solid #bbf7d0;
+}
+
+.toast-error {
+  background-color: #fef2f2;
+  color: var(--text-primary);
+  border: 1px solid #fecaca;
+}
+
+/* Ensure all text in the app uses dark colors */
+h1, h2, h3, h4, h5, h6 {
+  color: var(--text-primary) !important;
+}
+
+p, span, div {
+  color: var(--text-primary);
+}
+
+.text-secondary {
+  color: var(--text-secondary) !important;
+}
+
+.text-muted {
+  color: var(--text-muted) !important;
 }
