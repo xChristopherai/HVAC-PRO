@@ -1,137 +1,90 @@
 /* Unified Design System - Appointments Style Source of Truth */
 
 :root {
-  /* Page & Surface Colors */
+  /* Core Page & Surface Colors - Appointments Style */
   --bg-page: #F3F4F6;        /* neutral-200 - page background like appointments */
   --bg-card: #FFFFFF;        /* white - card panels */
   --bg-subtle: #F9FAFB;      /* gray-50 - subtle backgrounds */
   
-  /* Typography */
+  /* Typography - No White Text Allowed */
   --text-primary: #111827;   /* gray-900 - primary text */
   --text-secondary: #374151; /* gray-700 - secondary text */
   --text-muted: #6B7280;     /* gray-500 - muted text */
   --text-subtle: #9CA3AF;    /* gray-400 - subtle text */
   
-  /* Borders & Strokes */
+  /* Borders & Shadows */
   --border-subtle: #E5E7EB;  /* gray-200 - card borders */
   --border-strong: #D1D5DB;  /* gray-300 - input borders */
+  --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.05); /* subtle card shadow */
   
-  /* Interactive Elements */
+  /* Interactive Colors */
   --primary: #2563EB;        /* blue-600 - primary actions */
   --primary-hover: #1D4ED8;  /* blue-700 - primary hover */
   --success: #059669;        /* emerald-600 - success states */
-  --warning: #D97706;        /* amber-600 - warning states */
+  --warning: #D97706;        /* amber-600 - warning states (NO YELLOW BG) */
   --error: #DC2626;          /* red-600 - error states */
   
-  /* Chips & Tags */
-  --chip-bg: #F9FAFB;        /* gray-50 - light chip background */
-  --chip-border: #E5E7EB;    /* gray-200 - chip borders */
-  --chip-text: #374151;      /* gray-700 - chip text */
-  
-  /* Shadows */
-  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
-  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-  
-  /* Spacing */
-  --radius-md: 0.5rem;       /* 8px - standard border radius */
-  --radius-lg: 0.75rem;      /* 12px - card border radius */
+  /* Status Colors - Subtle Backgrounds Only */
+  --status-success-bg: #F0FDF4;   /* emerald-50 */
+  --status-warning-bg: #FFFBEB;   /* amber-50 */
+  --status-error-bg: #FEF2F2;     /* red-50 */
+  --status-info-bg: #EFF6FF;      /* blue-50 */
 }
 
-/* Apply theme to body */
+/* Apply globally - Force override any existing styles */
+html,
 body {
   background: var(--bg-page) !important;
   color: var(--text-primary) !important;
 }
 
-/* Unified Card Style */
-.unified-card {
-  background: var(--bg-card);
-  border: 1px solid var(--border-subtle);
-  border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-sm);
-}
-
-/* Unified Stat Tile */
-.stat-tile {
-  background: var(--bg-card);
-  border: 1px solid var(--border-subtle);
-  border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-sm);
-  padding: 1rem;
-}
-
-/* Unified Search Bar */
-.search-bar {
-  background: var(--bg-card);
-  border: 1px solid var(--border-strong);
-  border-radius: var(--radius-md);
-  color: var(--text-primary);
-}
-
-.search-bar:focus {
-  outline: none;
-  border-color: var(--primary);
-  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.1);
-}
-
-/* Unified Filter Chips */
-.filter-chip {
-  background: var(--chip-bg);
-  border: 1px solid var(--chip-border);
-  border-radius: var(--radius-md);
-  color: var(--chip-text);
-  font-size: 0.875rem;
-  font-weight: 500;
-  padding: 0.375rem 0.75rem;
-  transition: all 0.15s ease;
-}
-
-.filter-chip:hover {
-  background: var(--bg-card);
-  border-color: var(--border-strong);
-}
-
-.filter-chip.active {
-  background: var(--primary);
-  border-color: var(--primary);
-  color: white;
-}
-
-/* NO YELLOW ANYWHERE */
-.bg-yellow-50, .bg-yellow-100, .bg-yellow-200, .bg-yellow-300, .bg-yellow-400, .bg-yellow-500 {
-  background: var(--bg-card) !important;
-}
-
-.bg-amber-50, .bg-amber-100, .bg-amber-200 {
-  background: var(--bg-subtle) !important;
-}
-
-.text-yellow-600, .text-yellow-700, .text-yellow-800 {
-  color: var(--warning) !important;
-}
-
-/* NO WHITE TEXT */
-.text-white {
+#root {
+  background: var(--bg-page) !important;
   color: var(--text-primary) !important;
 }
 
-/* Unified Typography */
-.page-title {
-  font-size: 1.875rem;
-  font-weight: 700;
-  color: var(--text-primary);
-  margin-bottom: 0.5rem;
+/* NUCLEAR OPTION - Kill ALL Yellow Backgrounds */
+*[class*="bg-yellow"],
+*[class*="bg-amber"], 
+*[style*="background: yellow"],
+*[style*="background-color: yellow"],
+*[style*="background: #FFFF00"],
+*[style*="background-color: #FFFF00"],
+*[style*="background: rgb(255, 255, 0)"],
+*[style*="background-color: rgb(255, 255, 0)"] {
+  background: var(--bg-card) !important;
+  background-color: var(--bg-card) !important;
 }
 
-.page-subtitle {
-  color: var(--text-muted);
-  font-size: 1rem;
-  margin-bottom: 1.5rem;
+/* Kill all white text */
+*[class*="text-white"],
+*[style*="color: white"],
+*[style*="color: #fff"],
+*[style*="color: #FFFFFF"] {
+  color: var(--text-primary) !important;
 }
 
-.section-title {
-  font-size: 1.125rem;
-  font-weight: 600;
-  color: var(--text-primary);
-  margin-bottom: 1rem;
+/* Force Card Backgrounds */
+.bg-card,
+[class*="bg-card"],
+.card,
+[class*="card"]:not([class*="card-header"]):not([class*="card-content"]) {
+  background: var(--bg-card) !important;
+  background-color: var(--bg-card) !important;
+}
+
+/* Unified Card Classes */
+.unified-card {
+  background: var(--bg-card) !important;
+  border: 1px solid var(--border-subtle) !important;
+  border-radius: 0.5rem !important;
+  box-shadow: var(--shadow-card) !important;
+}
+
+.unified-stat-tile {
+  background: var(--bg-card) !important;
+  border: 1px solid var(--border-subtle) !important;
+  border-radius: 0.5rem !important;
+  box-shadow: var(--shadow-card) !important;
+  padding: 1rem !important;
 }
