@@ -1,92 +1,83 @@
 <analysis>
-The previous AI engineer successfully brought the HVAC Assistant application from a basic template to an MVP with significant features. The work involved extensive full-stack development (FastAPI backend, React frontend), iterative UI redesigns (from Linear/Stripe to PayPal.com aesthetic, requiring significant CSS/component refactoring), and robust debugging, especially for persistent visual bugs and authentication issues. Key accomplishments include the implementation of AI Voice Scheduling (backend and partial frontend), a comprehensive backend for all major UI buttons, and a global fix for text visibility issues across the application. The work has been structured into distinct Phases for clarity, with Phases 2, 3, and 4 completed, and Phase 5 (Settings) currently underway, focusing on backend endpoint implementation and frontend component integration, with backend testing already passed. The engineer has demonstrated adaptability to changing UI requirements and persistence in resolving complex styling and functionality challenges.
+The AI engineer has skillfully navigated the development of the HVAC Assistant application through several complex phases, demonstrating a strong ability to build, refine, and debug a full-stack application iteratively. Starting from Phase 5 (Settings), the work progressed through implementing an AI Voice Scheduling backend and a client-facing Calls dashboard in Phase 6. Phase 7 introduced critical backend logic for QA gates and subcontractor holdbacks, which was then extended with a comprehensive frontend dashboard. Phase 8 focused on automated owner weekly summary SMS reports, evolving from a backend-only feature to a full-fledged Owner Scorecard UI with plain-English metrics. Significant attention was given to integrating real financial data from Phase 7 into the reports and ensuring bulletproof currency formatting on the frontend. The current task is an accessibility improvement, focusing on a global UI fix to eliminate all white text, which involves extensive CSS and component auditing and refactoring.
 </analysis>
 
 <product_requirements>
-The goal is to develop an AI-powered HVAC business management platform featuring an SMS receptionist, operations management, and owner analytics. Initially, the project shifted from a CORS bug fix to building the application from scratch.
-
-Key functionalities include:
-- **Phase 1 (MVP + Admin)**: AI SMS Receptionist, Business Dashboard, Settings, Multi-tenant Admin Portal, JWT Auth.
-- **Phase 2 (Owner-Only)**: Owner Insights (Chart.js), Google Calendar (mock), In-App Messaging, Automated Customer Rating, Notifications, Template-Based SMS.
-- **UI Redesign**: Transitioned from a Linear/Stripe aesthetic to a clean PayPal-style layout, emphasizing high contrast, readable text, a fixed left sidebar (260px), wide centered content (1200px), white rounded cards with subtle shadows, and a light PayPal-specific color palette.
-- **AI Voice Scheduling**: Automate appointment booking via Twilio Voice Webhook () using a state machine, collecting customer details (name, address, issue, time), checking availability (), creating/finding customers (), and creating appointments (). Mock adapters are required if Twilio credentials are not provided. Frontend: Hide Schedule Appointment if  is true, show Created by AI Voice badge, and wire Add Customer button.
-- **General**: Maintain existing functionality, re-enable authentication post-redesign, implement a  feature flag, ensure zero regressions, and tidy empty/error states.
-- **Phase 2 (Dashboard)**: Render dashboard with mock KPIs (Customers, Jobs, Technicians, Appointments) including ▲/▼ deltas. Implement four Quick Actions (Add Customer, Schedule Job, Create Invoice, View Reports) with POST endpoints and toast notifications. Respect feature flags (, ).
-- **Phase 3 (Customers & Appointments)**: Customers: Add modal (), Search + Filters (). Appointments: Calendar view (), tabs (scheduled/confirmed/in_progress/completed) via .
-- **Phase 4 (Technicians & Messaging)**: Technicians: Add, Search, status tabs (available/busy/off_duty/unavailable). Messaging: Search + tabs (all/active/converted/pending). New Message behind a flag (default hidden).
-- **Phase 5 (Settings)**: All sections (Business, AI, SMS, Calendar, Notifications, Billing, Service Areas, Integrations) should save data via a unified  endpoint. Billing allows management, and Integrations store credentials. Payments list should include PayPal/Venmo/Apple Pay (store creds only). Persistence upon refresh and test event success required.
+The goal is to develop an AI-powered HVAC business management platform with an SMS receptionist, operations management, and owner analytics. The project involves phased development:
+- **Phase 1-4**: AI SMS Receptionist, Admin Portal, Owner Insights, UI Redesign (to PayPal-style), AI Voice Scheduling, Dashboard KPIs, Quick Actions, Customers/Appointments/Technicians/Messaging lists with search and add functionalities.
+- **Phase 5 (Settings)**: Comprehensive settings panel for Business, AI Assistant, SMS, Calendar, Notifications, Billing, Service Areas, Integrations, all persisting data via a unified  endpoint, with mock API keys.
+- **Phase 6 (Voice & SMS)**: Implement  for AI Voice Scheduling (greet → collect details → appointment creation → SMS confirm). Introduce a Call Log (later Calls) page () with search (client name, phone), date filters, AI vs Human filters, lead tech transfers, call transcripts, stats, and a detail drawer.
+- **Phase 7 (QA Gates & Subcontractor Holdback)**: Implement hard blocks for job closure (microns < 500, photos, warranty, inspection) and 10% subcontractor payment holdbacks until QA/warranty/inspection pass. Frontend () includes status cards, jobs table, detail drawer with blocking reasons/photos, and sidebar controls for holdback percentage and QA toggles.
+- **Phase 8 (Owner Weekly Summary SMS)**: Backend generates a one-line SMS summary (mocked if Twilio is disabled) via . Frontend () displays an SMS preview, trigger button, KPI strip (calls, AI success, QA passes, potential revenue, holdback released), and history. This was later simplified to a plain-English Owner Scorecard with 5 large tiles, a single-line SMS preview, and a simplified history. The backend was updated to populate  and  from real Phase 7 data and ensure numerical responses. Frontend currency formatting was made robust.
+- **UI Fix: Ban White Text App-Wide**: Eliminate all white (/) text across the application, replacing it with dark text tokens for accessibility.
 </product_requirements>
 
 <key_technical_concepts>
-- **Full-stack Development**: React (Frontend) + FastAPI (Backend)
-- **Database**: MongoDB (using UUIDs for IDs)
-- **Styling**: Tailwind CSS, Shadcn/ui
-- **Charting**: Chart.js
-- **Authentication**: JWT, HTTP-only cookies
-- **External Integrations**: Twilio (SMS/Voice), Google Calendar, OpenAI (via Emergent LLM Key), mocked Stripe/QuickBooks
-- **Iconography**: Lucide React
-- **Process Management**: Supervisorctl
+- Full-stack Development: React (Frontend), FastAPI (Backend)
+- Database: MongoDB (using UUIDs for IDs)
+- Styling: Tailwind CSS, Shadcn/ui
+- External Integrations: Twilio (mocked), Google Calendar (mocked), OpenAI (via Emergent LLM Key), mocked Stripe/QuickBooks
+- Authentication: JWT, HTTP-only cookies (re-enabled as needed)
+- Process Management: Supervisorctl
 </key_technical_concepts>
 
 <code_architecture>
-The application follows a standard full-stack architecture with separate backend and frontend directories.
+The application uses a standard full-stack architecture with separate  and  directories.
 
 **Detailed Directory Structure:**
 
 
 **Key Files and Changes:**
--   : The core FastAPI application. It has been extensively updated to support over 150 API endpoints, manage CORS, handle authentication (temporarily disabled for dashboards, then re-enabled), and expose root-level endpoints. Recent updates include:
-    *   Support for filtering appointments by .
-    *   New endpoints for AI Voice Scheduling (, ).
-    *   Backend endpoints for Quick Actions (, , , ).
-    *   Backend endpoints for Customers search ().
-    *   Backend endpoints for Appointments calendar view and filtering (, ).
-    *   Backend endpoints for Technicians (, ).
-    *   Backend endpoints for Messaging (, ).
-    *   Unified settings update endpoint () and individual settings endpoints for Calendar, Notifications, Billing, Service Areas, and Integrations.
--   : Defines MongoDB data models. Created from scratch, it now includes  enum,  and  fields in  model, and an  model. Recent edits also included import fixes.
--   : Contains various mock services and utility functions. Recent changes include adding missing functions like  and others used by  for AI Voice Scheduling.
--   : The main React application and routing hub. It has been fully rewritten multiple times for feature sets, authentication, and UI redesigns. It now incorporates the  feature flag and passes  to relevant components.
--   : Global and component-level styles. Redesigned multiple times for different UI aesthetics (Linear/Stripe, PayPal). It includes CSS variables for the design system and has undergone various fixes for background colors and styling.
--   : Critical for global styling. Recently modified to apply comprehensive text styling rules, using  (text-gray-800) for primary and  (text-gray-600) for secondary text, resolving widespread text visibility issues.
--   : The owner-only analytics dashboard. Redesigned for PayPal aesthetic, it now includes functional KPIs with deltas and four Quick Actions buttons with mock success toasts.
--   : The comprehensive settings panel. Initially created and redesigned for PayPal, it has been completely rewritten to include functional sections for Business, AI Assistant, SMS Settings, Calendar, Notifications, Billing, Service Areas, and Integrations, all connected to backend persistence via . It also underwent multiple rounds of text color fixes.
--   : Customers list. Enhanced with Add Customer button functionality (opening a form and POSTing to ), search, and filter capabilities.
--   : Appointments list. Enhanced with a calendar view, status tabs (scheduled/confirmed/in_progress/completed), and a toggle between list and calendar views. The Schedule Appointment button is now conditionally hidden based on .
--   : Technicians list. Enhanced with add functionality, search, and status tabs (available/busy/off_duty/unavailable).
--   : In-app messaging component. Enhanced with search functionality, status tabs (all/active/converted/pending), and a New Message feature hidden behind a flag.
--   : Frontend environment variables.  and  were added/configured.
--   : Updated to include various UI libraries (, , ), and charting libraries (, ).
--   : Updated to integrate Shadcn UI presets and define color tokens/typography.
--   : Utility functions. Updated for Shadcn UI integration ( utility).
--   : Shadcn UI base components.
--   : Body element modified to force background color.
--   : Authentication utility. Updated to correctly construct API URLs by adding the  prefix.
+-   : The core FastAPI application.
+    -   **Importance**: Handles all API endpoints, authentication, and business logic.
+    -   **Changes**: Extensively updated for Phase 5 settings (), Phase 6 voice webhook and call logging (, ), Phase 7 QA gates (, ), and Phase 8 reporting (). Enhanced to ensure financial fields are numerical and SMS composition is in plain English.
+-   : Defines MongoDB data models.
+    -   **Importance**: Structures all data stored in MongoDB.
+    -   **Changes**: Added models/fields for  (transcript, status, AI confidence),  (microns, photos, warranty), and  (amount, status) to support new features.
+-   : Contains mock services and utility functions.
+    -   **Importance**: Provides business logic and mock external integrations.
+    -   **Changes**: Added , , , , , ,  and other functions for the new phases.
+-   : The main React application and routing hub.
+    -   **Importance**: Orchestrates application flow and component rendering.
+    -   **Changes**: Updated to include routes and navigation links for , , and  components.
+-   : Global and component-level styles.
+    -   **Importance**: Defines the application's visual theme.
+    -   **Changes**: Currently being modified to define global dark text tokens (, , ) and apply them to the  as part of the Ban White Text App-Wide fix.
+-   : The comprehensive settings panel.
+    -   **Importance**: Allows owners to configure business and AI settings.
+    -   **Changes**: Completely rewritten for Phase 5 to support all settings tabs and backend persistence.
+-   : (New file)
+    -   **Importance**: Implements the refined Call Log dashboard for Phase 6.
+    -   **Changes**: Created to display call data with search, filters, stats, table, and a detail drawer.
+-   : (New file)
+    -   **Importance**: Implements the owner dashboard for Phase 7 QA Gates and Holdback controls.
+    -   **Changes**: Created to show QA status cards, a jobs table, a drawer with blocking reasons, and sidebar controls.
+-   : (New file)
+    -   **Importance**: Implements the owner weekly summary reports dashboard for Phase 8.
+    -   **Changes**: Created, then modified to simplify the UI to an Owner Scorecard format with plain-English metrics, integrated with real holdback data, and uses  for currency.
+-   : Utility functions.
+    -   **Importance**: Provides reusable helper functions.
+    -   **Changes**: Added the  utility function for consistent currency formatting.
 </code_architecture>
 
 <pending_tasks>
-- **Production Deployment Fix**: The issue of the application not working on the production URL due to platform-level routing issues remains unresolved.
-- **Re-enable Full Authentication**: Authentication is temporarily disabled for dashboard endpoints and needs to be re-enabled fully.
-- **Complete Phase 3 Roadmap**: This includes Stripe/PayPal payments, QuickBooks/Xero integration, advanced calendar features, enhanced notifications, and mobile optimization. (Note: The term Phase 3 roadmap here refers to the user's initial large-scale vision, not the completed Phase 3 of the current development trajectory.)
-- **Twilio Integration**: Full integration with real Twilio credentials (instead of mock adapters).
+- **Production Deployment Fix**: Resolve platform-level routing issues preventing the app from working on the production URL.
+- **Re-enable Full Authentication**: Re-enable authentication for all dashboard endpoints.
+- **Complete Phase 3 Roadmap**: Implement Stripe/PayPal payments, QuickBooks/Xero integration, advanced calendar features, enhanced notifications, and mobile optimization.
+- **Twilio Integration**: Integrate with real Twilio credentials (replacing mock adapters).
+- **UI Fix: Ban White Text App-Wide**: Complete the audit and replacement of all white text in frontend components.
+- **Lint/Guard**: Implement a style lint rule that fails on  or  in .
 </pending_tasks>
 
 <current_work>
-Immediately before this summary request, the AI engineer was actively working on **PHASE 5 — Settings**. This phase involved comprehensively updating all settings tabs (Business, AI, SMS, Calendar, Notifications, Billing, Service Areas, Integrations) to persist data via a unified backend endpoint.
+The AI engineer is currently addressing a **UI Fix: Ban White Text App-Wide**. This is an accessibility task to ensure no white (/) font is present anywhere in the application.
 
-Specifically, the engineer has:
-1.  **Backend Implementation**:
-    *   Examined existing settings endpoints in .
-    *   Created a new unified  endpoint in  to handle all general settings updates.
-    *   Restarted the backend to load the new endpoint.
-    *   Successfully passed backend API tests for all Phase 5 settings endpoints with a 100% success rate, confirming data saving and retrieval for Calendar, Notifications, and Billing.
-2.  **Frontend Implementation**:
-    *   Completely rewrote the  file to integrate full Phase 5 functionality for all sections, including forms, logic for saving data, and conditional rendering.
-    *   Restarted the frontend to apply these changes.
-
-The current state is that the backend for Phase 5 settings is fully functional and tested, and the frontend components have been implemented and restarted. The next immediate step is to verify the frontend changes visually through screenshots and complete the acceptance criteria for Phase 5 as defined by the user.
+The work completed so far includes:
+1.  **Auditing**: Initial  commands were performed to identify existing occurrences of , , and  in both  and React components.
+2.  **Global CSS Update**: The file  has been modified to define new dark text CSS variables (, , ) and apply  to the global  element.
+The engineer has also prepared to fix individual React components.
 </current_work>
 
 <optional_next_step>
-Take comprehensive screenshots of each settings tab to verify the frontend implementation for Phase 5.
+Continue fixing all React components by replacing  and other white text instances with the new dark text tokens.
 </optional_next_step>
