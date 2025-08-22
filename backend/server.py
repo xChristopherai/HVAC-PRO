@@ -1155,6 +1155,10 @@ async def get_call(call_id: str, current_user: dict = Depends(get_current_user))
         if "transcript" not in call_data:
             call_data["transcript"] = []
         
+        # Handle field alias conversion
+        if "from_" in call_data:
+            call_data["from"] = call_data.pop("from_")
+        
         return Call(**call_data)
         
     except HTTPException:
