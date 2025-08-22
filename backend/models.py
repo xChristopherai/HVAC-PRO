@@ -300,8 +300,75 @@ class InquiryCreate(BaseModel):
     customer_phone: str
     initial_message: str
 
-# Call Log Models (Phase 6)
+# Enhanced Call Transcript Models
+class CallDirection(str, Enum):
+    INBOUND = "inbound"
+    OUTBOUND = "outbound"
+
 class CallStatus(str, Enum):
+    INCOMING = "incoming"
+    COMPLETED = "completed"
+    MISSED = "missed"
+    VOICEMAIL = "voicemail"
+    TRANSFERRED = "transferred"
+
+class CallDisposition(str, Enum):
+    BOOKED = "booked"
+    QUOTE = "quote"
+    SUPPORT = "support"
+    SPAM = "spam"
+    FOLLOW_UP = "follow_up"
+    NO_ANSWER = "no_answer"
+
+class CallSentiment(str, Enum):
+    POSITIVE = "positive"
+    NEUTRAL = "neutral"
+    NEGATIVE = "negative"
+
+class TranscriptRole(str, Enum):
+    AI = "ai"
+    CUSTOMER = "customer"
+    TECH = "tech"
+    SYSTEM = "system"
+
+class TranscriptEntry(BaseModel):
+    ts: datetime = Field(default_factory=datetime.utcnow)
+    role: TranscriptRole
+    text: Optional[str] = None
+    event: Optional[str] = None  # For system events like "transfer_started"
+
+# Main Call model for full transcript system
+class Call(BaseDocument):
+    # Basic call information
+    direction: CallDirection = CallDirection.INBOUND
+    from_: str = Field(alias="from")  # Phone number
+    to: str  # Phone number
+    
+    # Timing
+    started_at: datetime = Field(default_factory=datetime.utcnow)
+    ended_at: Optional[datetime] = None
+    duration_sec: Optional[int] = None
+    
+    # Status and outcome
+    status: CallStatus = CallStatus.INCOMING
+    disposition: Optional[CallDisposition] = None
+    
+    # Tags and metadata
+    tags: List[str] = Field(default_factory=list)
+    transcript: List[TranscriptEntry] = Field(default_factory=list)
+    recording_url: Optional[str] = None
+    sentiment: Optional[CallSentiment] = None
+    
+    # Relationships
+    created_by: Optional[str] = None
+    customer_id: Optional[str] = None
+    appointment_id: Optional[str] = None
+    
+    class Config:
+        allow_population_by_field_name = True
+
+# Backward compatibility - keep existing CallLog for Phase 6 compatibility
+class CallLogStatus(str, Enum):
     INCOMING = "incoming"
     OUTGOING = "outgoing"
     MISSED = "missed"
@@ -324,7 +391,7 @@ class CallLog(BaseDocument):
     customer_name: Optional[str] = None
     call_sid: str  # Twilio Call SID
     direction: str = "inbound"  # inbound/outbound
-    status: CallStatus = CallStatus.INCOMING
+    status: CallLogStatus = CallLogStatus.INCOMING
     duration: Optional[int] = None  # seconds
     start_time: datetime = Field(default_factory=datetime.utcnow)
     end_time: Optional[datetime] = None
