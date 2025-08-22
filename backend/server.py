@@ -1047,6 +1047,288 @@ async def scheduled_weekly_summary():
         logger.error(f"Error in scheduled weekly summary: {str(e)}")
         return False
 
+# ==================== CALL TRANSCRIPT SYSTEM (NEW) ====================
+
+@app.get("/api/calls")
+async def list_calls(
+    from_: Optional[str] = Query(None, alias="from", description="Filter by from phone number"),
+    to: Optional[str] = Query(None, description="Filter by to phone number"),
+    q: Optional[str] = Query(None, description="Search in customer names, phone numbers, and transcripts"),
+    status: Optional[str] = Query(None, description="Filter by call status"),
+    tag: Optional[str] = Query(None, description="Filter by tag (e.g., ai_answered, transferred_to_tech)"),
+    limit: int = Query(50, le=100, description="Number of calls to return"),
+    cursor: Optional[str] = Query(None, description="Pagination cursor"),
+    current_user: dict = Depends(get_current_user)
+):
+    """List calls without full transcripts for performance"""
+    try:
+        # Build MongoDB filters
+        filters = {}
+        
+        if from_:
+            filters["from"] = from_
+        if to:
+            filters["to"] = to
+        if status:
+            filters["status"] = status
+        if tag:
+            filters["tags"] = {"$in": [tag]}
+        
+        # Handle text search
+        if q:
+            # Create text search conditions for customer name, phone, and transcript
+            text_conditions = []
+            
+            # Search in customer names (via lookup)
+            text_conditions.append({"customer_id": {"$regex": q, "$options": "i"}})
+            
+            # Search in phone numbers
+            text_conditions.append({"from": {"$regex": q, "$options": "i"}})
+            text_conditions.append({"to": {"$regex": q, "$options": "i"}})
+            
+            # Search in transcript text
+            text_conditions.append({"transcript.text": {"$regex": q, "$options": "i"}})
+            
+            filters["$or"] = text_conditions
+        
+        # Handle cursor-based pagination
+        if cursor:
+            try:
+                # Decode cursor (simple timestamp-based)
+                cursor_timestamp = datetime.fromisoformat(cursor)
+                filters["created_at"] = {"$lt": cursor_timestamp}
+            except:
+                pass  # Invalid cursor, ignore
+        
+        # Query calls with projection to exclude transcript for performance
+        projection = {
+            "transcript": 0  # Exclude transcript array for list view
+        }
+        
+        calls_cursor = db.calls.find(filters, projection).sort("created_at", -1).limit(limit + 1)
+        calls_list = await calls_cursor.to_list(length=limit + 1)
+        
+        # Determine if there are more results and next cursor
+        has_more = len(calls_list) > limit
+        if has_more:
+            calls_list = calls_list[:-1]  # Remove extra item
+            next_cursor = calls_list[-1]["created_at"].isoformat() if calls_list else None
+        else:
+            next_cursor = None
+        
+        # Convert to Call objects (without transcript)
+        calls = []
+        for call_data in calls_list:
+            call_data["transcript"] = []  # Ensure empty transcript for list view
+            calls.append(Call(**call_data))
+        
+        return CallSearchResponse(
+            calls=calls,
+            total_count=await db.calls.count_documents(filters),
+            next_cursor=next_cursor,
+            filters_applied={
+                "from": from_,
+                "to": to,
+                "q": q,
+                "status": status,
+                "tag": tag
+            }
+        )
+        
+    except Exception as e:
+        logger.error(f"Error listing calls: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/api/calls/{call_id}")
+async def get_call(call_id: str, current_user: dict = Depends(get_current_user)):
+    """Get full call document including transcript"""
+    try:
+        call_data = await db.calls.find_one({"id": call_id})
+        
+        if not call_data:
+            raise HTTPException(status_code=404, detail="Call not found")
+        
+        # Ensure transcript is always a list
+        if "transcript" not in call_data:
+            call_data["transcript"] = []
+        
+        return Call(**call_data)
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error getting call {call_id}: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/api/calls/simulate")
+async def simulate_call(request: SimulateCallRequest, current_user: dict = Depends(get_current_user)):
+    """Create a realistic call with transcript lines (10-25 turns)"""
+    try:
+        import random
+        from datetime import timedelta
+        
+        # Set seed for reproducible results
+        if request.seed:
+            random.seed(request.seed)
+        
+        # Generate realistic call data based on scenario
+        call_scenarios = {
+            "estimate": {
+                "disposition": CallDisposition.QUOTE,
+                "sentiment": CallSentiment.POSITIVE,
+                "tags": ["ai_answered", "estimate_requested"],
+                "duration_range": (180, 420),  # 3-7 minutes
+                "conversation_starter": "Hi, I need a quote for installing a new AC unit."
+            },
+            "diagnostic": {
+                "disposition": CallDisposition.BOOKED,
+                "sentiment": CallSentiment.NEUTRAL,
+                "tags": ["ai_answered", "diagnostic_scheduled"],
+                "duration_range": (240, 480),  # 4-8 minutes
+                "conversation_starter": "My air conditioner stopped working overnight."
+            },
+            "voicemail": {
+                "disposition": CallDisposition.NO_ANSWER,
+                "sentiment": CallSentiment.NEUTRAL,
+                "tags": ["voicemail_left"],
+                "duration_range": (30, 90),   # 30s-1.5min
+                "conversation_starter": "Hi, this is Sarah calling about my heating system..."
+            },
+            "reschedule": {
+                "disposition": CallDisposition.BOOKED,
+                "sentiment": CallSentiment.POSITIVE,
+                "tags": ["ai_answered", "appointment_rescheduled"],
+                "duration_range": (120, 300),  # 2-5 minutes
+                "conversation_starter": "I need to reschedule my appointment for tomorrow."
+            }
+        }
+        
+        scenario_config = call_scenarios.get(request.scenario, call_scenarios["estimate"])
+        
+        # Generate phone numbers and timing
+        customer_phones = ["+1-205-555-1234", "+1-205-555-5678", "+1-205-555-9012", "+1-205-555-3456"]
+        business_phone = "+1-205-555-HVAC"
+        
+        duration_sec = random.randint(*scenario_config["duration_range"])
+        started_at = datetime.utcnow() - timedelta(minutes=random.randint(1, 1440))  # Random time in last 24h
+        ended_at = started_at + timedelta(seconds=duration_sec)
+        
+        # Create call
+        call = Call(
+            direction=CallDirection.INBOUND,
+            from_=random.choice(customer_phones),
+            to=business_phone,
+            started_at=started_at,
+            ended_at=ended_at,
+            duration_sec=duration_sec,
+            status=CallStatus.COMPLETED,
+            disposition=scenario_config["disposition"],
+            tags=scenario_config["tags"],
+            sentiment=scenario_config["sentiment"],
+            recording_url=f"https://recordings.example.com/call_{uuid.uuid4().hex[:8]}.mp3" if request.with_recording else None,
+            created_by=current_user.get("user_id", "system")
+        )
+        
+        # Generate realistic transcript (10-25 turns)
+        transcript_turns = random.randint(10, 25)
+        conversation_time = started_at
+        
+        # Add initial greeting
+        call.transcript.append(TranscriptEntry(
+            ts=conversation_time,
+            role=TranscriptRole.AI,
+            text="Thank you for calling HVAC Pro! This is Sarah, your AI assistant. How can I help you today?"
+        ))
+        
+        # Add customer's initial message
+        conversation_time += timedelta(seconds=random.randint(2, 5))
+        call.transcript.append(TranscriptEntry(
+            ts=conversation_time,
+            role=TranscriptRole.CUSTOMER,
+            text=scenario_config["conversation_starter"]
+        ))
+        
+        # Generate conversation based on scenario
+        if request.scenario == "estimate":
+            responses = [
+                ("ai", "I'd be happy to help you with an AC installation quote. What type of unit are you looking for?"),
+                ("customer", "I have a 2,000 square foot home and need a central air system."),
+                ("ai", "Great! For a home that size, I'd recommend a 3-ton unit. Can you tell me about your current heating system?"),
+                ("customer", "I have a gas furnace that's about 5 years old."),
+                ("ai", "Perfect, we can work with that existing ductwork. Let me schedule a technician to provide an accurate quote."),
+                ("customer", "How much should I expect this to cost?"),
+                ("ai", "Installation typically ranges from $4,500 to $8,000 depending on the unit and complexity. Our technician will provide exact pricing."),
+                ("customer", "That sounds reasonable. When can someone come out?"),
+                ("ai", "I have availability tomorrow afternoon or Friday morning. Which works better?"),
+                ("customer", "Friday morning would be perfect."),
+                ("ai", "Excellent! I'm scheduling you for Friday at 9 AM. You'll receive a confirmation text shortly.")
+            ]
+        elif request.scenario == "diagnostic":
+            responses = [
+                ("ai", "I'm sorry to hear about your AC trouble. Can you tell me what symptoms you're experiencing?"),
+                ("customer", "It's not blowing cold air, just warm air coming through the vents."),
+                ("ai", "That's frustrating! Have you checked if the thermostat is set to cooling mode?"),
+                ("customer", "Yes, it's set to 72 degrees on cool mode."),
+                ("ai", "Let me help troubleshoot. Can you check if the outdoor unit is running?"),
+                ("customer", "I can hear it running outside, but it doesn't seem to be working properly."),
+                ("ai", "It sounds like you might have a refrigerant issue or compressor problem. I'd recommend having a technician diagnose this."),
+                ("customer", "How soon can someone come out? It's getting pretty warm in here."),
+                ("ai", "I understand the urgency. I can schedule someone for this afternoon between 2-5 PM."),
+                ("customer", "That would be great, thank you!"),
+                ("ai", "You're all set! Our technician Mike will be there between 2-5 PM today. The diagnostic fee is $89.")
+            ]
+        else:  # Default conversation
+            responses = [
+                ("ai", "I understand you need assistance. Let me help you with that."),
+                ("customer", "Yes, I've been having issues with my HVAC system."),
+                ("ai", "Can you describe what's happening with your system?"),
+                ("customer", "It's making strange noises and not heating evenly."),
+                ("ai", "Those symptoms suggest it needs professional attention. Let me schedule a service call."),
+                ("customer", "How much will that cost?"),
+                ("ai", "Our service call fee is $95, which includes diagnosis and goes toward any repairs needed."),
+                ("customer", "Okay, when can someone come out?"),
+                ("ai", "I have availability tomorrow morning. Would 10 AM work for you?"),
+                ("customer", "Perfect, see you then!")
+            ]
+        
+        # Add conversation turns
+        for i, (role, text) in enumerate(responses[:transcript_turns-2]):  # -2 for initial turns already added
+            conversation_time += timedelta(seconds=random.randint(3, 15))
+            call.transcript.append(TranscriptEntry(
+                ts=conversation_time,
+                role=TranscriptRole.AI if role == "ai" else TranscriptRole.CUSTOMER,
+                text=text
+            ))
+        
+        # Add system events for transferred calls
+        if "transferred_to_tech" in scenario_config["tags"]:
+            conversation_time += timedelta(seconds=random.randint(5, 10))
+            call.transcript.append(TranscriptEntry(
+                ts=conversation_time,
+                role=TranscriptRole.SYSTEM,
+                event="transfer_started",
+                text="Transferring call to technician"
+            ))
+        
+        # Save call to database
+        await db.calls.insert_one(call.dict())
+        
+        logger.info(f"Simulated {request.scenario} call created with {len(call.transcript)} transcript entries")
+        
+        return {
+            "message": "Realistic call simulated successfully",
+            "call_id": call.id,
+            "scenario": request.scenario,
+            "duration_sec": call.duration_sec,
+            "transcript_entries": len(call.transcript),
+            "disposition": call.disposition,
+            "tags": call.tags
+        }
+        
+    except Exception as e:
+        logger.error(f"Error simulating call: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
 # ==================== EXISTING QA GATES & SUBCONTRACTOR ENDPOINTS (PHASE 7) ====================
 
 @app.post("/api/jobs/{job_id}/qa-gate")
