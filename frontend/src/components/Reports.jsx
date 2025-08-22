@@ -388,12 +388,12 @@ const Reports = () => {
           </div>
           
           <div className="bg-white rounded-xl border shadow-sm p-8 text-center">
-            <div className="text-4xl font-bold text-orange-600 mb-2">{formatCurrencyFromCents(preview.jobs_billed_cents)}</div>
+            <div className="text-4xl font-bold text-orange-600 mb-2">{formatDollars(preview.jobs_billed_cents)}</div>
             <div className="text-xl font-medium text-gray-700">Jobs billed</div>
           </div>
           
           <div className="bg-white rounded-xl border shadow-sm p-8 text-center">
-            <div className="text-4xl font-bold text-red-600 mb-2">{formatCurrencyFromCents(preview.money_on_hold_cents)}</div>
+            <div className="text-4xl font-bold text-red-600 mb-2">{formatDollars(preview.money_on_hold_cents)}</div>
             <div className="text-xl font-medium text-gray-700">Money on hold</div>
           </div>
         </div>
