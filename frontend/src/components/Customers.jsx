@@ -242,7 +242,7 @@ const Customers = ({ currentUser, aiVoiceEnabled }) => {
   }
 
   return (
-    <div id="customers-page" className="space-y-6">
+    <div id="customers-page" className="space-y-6" style={{ background: '#F3F4F6' }}>
       {/* Add Customer Dialog */}
       <AddCustomerDialog 
         open={showAddCustomer} 
@@ -250,35 +250,35 @@ const Customers = ({ currentUser, aiVoiceEnabled }) => {
         onAddCustomer={handleAddCustomer}
       />
       
-      {/* Header */}
+      {/* Header - Appointments Style */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold">Customers</h1>
-          <p className="text-muted-foreground">Manage your customer database</p>
+          <h1 className="text-3xl font-bold text-gray-900">Customers</h1>
+          <p className="text-gray-500">Manage your customer database</p>
         </div>
-        <Button onClick={() => setShowAddCustomer(true)}>
+        <Button 
+          onClick={() => setShowAddCustomer(true)}
+          className="bg-blue-600 hover:bg-blue-700 text-white"
+          style={{ backgroundColor: '#2563EB', color: '#FFFFFF' }}
+        >
           <Plus className="w-4 h-4 mr-2" />
           Add Customer
         </Button>
       </div>
 
-      {/* Search and Filters */}
+      {/* Search and Filters - Appointments Style */}
       <div className="flex flex-col sm:flex-row gap-4">
-        <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-          <Input
-            placeholder="Search customers by name, email, or phone..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="pl-10"
-          />
-          {searching && (
-            <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
-              <div className="w-4 h-4 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
-            </div>
-          )}
-        </div>
-        <Button variant="outline">
+        <SearchBar
+          placeholder="Search customers by name, email, or phone..."
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          loading={searching}
+        />
+        <Button 
+          variant="outline"
+          className="bg-white hover:bg-gray-50 text-gray-700 border-gray-300"
+          style={{ backgroundColor: '#FFFFFF', color: '#374151', borderColor: '#D1D5DB' }}
+        >
           <Filter className="w-4 h-4 mr-2" />
           Filters
         </Button>
