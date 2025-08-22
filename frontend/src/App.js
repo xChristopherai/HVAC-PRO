@@ -7,6 +7,7 @@ import {
   Wrench, 
   MessageSquare, 
   Settings as SettingsIcon, 
+  Phone,
   Search,
   Bell,
   Menu,
@@ -24,6 +25,7 @@ import Customers from './components/Customers';
 import Appointments from './components/Appointments';
 import Technicians from './components/Technicians';
 import Messaging from './components/Messaging';
+import CallLog from './components/CallLog';
 
 // Legacy components with NEW_UI flag support
 import Settings from './components/Settings';
@@ -43,6 +45,7 @@ const navigation = [
   { name: 'Appointments', href: '/appointments', icon: Calendar },
   { name: 'Technicians', href: '/technicians', icon: Wrench },
   { name: 'Messaging', href: '/messaging', icon: MessageSquare },
+  { name: 'Call Log', href: '/call-log', icon: Phone },
   { name: 'Settings', href: '/settings', icon: SettingsIcon },
 ];
 
