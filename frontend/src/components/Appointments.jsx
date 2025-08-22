@@ -484,7 +484,6 @@ const AppointmentCalendarView = ({ appointments, loading }) => {
       case 'in_progress': return 'border-l-amber-500 bg-amber-50';
       case 'completed': return 'border-l-emerald-500 bg-emerald-50';
       case 'cancelled': return 'border-l-red-500 bg-red-50';
-      case 'completed': return 'border-l-gray-500 bg-gray-50';
       default: return 'border-l-gray-300 bg-gray-50';
     }
   };
